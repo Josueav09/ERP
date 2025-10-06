@@ -1,1 +1,62 @@
-@import "tailwindcss";
+@import "tailwindcss/preflight";
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
+
+/* Base page styles */
+html,body,#root {
+  height: 100%;
+}
+
+body {
+  background-color: #F9FAFB; /* gray-50 */
+  color: #111827; /* gray-900 */
+}
+
+/* Reusable component helpers (explicit CSS to avoid unknown @apply tokens) */
+.btn-primary {
+  background-color: #0A332C;
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color .2s;
+  font-weight: 500;
+}
+.btn-primary:hover { background-color: #07221c; }
+
+.btn-secondary {
+  background-color: #B5E385;
+  color: #0A332C;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color .2s;
+  font-weight: 500;
+}
+.btn-secondary:hover { background-color: #C9E993; }
+
+.btn-outline {
+  border-width: 2px;
+  border-color: #0A332C;
+  color: #0A332C;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color .2s, color .2s;
+  font-weight: 500;
+}
+.btn-outline:hover { background-color: #0A332C; color: #ffffff; }
+
+.input-field {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid #D1D5DB; /* gray-300 */
+  border-radius: 0.5rem;
+  outline: none;
+}
+.input-field:focus { box-shadow: 0 0 0 4px rgba(181,227,133,0.12); border-color: transparent; }
+
+.card { background: #ffffff; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 1.5rem; }
+.badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+.badge-success { background: #DCFCE7; color: #065F46; }
+.badge-warning { background: #FEF3C7; color: #92400E; }
+.badge-danger { background: #FEE2E2; color: #991B1B; }
+.badge-info { background: #DBEAFE; color: #1E3A8A; }
+
