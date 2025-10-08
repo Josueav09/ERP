@@ -1,103 +1,87 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, BrowserRouter } from 'react-router-dom';
-import PrivateRoute from './PrivateRoute';
-import AuthLayout from '../layouts/AuthLayout';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigation } from '../context/NavigationContext';
 import DashboardLayout from '../layouts/DashboardLayout';
-import Login from '../pages/Login';
-import Dashboard from '../pages/Dashboard';
 
-const ProductModule = lazy(() => import('../../src/modules/product/pages/ProductList'));
-const MarketingModule = lazy(() => import('../../src/modules/marketing/pages/MarketingOverview'));
-const SalesModule = lazy(() => import('../../src/modules/sales/pages/SalesOverview'));
-const ReportingModule = lazy(() => import('../../src/modules/reporting/pages/ReportingOverview'));
-const UsersModule = lazy(() => import('../../src/modules/users/pages/UserList'));
-const PersonalModule = lazy(() => import('../../src/modules/personal/pages/PersonalOverview'));
-const LearningModule = lazy(() => import('../../src/modules/learning/pages/LearningOverview'));
+// Lazy load pages
+const Login = lazy(() => import('../pages/Login'));
+const Home = lazy(() => import('../pages/Home'));
+const NotFound = lazy(() => import('../pages/NotFound'));
+const ProductList = lazy(() => import('../modules/product/pages/ProductList'));
+const ProductForm = lazy(() => import('../modules/product/pages/ProductoForm'));
+const Marketing = lazy(() => import('../modules/marketing/pages/Leads'));
+const MarketingForm = lazy(() => import('../modules/marketing/pages/LeadForm'));
+const Sales = lazy(() => import('../modules/sales/pages/Opportunities'));
+const SalesForm = lazy(() => import('../modules/sales/pages/OpportunitiesForm'));
+const Reports = lazy(() => import('../modules/reporting/pages/DashboardReports'));
+const Personal = lazy(() => import('../modules/personal/pages/Performance'));
+const Learning = lazy(() => import('../modules/learning/pages/Courses'));
+const Users = lazy(() => import('../modules/users/pages/UserList'));
+// const UserForm = lazy(() => import('../modules/users/pages/UserForm'));
+
+// Loading component
+const LoadingSpinner: React.FC = () => (
+  <div className="flex items-center justify-center h-screen bg-gray-50">
+    <div className="text-center">
+      <div className="spinner mx-auto mb-4"></div>
+      <p className="text-gray-600">Cargando...</p>
+    </div>
+  </div>
+);
 
 const AppRoutes: React.FC = () => {
-  return (
-    <BrowserRouter>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Routes>
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-          </Route>
+  const { isAuthenticated, loading } = useAuth();
+  const { currentPage } = useNavigation();
 
-          <Route element={<DashboardLayout />}>
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
-            <Route
-              path="/products"
-              element={
-                <PrivateRoute>
-                  <ProductModule />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/marketing"
-              element={
-                <PrivateRoute>
-                  <MarketingModule />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/sales"
-              element={
-                <PrivateRoute>
-                  <SalesModule />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/reporting"
-              element={
-                <PrivateRoute>
-                  <ReportingModule />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/users"
-              element={
-                <PrivateRoute>
-                  <UsersModule />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/personal"
-              element={
-                <PrivateRoute>
-                  <PersonalModule />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/learning"
-              element={
-                <PrivateRoute>
-                  <LearningModule />
-                </PrivateRoute>
-              }
-            />
-          </Route>
-        </Routes>
+  // Public routes
+  if (!isAuthenticated || currentPage === 'login') {
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <Login />
       </Suspense>
-    </BrowserRouter>
+    );
+  }
+
+  // Protected routes
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <Home />;
+      case 'products':
+        return <ProductList />;
+      case 'product-form':
+        return <ProductForm />;
+      case 'marketing':
+        return <Marketing />;
+      case 'marketing-form':
+        return <MarketingForm />;
+      case 'sales':
+        return <Sales />;
+      case 'sales-form':
+        return <SalesForm />;
+      case 'reports':
+        return <Reports />;
+      case 'personal':
+        return <Personal />;
+      case 'learning':
+        return <Learning />;
+      case 'users':
+        return <Users />;
+      // case 'user-form':
+      //   return <UserForm />;
+      default:
+        return <NotFound />;
+    }
+  };
+
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <DashboardLayout>{renderPage()}</DashboardLayout>
+    </Suspense>
   );
 };
 

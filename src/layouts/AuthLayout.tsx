@@ -1,12 +1,19 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 
-const AuthLayout: React.FC = () => {
+interface AuthLayoutProps {
+  children: React.ReactNode;
+}
+
+const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <main className="w-full max-w-md p-6">
-        <Outlet />
-      </main>
+    <div className="min-h-screen bg-gradient-to-br from-primary-dark via-primary to-primary-dark flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {children}
+      </div>
+      
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-accent opacity-10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent-light opacity-10 rounded-full blur-3xl"></div>
     </div>
   );
 };

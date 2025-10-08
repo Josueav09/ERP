@@ -1,160 +1,147 @@
-import api from "./api";
+import api, { handleApiResponse, handleApiError } from './api';
+import { LoginCredentials, LoginResponse, User } from '../types/auth';
+import { ApiResponse } from '../types/api';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role?: string;
-  [key: string]: any; // Por si tu backend devuelve más campos
-}
+class AuthService {
+  private readonly BASE_URL = '/auth';
 
-interface LoginResponse {
-  token: string;
-  refreshToken: string;
-  user: User;
-}
-
-interface LoginResult {
-  success: boolean;
-  user?: User;
-  message?: string;
-}
-
-interface LoginAttempts {
-  [email: string]: {
-    count: number;
-    timestamp: number;
-  };
-}
-
-const authService = {
-  // Login con control de intentos fallidos
-  login: async (
-    email: string,
-    password: string,
-    twoFactorCode?: string,
-    captchaToken?: string
-  ): Promise<LoginResult> => {
+  /**
+   * Login user
+   */
+  async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      const response = await api.post<LoginResponse>("/auth/login", {
-        email,
-        password,
-        twoFactorCode,
-        captchaToken,
-      });
-
-      const { token, refreshToken, user } = response.data;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Resetear intentos fallidos
-      authService.resetLoginAttempts(email);
-
-      return { success: true, user };
-    } catch (error: any) {
-      // Registrar intento fallido
-      authService.recordFailedAttempt(email);
-
-      return {
-        success: false,
-        message: error.response?.data?.message || "Error al iniciar sesión",
-      };
-    }
-  },
-
-  // Registro de intentos fallidos (mock)
-  recordFailedAttempt: (email: string): void => {
-    const attempts: LoginAttempts = JSON.parse(
-      localStorage.getItem("loginAttempts") || "{}"
-    );
-    const userAttempts = attempts[email] || { count: 0, timestamp: Date.now() };
-
-    userAttempts.count += 1;
-    userAttempts.timestamp = Date.now();
-
-    attempts[email] = userAttempts;
-    localStorage.setItem("loginAttempts", JSON.stringify(attempts));
-
-    // Bloqueo de IP (simulado)
-    const ipAttempts = parseInt(localStorage.getItem("ipAttempts") || "0");
-    localStorage.setItem("ipAttempts", (ipAttempts + 1).toString());
-  },
-
-  // Resetear intentos
-  resetLoginAttempts: (email: string): void => {
-    const attempts: LoginAttempts = JSON.parse(
-      localStorage.getItem("loginAttempts") || "{}"
-    );
-    delete attempts[email];
-    localStorage.setItem("loginAttempts", JSON.stringify(attempts));
-    localStorage.setItem("ipAttempts", "0");
-  },
-
-  // Verificar si usuario está bloqueado
-  isUserBlocked: (email: string): boolean => {
-    const attempts: LoginAttempts = JSON.parse(
-      localStorage.getItem("loginAttempts") || "{}"
-    );
-    const userAttempts = attempts[email];
-
-    if (!userAttempts) return false;
-
-    const maxAttempts =
-      Number(import.meta.env.VITE_MAX_LOGIN_ATTEMPTS_USER) || 7;
-    return userAttempts.count >= maxAttempts;
-  },
-
-  // Verificar si IP está bloqueada
-  isIpBlocked: (): boolean => {
-    const ipAttempts = parseInt(localStorage.getItem("ipAttempts") || "0");
-    const maxAttempts = Number(import.meta.env.VITE_MAX_LOGIN_ATTEMPTS_IP) || 5;
-    return ipAttempts >= maxAttempts;
-  },
-
-  // Logout
-  logout: async (): Promise<void> => {
-    try {
-      await api.post("/auth/logout");
+      const response = await api.post(`${this.BASE_URL}/login`, credentials);
+      return handleApiResponse<LoginResponse['data']>(response);
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+      return handleApiError(error);
+    }
+  }
+
+  /**
+   * Logout user
+   */
+  async logout(): Promise<void> {
+    try {
+      await api.post(`${this.BASE_URL}/logout`);
+    } catch (error) {
+      // Even if logout fails on server, clear local storage
+      console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('refreshToken');
     }
-  },
+  }
 
-  // Obtener usuario actual
-  getCurrentUser: (): User | null => {
-    const user = localStorage.getItem("user");
-    return user ? (JSON.parse(user) as User) : null;
-  },
-
-  // Verificar si está autenticado
-  isAuthenticated: (): boolean => {
-    return !!localStorage.getItem("token");
-  },
-
-  // Refresh token
-  refreshToken: async (): Promise<string> => {
+  /**
+   * Refresh access token
+   */
+  async refreshToken(refreshToken: string): Promise<ApiResponse<{ token: string; refreshToken: string }>> {
     try {
-      const refreshToken = localStorage.getItem("refreshToken");
-      const response = await api.post<{ token: string }>("/auth/refresh", {
-        refreshToken,
-      });
-
-      const { token } = response.data;
-      localStorage.setItem("token", token);
-
-      return token;
+      const response = await api.post(`${this.BASE_URL}/refresh`, { refreshToken });
+      return handleApiResponse<{ token: string; refreshToken: string }>(response);
     } catch (error) {
-      await authService.logout();
-      throw error;
+      return handleApiError(error);
     }
-  },
-};
+  }
 
-export default authService;
+
+  /**
+   * Verify 2FA code
+   */
+  async verify2FA(userId: string, code: string): Promise<ApiResponse<{ verified: boolean }>> {
+    try {
+      const response = await api.post(`${this.BASE_URL}/verify-2fa`, { userId, code });
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
+
+  /**
+   * Request password reset
+   */
+  async requestPasswordReset(email: string): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await api.post(`${this.BASE_URL}/password-reset/request`, { email });
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
+
+  /**
+   * Reset password
+   */
+  async resetPassword(token: string, newPassword: string): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await api.post(`${this.BASE_URL}/password-reset/confirm`, {
+        token,
+        newPassword,
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
+
+  /**
+   * Get current user profile
+   */
+  async getCurrentUser(): Promise<ApiResponse<User>> {
+    try {
+      const response = await api.get(`${this.BASE_URL}/me`);
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
+
+  /**
+   * Update current user profile
+   */
+  async updateProfile(data: Partial<User>): Promise<ApiResponse<User>> {
+    try {
+      const response = await api.put(`${this.BASE_URL}/me`, data);
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
+
+  /**
+   * Change password
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await api.post(`${this.BASE_URL}/change-password`, {
+        currentPassword,
+        newPassword,
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
+
+  /**
+   * Mock login for development (remove in production)
+   */
+  mockLogin(email: string): User {
+    return {
+      id: '1',
+      email,
+      name: 'Usuario Demo',
+      role: 'admin',
+      token: 'mock-jwt-token-' + Date.now(),
+      refreshToken: 'mock-refresh-token-' + Date.now(),
+      avatar: '',
+      phone: '+51 999 999 999',
+      company: 'Empresa Demo',
+      position: 'Administrador',
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+    };
+  }
+}
+
+export default new AuthService();
