@@ -1,5 +1,5 @@
 import api, { MICROSERVICES, handleApiResponse, handleApiError } from '../../../services/api';
-import { ApiResponse, PaginationParams, FilterParams } from '../../../types/api';
+import { ApiResponse, PaginationParams } from '../../../types/api';
 import { Product, CreateProductDTO, UpdateProductDTO, ProductFilter, ProductCategory } from '../../../types/product';
 
 class ProductService {

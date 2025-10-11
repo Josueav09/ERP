@@ -1,245 +1,325 @@
-import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { useNavigation } from '../context/NavigationContext';
-import AuthLayout from '../layouts/AuthLayout';
-import Input from '../components/common/Input';
-import Button from '../components/common/Button';
-import { SECURITY } from '../config/config';
+// frontend/src/pages/LoginPage.tsx
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { SimpleCaptcha } from "../components/common/simple-captcha";
+import { EmailVerificationModal } from "../components/common/email-verification-modal";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { Eye, EyeOff, Lock, User, Loader2, AlertCircle } from "lucide-react";
 
-const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [code2FA, setCode2FA] = useState('');
-  const [captcha, setCaptcha] = useState('');
-  const [error, setError] = useState('');
-  const [attempts, setAttempts] = useState(0);
-  const [loading, setLoading] = useState(false);
+export default function LoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResponse, setCaptchaResponse] = useState(""); // ✅ respuesta del usuario
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  
 
-  const { login } = useAuth();
-  const { navigate } = useNavigation();
+  const { login, verifyEmailCode } = useAuth();
+  const navigate = useNavigate();
 
-  const MAX_ATTEMPTS = SECURITY.maxIPAttempts;
+  // ✅ Callback cuando se verifica el captcha
+  const handleCaptchaVerify = (token: string, userInput: string) => {
+    setCaptchaToken(token);
+    setCaptchaResponse(userInput);
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setError("");
 
-    // Validar intentos
-    if (attempts >= MAX_ATTEMPTS) {
-      setError('Usuario bloqueado por múltiples intentos fallidos. Contacte al administrador.');
-      return;
+  //   if (!captchaToken || !captchaResponse) {
+  //     setError("Por favor complete la verificación captcha");
+  //     return;
+  //   }
+
+  //   if (!username.trim() || !password.trim()) {
+  //     setError("Email y contraseña son obligatorios");
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+
+  //   try {
+  //     const result = await login(username, password, captchaToken, captchaResponse);
+
+  //     // ✅ CORRECCIÓN: Verificar mejor la respuesta
+  //     if (result.success && result.requiresEmailVerification) {
+  //       console.log("Requiere verificación de email:", result);
+  //       setUserEmail(result.email || username); // Usar el email de la respuesta o el username
+  //       setShowEmailVerification(true);
+  //     } else if (result.success) {
+  //       // Login exitoso sin verificación (no debería pasar en tu caso)
+  //       navigate("/dashboard");
+  //     } else {
+  //       setError(result.error || "Error al iniciar sesión");
+  //       // Resetear captcha en caso de error
+  //       setCaptchaToken("");
+  //       setCaptchaResponse("");
+  //     }
+  //   } catch (err) {
+  //     console.error("Error en login:", err);
+  //     setError("Error de conexión con el servidor");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setError("");
+
+  //   if (!captchaToken || !captchaResponse) {
+  //     setError("Por favor complete la verificación captcha");
+  //     return;
+  //   }
+
+  //   if (!username.trim() || !password.trim()) {
+  //     setError("Email y contraseña son obligatorios");
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+
+  //   try {
+  //     const result = await login(username, password, captchaToken, captchaResponse);
+
+  //     console.log("🔐 Login result:", result);
+
+  //     if (result.success && result.requiresEmailVerification) {
+  //       console.log("🎯 Mostrando modal de verificación para:", result.email);
+  //       setUserEmail(result.email || username);
+  //       setShowEmailVerification(true); // ✅ Esto debería funcionar ahora
+  //     } else if (result.success) {
+  //       // Login exitoso sin verificación
+  //       navigate("/dashboard");
+  //     } else {
+  //       setError(result.error || "Error al iniciar sesión");
+  //       setCaptchaToken("");
+  //       setCaptchaResponse("");
+  //     }
+  //   } catch (err) {
+  //     console.error("Error en login:", err);
+  //     setError("Error de conexión con el servidor");
+  //   } finally {
+  //     // ✅ Solo desactivar loading si NO es un caso de verificación de email
+  //     if (!showEmailVerification) {
+  //       setIsLoading(false);
+  //     }
+  //   }
+  // };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+
+  if (!captchaToken || !captchaResponse) {
+    setError("Por favor complete la verificación captcha");
+    return;
+  }
+
+  if (!username.trim() || !password.trim()) {
+    setError("Email y contraseña son obligatorios");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const result = await login(username, password, captchaToken, captchaResponse);
+
+    if (result.success && result.requiresEmailVerification) {
+      console.log("✅ Login exitoso, requiere verificación");
+      
+      // ✅ DESACTIVAR loading inmediatamente
+      setIsLoading(false);
+      
+      setUserEmail(result.email || username);
+      setShowEmailVerification(true);
+      
+    } else if (result.success) {
+      navigate("/dashboard");
+    } else {
+      setError(result.error || "Error al iniciar sesión");
+      setCaptchaToken("");
+      setCaptchaResponse("");
+      setIsLoading(false);
     }
+  } catch (err) {
+    console.error("Error en login:", err);
+    setError("Error de conexión con el servidor");
+    setIsLoading(false);
+  }
+};
 
-    // Validar captcha
-    if (captcha.toLowerCase() !== 'erp') {
-      setError('Captcha incorrecto. Por favor, escriba "erp"');
-      return;
-    }
-
-    // Validar campos
-    if (!email || !password || !code2FA) {
-      setError('Por favor, complete todos los campos');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await login({ email, password, code2FA, captcha });
-      navigate('dashboard');
-    } catch (err: any) {
-      setAttempts((prev) => prev + 1);
-      setError(
-        err.message || `Credenciales inválidas. Intentos restantes: ${MAX_ATTEMPTS - attempts - 1}`
-      );
-    } finally {
-      setLoading(false);
+  const handleEmailVerify = async (code: string): Promise<{ success: boolean; error?: string }> => {
+    const result = await verifyEmailCode(code);
+    if (result.success) {
+      setShowEmailVerification(false);
+      navigate("/dashboard");
+      return { success: true };
+    } else {
+      setError(result.error || "Código incorrecto");
+      return { success: false, error: result.error || "Código incorrecto" };
     }
   };
 
+  
+
+  // Agrega esto justo antes del return
+  console.log("🔍 DEBUG Modal state:", {
+    showEmailVerification,
+    userEmail,
+    modalShouldShow: showEmailVerification && userEmail
+  });
+
+  // Y también agrega esto para verificar que el componente se está renderizando
+  console.log("🔍 DEBUG Rendering EmailVerificationModal component");
+
+  
+
   return (
-    <AuthLayout>
-      <div className="bg-white rounded-xl shadow-2xl p-8 animate-fadeIn">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-block bg-primary-dark text-accent p-4 rounded-full mb-4">
-            <svg
-              className="w-12 h-12"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-            </svg>
-          </div>
-          <h2 className="text-3xl font-bold text-primary-dark mb-2">Sistema ERP</h2>
-          <p className="text-gray-600">Ingrese sus credenciales para continuar</p>
-        </div>
+    <div className="min-h-screen bg-[#013936] flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-5">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23C7E196' fillOpacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}
+        />
+      </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Login form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <Input
-            type="email"
-            label="Correo Electrónico"
-            placeholder="usuario@empresa.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={attempts >= MAX_ATTEMPTS}
-            icon={
-              <svg
-                className="w-5 h-5 text-gray-400"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-              </svg>
-            }
-          />
-
-          <Input
-            type="password"
-            label="Contraseña"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={attempts >= MAX_ATTEMPTS}
-            icon={
-              <svg
-                className="w-5 h-5 text-gray-400"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-              </svg>
-            }
-          />
-
-          <Input
-            type="text"
-            label="Código 2FA"
-            placeholder="123456"
-            value={code2FA}
-            onChange={(e) => setCode2FA(e.target.value)}
-            required
-            maxLength={6}
-            disabled={attempts >= MAX_ATTEMPTS}
-            helperText="Ingrese el código de autenticación de dos factores"
-            icon={
-              <svg
-                className="w-5 h-5 text-gray-400"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-              </svg>
-            }
-          />
-
-          <Input
-            type="text"
-            label='Captcha - Escriba "erp"'
-            placeholder="Verificación"
-            value={captcha}
-            onChange={(e) => setCaptcha(e.target.value)}
-            required
-            disabled={attempts >= MAX_ATTEMPTS}
-            icon={
-              <svg
-                className="w-5 h-5 text-gray-400"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-            }
-          />
-
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={loading}
-            disabled={attempts >= MAX_ATTEMPTS}
-          >
-            Iniciar Sesión
-          </Button>
-        </form>
-
-        {/* Additional info */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="grid grid-cols-2 gap-4 text-center text-sm text-gray-600">
-            <div className="flex items-center justify-center space-x-2">
-              <span>🔒</span>
-              <span>Autenticación 2FA</span>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <span>⏱️</span>
-              <span>Sesión de 10 min</span>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <span>🚫</span>
-              <span>Bloqueo tras 7 intentos</span>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <span>🌐</span>
-              <span>Bloqueo por IP (5)</span>
-            </div>
-          </div>
-
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">
-              💡 <strong>Modo Demo:</strong> Usa cualquier email y contraseña para probar
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center relative z-10">
+        {/* Branding */}
+        <div className="hidden lg:flex flex-col justify-center space-y-8 text-white">
+          <div className="space-y-6">
+            <img src="/growvia-logo.png" alt="Growvia" className="mb-8 w-72" />
+            <h1 className="text-5xl font-bold leading-tight">Tu fuerza de ventas, lista para crecer</h1>
+            <p className="text-xl text-white/80">
+              Accede a tu panel de control y gestiona tu equipo de vendedores profesionales.
             </p>
           </div>
+          <div className="flex gap-2 pt-8">
+            <div className="h-1 w-16 bg-[#C7E196] rounded-full" />
+            <div className="h-1 w-8 bg-[#C7E196]/60 rounded-full" />
+            <div className="h-1 w-4 bg-[#C7E196]/30 rounded-full" />
+          </div>
         </div>
-      </div>
-    </AuthLayout>
-  );
-};
+          
+        {/* Login Form */}
+        <Card className="w-full shadow-2xl border-0">
+          <CardHeader className="space-y-3 pb-6">
+            <div className="lg:hidden mb-4">
+              <img src="/growvia-logo.png" alt="Growvia" className="w-48 mx-auto" />
+            </div>
+            <CardTitle className="text-3xl font-bold text-[#013936]">Zona de Clientes</CardTitle>
+            <CardDescription className="text-base">Ingrese sus credenciales para acceder</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {error && (
+                <Alert variant="destructive" className="bg-destructive/10 border-destructive/30">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
+                </Alert>
+              )}
 
-export default Login;
+              {/* Usuario */}
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-[#013936] font-medium">
+                  Email
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#013936]/40" />
+                  <Input
+                    id="username"
+                    type="email"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="su-email@ejemplo.com"
+                    className="pl-10 h-12 border-[#013936]/20 focus-visible:ring-[#C7E196]"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Contraseña */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-[#013936] font-medium">
+                  Contraseña
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#013936]/40" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10 h-12 border-[#013936]/20 focus-visible:ring-[#C7E196]"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#013936]/40 hover:text-[#013936]/60"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Captcha */}
+              <div className="space-y-2">
+                <Label className="text-[#013936] font-medium">Verificación de seguridad</Label>
+                <SimpleCaptcha onVerify={handleCaptchaVerify} />
+              </div>
+
+              {/* Botón */}
+              <Button
+                type="submit"
+                className="w-full h-12 bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-semibold text-base shadow-lg"
+                disabled={isLoading || !captchaToken || !captchaResponse}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Iniciando sesión...
+                  </>
+                ) : (
+                  "Iniciar Sesión"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      <EmailVerificationModal
+        open={showEmailVerification}
+        email={userEmail}
+        onVerify={handleEmailVerify}
+        onClose={() => {
+          setShowEmailVerification(false);
+          setUserEmail("");
+        }}
+      />
+      <style>
+        {`
+    .fixed[data-state="open"] {
+      z-index: 9999 !important;
+    }
+    [data-radix-dialog-content] {
+      z-index: 10000 !important;
+    }
+  `}
+      </style>
+    </div>
+  );
+}

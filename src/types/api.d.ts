@@ -1,6 +1,7 @@
+// src/types/api.d.ts
 export interface ApiResponse<T = any> {
   success: boolean;
-  data: T;
+  data: T | null;
   message?: string;
   errors?: Record<string, string[]>;
   meta?: PaginationMeta;

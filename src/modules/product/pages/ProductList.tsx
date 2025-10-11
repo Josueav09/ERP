@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigation } from '../../../context/NavigationContext';
+import { Link } from 'react-router-dom';
 import Button from '../../../components/common/Button';
 import Input from '../../../components/common/Input';
 
@@ -14,7 +14,6 @@ interface Product {
 }
 
 const ProductList: React.FC = () => {
-  const { navigate } = useNavigation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -39,13 +38,13 @@ const ProductList: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <span className="badge-success">Activo</span>;
+        return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Activo</span>;
       case 'inactive':
-        return <span className="badge-warning">Inactivo</span>;
+        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Inactivo</span>;
       case 'out_of_stock':
-        return <span className="badge-danger">Sin Stock</span>;
+        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Sin Stock</span>;
       default:
-        return <span className="badge-info">{status}</span>;
+        return <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">{status}</span>;
     }
   };
 
@@ -57,9 +56,11 @@ const ProductList: React.FC = () => {
           <h1 className="text-3xl font-bold text-primary-dark">Gestión de Productos</h1>
           <p className="text-gray-600 mt-1">Administra tu catálogo de productos</p>
         </div>
-        <Button variant="primary" onClick={() => navigate('product-form', { mode: 'create' })}>
-          + Nuevo Producto
-        </Button>
+        <Link to="/products/new">
+          <Button variant="primary">
+            + Nuevo Producto
+          </Button>
+        </Link>
       </div>
 
       {/* Filters */}
@@ -79,7 +80,7 @@ const ProductList: React.FC = () => {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="input-field"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           >
             {categories.map((cat) => (
               <option key={cat} value={cat}>
@@ -116,7 +117,7 @@ const ProductList: React.FC = () => {
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map((product) => (
-          <div key={product.id} className="card p-6 animate-fadeIn">
+          <div key={product.id} className="bg-white rounded-lg shadow p-6 transition-all duration-200 hover:shadow-lg">
             <div className="text-6xl text-center mb-4">{product.image}</div>
             <h3 className="text-xl font-bold text-primary-dark mb-2">{product.name}</h3>
             <p className="text-gray-600 text-sm mb-3">{product.category}</p>
@@ -136,17 +137,16 @@ const ProductList: React.FC = () => {
             </div>
 
             <div className="flex space-x-2">
-              <Button
-                variant="primary"
-                size="sm"
-                fullWidth
-                onClick={() => navigate('product-form', { mode: 'edit', id: product.id })}
-              >
-                Editar
-              </Button>
-              <Button variant="outline" size="sm" fullWidth>
-                Ver Detalles
-              </Button>
+              <Link to={`/products/edit/${product.id}`} className="flex-1">
+                <Button variant="primary" size="sm" fullWidth>
+                  Editar
+                </Button>
+              </Link>
+              <Link to={`/products/${product.id}`} className="flex-1">
+                <Button variant="outline" size="sm" fullWidth>
+                  Ver Detalles
+                </Button>
+              </Link>
             </div>
           </div>
         ))}
@@ -158,9 +158,11 @@ const ProductList: React.FC = () => {
           <div className="text-6xl mb-4">📦</div>
           <h3 className="text-xl font-bold text-gray-800 mb-2">No se encontraron productos</h3>
           <p className="text-gray-600 mb-6">Intenta ajustar los filtros o crea un nuevo producto</p>
-          <Button variant="primary" onClick={() => navigate('product-form', { mode: 'create' })}>
-            Crear Primer Producto
-          </Button>
+          <Link to="/products/new">
+            <Button variant="primary">
+              Crear Primer Producto
+            </Button>
+          </Link>
         </div>
       )}
     </div>

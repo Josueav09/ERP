@@ -1,33 +1,37 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigation, PageType } from '../../context/NavigationContext';
 import { UserRole } from '../../types/auth';
 
 interface MenuItem {
   icon: string;
   label: string;
-  path: PageType;
+  path: string;
   roles: (UserRole | 'all')[];
 }
 
 const Sidebar: React.FC = () => {
   const { user } = useAuth();
-  const { navigate, currentPage } = useNavigation();
+  const location = useLocation();
 
   const menuItems: MenuItem[] = [
-    { icon: '📊', label: 'Dashboard', path: 'dashboard', roles: ['all'] },
-    { icon: '📦', label: 'Productos', path: 'products', roles: ['admin', 'jefe', 'ejecutiva', 'desarrollador'] },
-    { icon: '📢', label: 'Marketing', path: 'marketing', roles: ['admin', 'jefe', 'ejecutiva'] },
-    { icon: '💼', label: 'Ventas', path: 'sales', roles: ['admin', 'jefe', 'ejecutiva'] },
-    { icon: '📈', label: 'Reportes', path: 'reports', roles: ['all'] },
-    { icon: '👤', label: 'Mi Desempeño', path: 'personal', roles: ['admin', 'jefe', 'ejecutiva'] },
-    { icon: '📚', label: 'Capacitación', path: 'learning', roles: ['all'] },
-    { icon: '👥', label: 'Usuarios', path: 'users', roles: ['admin', 'jefe'] },
+    { icon: '📊', label: 'Dashboard', path: '/dashboard', roles: ['all'] },
+    { icon: '📦', label: 'Productos', path: '/products', roles: ['admin', 'jefe', 'ejecutiva', 'desarrollador'] },
+    { icon: '📢', label: 'Marketing', path: '/marketing', roles: ['admin', 'jefe', 'ejecutiva'] },
+    { icon: '💼', label: 'Ventas', path: '/sales', roles: ['admin', 'jefe', 'ejecutiva'] },
+    { icon: '📈', label: 'Reportes', path: '/reports', roles: ['all'] },
+    { icon: '👤', label: 'Mi Desempeño', path: '/performance', roles: ['admin', 'jefe', 'ejecutiva'] },
+    { icon: '📚', label: 'Capacitación', path: '/learning', roles: ['all'] },
+    { icon: '👥', label: 'Usuarios', path: '/users', roles: ['admin', 'jefe'] },
   ];
 
   const hasAccess = (item: MenuItem): boolean => {
     if (item.roles.includes('all')) return true;
     return user ? item.roles.includes(user.role) : false;
+  };
+
+  const isActive = (path: string): boolean => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   return (
@@ -36,21 +40,21 @@ const Sidebar: React.FC = () => {
         {menuItems.map((item) => {
           if (!hasAccess(item)) return null;
 
-          const isActive = currentPage === item.path;
+          const active = isActive(item.path);
 
           return (
-            <button
+            <Link
               key={item.path}
-              onClick={() => navigate(item.path)}
+              to={item.path}
               className={`w-full flex items-center space-x-3 px-4 py-3 text-left rounded-lg transition-all duration-200 ${
-                isActive
+                active
                   ? 'bg-primary-dark text-accent shadow-md scale-105'
                   : 'text-accent-light hover:bg-primary-dark hover:text-accent'
               }`}
             >
               <span className="text-2xl">{item.icon}</span>
               <span className="font-medium">{item.label}</span>
-            </button>
+            </Link>
           );
         })}
       </div>

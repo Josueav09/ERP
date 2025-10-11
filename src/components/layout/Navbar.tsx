@@ -1,57 +1,72 @@
 import React from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigation } from '../../context/NavigationContext';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
-  const { navigate } = useNavigation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
-    navigate('login');
+    navigate('/login');
+  };
+
+  const isActive = (path: string): boolean => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   return (
     <nav className="bg-primary-dark border-b border-primary px-6 py-4 shadow-md">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-8">
-          <h1
+          <Link
+            to="/dashboard"
             className="text-2xl font-bold text-accent cursor-pointer hover:text-accent-light transition"
-            onClick={() => navigate('dashboard')}
           >
             🏢 ERP System
-          </h1>
+          </Link>
           <div className="hidden md:flex space-x-4">
-            <button
-              onClick={() => navigate('dashboard')}
-              className="text-accent-light hover:text-accent transition font-medium"
+            <Link
+              to="/dashboard"
+              className={`transition font-medium ${
+                isActive('/dashboard') ? 'text-accent' : 'text-accent-light hover:text-accent'
+              }`}
             >
               Dashboard
-            </button>
-            <button
-              onClick={() => navigate('products')}
-              className="text-accent-light hover:text-accent transition font-medium"
+            </Link>
+            <Link
+              to="/products"
+              className={`transition font-medium ${
+                isActive('/products') ? 'text-accent' : 'text-accent-light hover:text-accent'
+              }`}
             >
               Productos
-            </button>
-            <button
-              onClick={() => navigate('marketing')}
-              className="text-accent-light hover:text-accent transition font-medium"
+            </Link>
+            <Link
+              to="/marketing"
+              className={`transition font-medium ${
+                isActive('/marketing') ? 'text-accent' : 'text-accent-light hover:text-accent'
+              }`}
             >
               Marketing
-            </button>
-            <button
-              onClick={() => navigate('sales')}
-              className="text-accent-light hover:text-accent transition font-medium"
+            </Link>
+            <Link
+              to="/sales"
+              className={`transition font-medium ${
+                isActive('/sales') ? 'text-accent' : 'text-accent-light hover:text-accent'
+              }`}
             >
               Ventas
-            </button>
-            <button
-              onClick={() => navigate('reports')}
-              className="text-accent-light hover:text-accent transition font-medium"
+            </Link>
+            <Link
+              to="/reports"
+              className={`transition font-medium ${
+                isActive('/reports') ? 'text-accent' : 'text-accent-light hover:text-accent'
+              }`}
             >
               Reportes
-            </button>
+            </Link>
           </div>
         </div>
 

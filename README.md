@@ -117,6 +117,58 @@ erp-frontend/
 ├── postcss.config.js
 └── index.html
 ```
+erp-frontend/
+├── public/
+│   └── favicon.ico
+├── src/
+│   ├── assets/           # Imágenes e iconos
+│   ├── components/       # Componentes reutilizables
+│   │   ├── common/       # Button, Input, Modal
+│   │   └── layout/       # Navbar, Sidebar, Footer
+│   ├── context/          # Context API
+│   │   ├── AuthContext.tsx
+│   │   └── NavigationContext.tsx
+│   ├── hooks/            # Custom hooks
+│   │   ├── useAuth.ts
+│   │   └── useFetch.ts
+│   ├── layouts/          # Layouts de páginas
+│   │   ├── AuthLayout.tsx
+│   │   └── DashboardLayout.tsx
+│   ├── modules/          # Módulos del sistema
+│   │   ├── product/
+│   │   ├── marketing/
+│   │   ├── sales/
+│   │   ├── reporting/
+│   │   ├── personal/
+│   │   ├── learning/
+│   │   └── users/
+│   ├── pages/            # Páginas principales
+│   │   ├── Login.tsx
+│   │   ├── Home.tsx
+│   │   └── NotFound.tsx
+│   ├── routes/           # Configuración de rutas
+│   │   └── AppRoutes.tsx
+│   ├── services/         # Servicios API
+│   │   ├── api.ts
+│   │   └── authService.ts
+│   ├── styles/           # Estilos globales
+│   │   └── index.css
+│   ├── types/            # Tipos TypeScript
+│   │   ├── auth.d.ts
+│   │   ├── user.d.ts
+│   │   ├── product.d.ts
+│   │   ├── marketing.d.ts
+│   │   ├── sales.d.ts
+│   │   └── api.d.ts
+│   ├── App.tsx
+│   └── main.tsx
+├── .env
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+├── tailwind.config.js
+├── postcss.config.js
+└── index.html
 
 ## 🎨 Paleta de Colores
 

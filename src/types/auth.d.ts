@@ -1,52 +1,57 @@
+// frontend/src/types/auth.ts
+
+export type UserRole = 'jefe' | 'ejecutiva' | 'empresa' | 'cliente' | 'admin' | 'desarrollador';
+
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
-  tenant?: string;
   token: string;
-  refreshToken?: string;
+  refreshToken: string;
   avatar?: string;
   phone?: string;
   company?: string;
   position?: string;
-  linkedIn?: string;
-  createdAt?: string;
-  lastLogin?: string;
+  createdAt: string;
+  lastLogin: string;
 }
-
-export type UserRole = 'cliente' | 'ejecutiva' | 'jefe' | 'desarrollador' | 'admin';
 
 export interface LoginCredentials {
   email: string;
   password: string;
-  code2FA: string;
-  captcha?: string;
-}
-
-export interface AuthContextType {
-  user: User | null;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => void;
-  isAuthenticated: boolean;
-  loading: boolean;
-  refreshToken: () => Promise<void>;
+  code2FA?: string;
+  captcha: string;
 }
 
 export interface LoginResponse {
   success: boolean;
+  message?: string;
   data: {
     user: User;
     token: string;
     refreshToken: string;
   };
-  message?: string;
+  requiresEmailVerification?: boolean;
+  email?: string;
 }
 
-export interface AuthState {
+export interface AuthContextType {
   user: User | null;
-  token: string | null;
+  login: (
+    email: string,
+    password: string,
+    captchaToken: string,
+    captchaResponse: string
+  ) => Promise<{
+    success: boolean;
+    requiresEmailVerification?: boolean;
+    email?: string;
+    error?: string;
+  }>;
+  logout: () => void;
+  verifyEmailCode: (code: string) => Promise<{ success: boolean; error?: string }>;
   isAuthenticated: boolean;
   loading: boolean;
-  error: string | null;
+  refreshToken: () => Promise<void>;
 }

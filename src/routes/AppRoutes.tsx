@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigation } from '../context/NavigationContext';
 import DashboardLayout from '../layouts/DashboardLayout';
 
 // Lazy load pages
@@ -17,7 +17,6 @@ const Reports = lazy(() => import('../modules/reporting/pages/DashboardReports')
 const Personal = lazy(() => import('../modules/personal/pages/Performance'));
 const Learning = lazy(() => import('../modules/learning/pages/Courses'));
 const Users = lazy(() => import('../modules/users/pages/UserList'));
-// const UserForm = lazy(() => import('../modules/users/pages/UserForm'));
 
 // Loading component
 const LoadingSpinner: React.FC = () => (
@@ -29,58 +28,184 @@ const LoadingSpinner: React.FC = () => (
   </div>
 );
 
-const AppRoutes: React.FC = () => {
+// Protected Route component
+const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  const { currentPage } = useNavigation();
 
   if (loading) {
     return <LoadingSpinner />;
   }
 
-  // Public routes
-  if (!isAuthenticated || currentPage === 'login') {
-    return (
-      <Suspense fallback={<LoadingSpinner />}>
-        <Login />
-      </Suspense>
-    );
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
-  // Protected routes
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <Home />;
-      case 'products':
-        return <ProductList />;
-      case 'product-form':
-        return <ProductForm />;
-      case 'marketing':
-        return <Marketing />;
-      case 'marketing-form':
-        return <MarketingForm />;
-      case 'sales':
-        return <Sales />;
-      case 'sales-form':
-        return <SalesForm />;
-      case 'reports':
-        return <Reports />;
-      case 'personal':
-        return <Personal />;
-      case 'learning':
-        return <Learning />;
-      case 'users':
-        return <Users />;
-      // case 'user-form':
-      //   return <UserForm />;
-      default:
-        return <NotFound />;
-    }
-  };
+  return children;
+};
 
+const AppRoutes: React.FC = () => {
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <DashboardLayout>{renderPage()}</DashboardLayout>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
+        
+        {/* Protected routes - Dashboard */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Home />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Home />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/dashboard/jefe" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Home />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/dashboard/ejecutiva" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Home />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/dashboard/cliente" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Home />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Product routes */}
+        <Route path="/products" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ProductList />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/products/new" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ProductForm />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/products/edit/:id" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ProductForm />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Marketing routes */}
+        <Route path="/marketing" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Marketing />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/marketing/new" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <MarketingForm />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/marketing/edit/:id" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <MarketingForm />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Sales routes */}
+        <Route path="/sales" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Sales />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/sales/new" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <SalesForm />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/sales/edit/:id" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <SalesForm />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Reports routes */}
+        <Route path="/reports" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Reports />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Performance routes */}
+        <Route path="/performance" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Personal />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Learning routes */}
+        <Route path="/learning" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Learning />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Users routes */}
+        <Route path="/users" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Users />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Fallback routes */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </Suspense>
   );
 };

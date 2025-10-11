@@ -11,7 +11,7 @@ const OpportunityForm: React.FC = () => {
     clientName: '',
     clientEmail: '',
     clientPhone: '',
-    company: '',
+    company: '', 
     contactPerson: '',
     value: '',
     stage: 'prospecting',
