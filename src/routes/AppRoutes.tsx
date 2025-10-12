@@ -228,7 +228,6 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
 
 // Lazy load pages - SOLO RUTAS DEL JEFE
 const Login = lazy(() => import('../pages/Login'));
@@ -240,6 +239,7 @@ const EjecutivaPage = lazy(() => import('../pages/jefe/ejecutivas/EjecutivaPage'
 const ClientesPage = lazy(() => import('../pages/jefe/clientes/ClientesPage'));
 const EmpresasPage = lazy(() => import('../pages/jefe/empresas/EmpresasPage'));
 const TrazabilidadPage = lazy(() => import('../pages/jefe/trazabilidad/TrazabilidadPage'));
+const PerfilPage = lazy(() => import('../pages/jefe/perfil/PerfilPage'));
 
 // Loading component
 const LoadingSpinner: React.FC = () => (
@@ -316,6 +316,11 @@ const AppRoutes: React.FC = () => {
         <Route path="/dashboard/jefe/trazabilidad" element={
           <ProtectedRoute>
               <TrazabilidadPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/jefe/perfil" element={
+          <ProtectedRoute>
+              <PerfilPage />
           </ProtectedRoute>
         } />
 
