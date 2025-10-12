@@ -1,6 +1,6 @@
 // src/config.ts
 export const API_CONFIG = {
-  baseURL: 'http://localhost:3001',
+  baseURL: 'http://localhost:3000',
   timeout: 30000,
 };
 

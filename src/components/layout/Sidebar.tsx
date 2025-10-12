@@ -16,7 +16,7 @@ const Sidebar: React.FC = () => {
 
   const menuItems: MenuItem[] = [
     { icon: '📊', label: 'Dashboard', path: '/dashboard', roles: ['all'] },
-    { icon: '📦', label: 'Productos', path: '/products', roles: ['admin', 'jefe', 'ejecutiva', 'desarrollador'] },
+    { icon: '📦', label: 'Auditoria', path: '/jefe/auditoria', roles: ['admin', 'jefe', 'ejecutiva', 'desarrollador'] },
     { icon: '📢', label: 'Marketing', path: '/marketing', roles: ['admin', 'jefe', 'ejecutiva'] },
     { icon: '💼', label: 'Ventas', path: '/sales', roles: ['admin', 'jefe', 'ejecutiva'] },
     { icon: '📈', label: 'Reportes', path: '/reports', roles: ['all'] },

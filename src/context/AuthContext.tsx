@@ -1,17 +1,13 @@
-// // ✅ src/context/AuthContext.tsx
+// // frontend/src/context/AuthContext.tsx
 // import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 // import { useNavigate } from "react-router-dom";
-// import { User, AuthContextType, LoginCredentials } from "../types/auth";
-// import authService from "../services/authService";
+// import { User, AuthContextType } from "../types/auth";
 // import { SECURITY } from "../config/config";
 
-// // ========================
-// // CONFIGURACIONES GENERALES
-// // ========================
 // const INACTIVITY_TIMEOUT = SECURITY.sessionTimeout;
 // const MAX_USER_ATTEMPTS = SECURITY.maxLoginAttempts;
 // const MAX_IP_ATTEMPTS = SECURITY.maxIPAttempts;
-// const BLOCK_DURATION = 30 * 60 * 1000; // 30 minutos
+// const BLOCK_DURATION = 30 * 60 * 1000;
 
 // const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -28,7 +24,7 @@
 // export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 //   const [user, setUser] = useState<User | null>(null);
 //   const [loading, setLoading] = useState(true);
-//   const [pendingUser, setPendingUser] = useState<User | null>(null);
+//   const [pendingUser, setPendingUser] = useState<any>(null); // usuario pendiente de verificación
 //   const [lastActivity, setLastActivity] = useState(Date.now());
 //   const navigate = useNavigate();
 
@@ -89,16 +85,10 @@
 //   useEffect(() => {
 //     const initAuth = () => {
 //       const storedUser = localStorage.getItem("user");
-//       const sessionExpiry = localStorage.getItem("session_expiry");
+//       const token = sessionStorage.getItem("token");
 
-//       if (storedUser && sessionExpiry) {
-//         const expiry = Number(sessionExpiry);
-//         if (Date.now() < expiry) {
-//           setUser(JSON.parse(storedUser));
-//         } else {
-//           localStorage.removeItem("user");
-//           localStorage.removeItem("session_expiry");
-//         }
+//       if (storedUser && token) {
+//         setUser(JSON.parse(storedUser));
 //       }
 //       setLoading(false);
 //     };
@@ -116,7 +106,7 @@
 //       if (Date.now() - lastActivity > INACTIVITY_TIMEOUT) {
 //         logout();
 //       }
-//     }, 60000); // 1 min
+//     }, 60000);
 
 //     const updateActivity = () => setLastActivity(Date.now());
 //     ["mousemove", "keypress", "click", "scroll"].forEach((e) =>
@@ -134,68 +124,157 @@
 //   // ========================
 //   // LOGIN
 //   // ========================
-//   const login = async (email: string, password: string, captchaToken: string) => {
-//     try {
-//       const attemptCheck = checkLoginAttempts(email);
-//       if (attemptCheck.blocked) {
-//         return { success: false, error: "Cuenta bloqueada. Intente en 30 minutos." };
-//       }
-
-//       if (!captchaToken) {
-//         return { success: false, error: "Debe completar el captcha." };
-//       }
-
-//       setLoading(true);
-//       const response = await authService.login({ email, password, code2FA: "", captcha: captchaToken });
-
-//       if (!response.success) {
-//         recordFailedAttempt(email);
-//         const remaining = checkLoginAttempts(email);
-//         const ipWarning =
-//           remaining.ipRemainingAttempts <= 2
-//             ? ` ADVERTENCIA: IP bloqueada en ${remaining.ipRemainingAttempts} intentos más.`
-//             : "";
-//         return {
-//           success: false,
-//           error: `${response.message || "Credenciales inválidas."} ${remaining.remainingAttempts} intentos restantes.${ipWarning}`,
-//         };
-//       }
-
-//       const { user: loggedUser, token, refreshToken } = response.data;
-//       clearLoginAttempts(email);
-
-//       localStorage.setItem("user", JSON.stringify(loggedUser));
-//       localStorage.setItem("session_expiry", (Date.now() + 24 * 60 * 60 * 1000).toString());
-//       sessionStorage.setItem("token", token);
-//       sessionStorage.setItem("refreshToken", refreshToken);
-
-//       setUser(loggedUser);
-
-//       // Redirección por rol
-//       setTimeout(() => {
-//         switch (loggedUser.role) {
-//           case "jefe":
-//             navigate("/dashboard/jefe");
-//             break;
-//           case "ejecutiva":
-//             navigate("/dashboard/ejecutiva");
-//             break;
-//           case "cliente":
-//             navigate("/dashboard/cliente");
-//             break;
-//           default:
-//             navigate("/dashboard");
-//         }
-//       }, 300);
-
-//       return { success: true };
-//     } catch (error) {
-//       console.error("Login error:", error);
-//       return { success: false, error: "Error al conectar con el servidor." };
-//     } finally {
-//       setLoading(false);
+// const login = async (
+//   email: string,
+//   password: string,
+//   captchaToken: string,
+//   captchaResponse: string
+// ) => {
+//   try {
+//     const attemptCheck = checkLoginAttempts(email);
+//     if (attemptCheck.blocked) {
+//       return { success: false, error: "Cuenta bloqueada. Intente en 30 minutos." };
 //     }
-//   };
+
+//     if (!captchaToken || !captchaResponse) {
+//       return { success: false, error: "Debe completar el captcha." };
+//     }
+
+//     setLoading(true);
+
+//     const response = await fetch("/auth/login", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         email,
+//         password,
+//         captchaToken,
+//         captchaResponse,
+//       }),
+//     });
+
+//     const data = await response.json();
+
+//     if (!response.ok || !data.success) {
+//       recordFailedAttempt(email);
+//       const remaining = checkLoginAttempts(email);
+//       const ipWarning =
+//         remaining.ipRemainingAttempts <= 2
+//           ? ` ADVERTENCIA: IP bloqueada en ${remaining.ipRemainingAttempts} intentos más.`
+//           : "";
+//       return {
+//         success: false,
+//         error: `${data.message || data.error || "Credenciales inválidas."} ${remaining.remainingAttempts} intentos restantes.${ipWarning}`,
+//       };
+//     }
+
+//     clearLoginAttempts(email);
+
+//     // ✅ CORRECCIÓN: Guardar toda la información del usuario pendiente
+//     if (data.requiresEmailVerification) {
+//       console.log("🔐 Setting pending user for email verification:", data.email);
+//       setPendingUser({
+//         email: data.email,
+//         userId: data.userId,
+//         name: data.name,
+//         rol: data.rol
+//       });
+      
+//       // ✅ NO llamar setLoading(false) aquí - el LoginPage necesita mantener el estado
+//       return {
+//         success: true,
+//         requiresEmailVerification: true,
+//         email: data.email,
+//         userData: data
+//       };
+//     }
+
+//     // ✅ Solo llamar setLoading(false) para casos de éxito sin verificación
+//     setLoading(false);
+//     return { success: true };
+//   } catch (error) {
+//     console.error("Login error:", error);
+//     setLoading(false); // ✅ Solo en catch
+//     return { success: false, error: "Error al conectar con el servidor." };
+//   }
+//   // ❌ ELIMINAR el finally block que causa el problema
+// };
+
+
+//   const verifyEmailCode = async (code: string) => {
+//   try {
+//     if (!pendingUser) {
+//       return { success: false, error: "No hay sesión pendiente" };
+//     }
+
+//     const response = await fetch("/auth/verify-email", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         email: pendingUser.email,
+//         code,
+//       }),
+//     });
+
+//     const data = await response.json();
+
+//     if (!response.ok || !data.success) {
+//       return {
+//         success: false,
+//         error: data.error || "Código inválido",
+//       };
+//     }
+
+//     // ✅ CORREGIR: Guardar usuario y token correctamente
+//     const loggedUser: User = {
+//       id: data.userId.toString(),
+//       email: data.email,
+//       name: data.name,
+//       role: data.rol,
+//       token: data.accessToken,
+//       refreshToken: data.accessToken,
+//       avatar: "",
+//       phone: "",
+//       company: "",
+//       position: "",
+//       createdAt: new Date().toISOString(),
+//       lastLogin: new Date().toISOString(),
+//     };
+
+//     setUser(loggedUser);
+//     localStorage.setItem("user", JSON.stringify(loggedUser));
+//     sessionStorage.setItem("token", data.accessToken);
+//     setPendingUser(null);
+    
+//     // ✅ IMPORTANTE: Actualizar loading state
+//     setLoading(false);
+
+//     // Redirigir según rol
+//     setTimeout(() => {
+//       switch (data.rol) {
+//         case "jefe":
+//           navigate("/dashboard/jefe");
+//           break;
+//         case "ejecutiva":
+//           navigate("/dashboard/ejecutiva");
+//           break;
+//         case "cliente":
+//           navigate("/dashboard/cliente");
+//           break;
+//         default:
+//           navigate("/dashboard");
+//       }
+//     }, 300);
+
+//     return { success: true };
+//   } catch (error) {
+//     console.error("Verify code error:", error);
+//     return {
+//       success: false,
+//       error: "Error al verificar código",
+//     };
+//   }
+// };
 
 
 
@@ -204,20 +283,18 @@
 //   // ========================
 //   const logout = useCallback(async () => {
 //     try {
-//       await authService.logout();
+//       await fetch("/auth/logout", { method: "POST" });
 //     } catch {
-//       // aun si falla, limpiamos sesión
+//       // Si falla, igual limpiar sesión local
 //     } finally {
 //       setUser(null);
 //       setPendingUser(null);
 //       localStorage.removeItem("user");
-//       localStorage.removeItem("session_expiry");
 //       sessionStorage.removeItem("token");
 //       sessionStorage.removeItem("refreshToken");
 //       navigate("/login");
 //     }
 //   }, [navigate]);
-
 
 //   // ========================
 //   // CONTEXTO FINAL
@@ -226,7 +303,7 @@
 //     user,
 //     login,
 //     logout,
-//     verifyEmailCode: async () => ({ success: true }), // opcional si tu backend no usa código email
+//     verifyEmailCode,
 //     isAuthenticated: !!user,
 //     loading,
 //     refreshToken: async () => {
@@ -240,11 +317,11 @@
 // export default AuthContext;
 
 
-// frontend/src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, AuthContextType } from "../types/auth";
 import { SECURITY } from "../config/config";
+import { authService, LoginData, VerifyEmailData } from "@/services/authService";
 
 const INACTIVITY_TIMEOUT = SECURITY.sessionTimeout;
 const MAX_USER_ATTEMPTS = SECURITY.maxLoginAttempts;
@@ -266,12 +343,12 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [pendingUser, setPendingUser] = useState<any>(null); // usuario pendiente de verificación
+  const [pendingUser, setPendingUser] = useState<any>(null);
   const [lastActivity, setLastActivity] = useState(Date.now());
   const navigate = useNavigate();
 
   // ========================
-  // INTENTOS DE LOGIN
+  // INTENTOS DE LOGIN (MANTENIENDO TU LÓGICA)
   // ========================
   const getLoginAttempts = useCallback((key: string) => {
     const stored = localStorage.getItem(`login_attempts_${key}`);
@@ -364,311 +441,159 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [user, lastActivity]);
 
   // ========================
-  // LOGIN
+  // LOGIN - CORREGIDO CON SERVICIOS
   // ========================
-  // const login = async (
-  //   email: string,
-  //   password: string,
-  //   captchaToken: string,
-  //   captchaResponse: string // ✅ nuevo parámetro
-  // ) => {
-  //   try {
-  //     const attemptCheck = checkLoginAttempts(email);
-  //     if (attemptCheck.blocked) {
-  //       return { success: false, error: "Cuenta bloqueada. Intente en 30 minutos." };
-  //     }
+  const login = async (
+    email: string,
+    password: string,
+    captchaToken: string,
+    captchaResponse: string
+  ) => {
+    try {
+      const attemptCheck = checkLoginAttempts(email);
+      if (attemptCheck.blocked) {
+        return { success: false, error: "Cuenta bloqueada. Intente en 30 minutos." };
+      }
 
-  //     if (!captchaToken || !captchaResponse) {
-  //       return { success: false, error: "Debe completar el captcha." };
-  //     }
+      if (!captchaToken || !captchaResponse) {
+        return { success: false, error: "Debe completar el captcha." };
+      }
 
-  //     setLoading(true);
+      setLoading(true);
 
-  //     // ✅ Llamada al backend con captchaToken y captchaResponse
-  //     const response = await fetch("/auth/login", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         email,
-  //         password,
-  //         captchaToken,
-  //         captchaResponse, // ✅ enviar la respuesta del usuario
-  //       }),
-  //     });
-
-  //     const data = await response.json();
-
-  //     if (!response.ok || !data.success) {
-  //       recordFailedAttempt(email);
-  //       const remaining = checkLoginAttempts(email);
-  //       const ipWarning =
-  //         remaining.ipRemainingAttempts <= 2
-  //           ? ` ADVERTENCIA: IP bloqueada en ${remaining.ipRemainingAttempts} intentos más.`
-  //           : "";
-  //       return {
-  //         success: false,
-  //         error: `${data.message || data.error || "Credenciales inválidas."} ${remaining.remainingAttempts} intentos restantes.${ipWarning}`,
-  //       };
-  //     }
-
-  //     clearLoginAttempts(email);
-
-  //     // ✅ Si requiere verificación de email
-  //     if (data.requiresEmailVerification) {
-  //       setPendingUser(data); // guardar datos temporalmente
-  //       return {
-  //         success: true,
-  //         requiresEmailVerification: true,
-  //         email: data.email,
-  //       };
-  //     }
-
-  //     // Si no requiere verificación (no debería pasar)
-  //     return { success: true };
-  //   } catch (error) {
-  //     console.error("Login error:", error);
-  //     return { success: false, error: "Error al conectar con el servidor." };
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-const login = async (
-  email: string,
-  password: string,
-  captchaToken: string,
-  captchaResponse: string
-) => {
-  try {
-    const attemptCheck = checkLoginAttempts(email);
-    if (attemptCheck.blocked) {
-      return { success: false, error: "Cuenta bloqueada. Intente en 30 minutos." };
-    }
-
-    if (!captchaToken || !captchaResponse) {
-      return { success: false, error: "Debe completar el captcha." };
-    }
-
-    setLoading(true);
-
-    const response = await fetch("/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      const loginData: LoginData = {
         email,
         password,
         captchaToken,
         captchaResponse,
-      }),
-    });
+      };
 
-    const data = await response.json();
+      const data = await authService.login(loginData);
 
-    if (!response.ok || !data.success) {
+      if (!data.success) {
+        recordFailedAttempt(email);
+        const remaining = checkLoginAttempts(email);
+        const ipWarning =
+          remaining.ipRemainingAttempts <= 2
+            ? ` ADVERTENCIA: IP bloqueada en ${remaining.ipRemainingAttempts} intentos más.`
+            : "";
+        return {
+          success: false,
+          error: `${data.message || data.error || "Credenciales inválidas."} ${remaining.remainingAttempts} intentos restantes.${ipWarning}`,
+        };
+      }
+
+      clearLoginAttempts(email);
+
+      // ✅ Usuario requiere verificación de email
+      if (data.requiresEmailVerification) {
+        console.log("🔐 Setting pending user for email verification:", data.email);
+        setPendingUser({
+          email: data.email,
+          userId: data.userId,
+          name: data.name,
+          rol: data.rol
+        });
+        
+        setLoading(false); // ✅ Importante: desactivar loading aquí
+        return {
+          success: true,
+          requiresEmailVerification: true,
+          email: data.email,
+          userData: data
+        };
+      }
+
+      setLoading(false);
+      return { success: true };
+    } catch (error: any) {
+      console.error("Login error:", error);
       recordFailedAttempt(email);
-      const remaining = checkLoginAttempts(email);
-      const ipWarning =
-        remaining.ipRemainingAttempts <= 2
-          ? ` ADVERTENCIA: IP bloqueada en ${remaining.ipRemainingAttempts} intentos más.`
-          : "";
-      return {
-        success: false,
-        error: `${data.message || data.error || "Credenciales inválidas."} ${remaining.remainingAttempts} intentos restantes.${ipWarning}`,
+      setLoading(false);
+      return { 
+        success: false, 
+        error: error.message || "Error al conectar con el servidor." 
       };
     }
-
-    clearLoginAttempts(email);
-
-    // ✅ CORRECCIÓN: Guardar toda la información del usuario pendiente
-    if (data.requiresEmailVerification) {
-      console.log("🔐 Setting pending user for email verification:", data.email);
-      setPendingUser({
-        email: data.email,
-        userId: data.userId,
-        name: data.name,
-        rol: data.rol
-      });
-      
-      // ✅ NO llamar setLoading(false) aquí - el LoginPage necesita mantener el estado
-      return {
-        success: true,
-        requiresEmailVerification: true,
-        email: data.email,
-        userData: data
-      };
-    }
-
-    // ✅ Solo llamar setLoading(false) para casos de éxito sin verificación
-    setLoading(false);
-    return { success: true };
-  } catch (error) {
-    console.error("Login error:", error);
-    setLoading(false); // ✅ Solo en catch
-    return { success: false, error: "Error al conectar con el servidor." };
-  }
-  // ❌ ELIMINAR el finally block que causa el problema
-};
-
-
+  };
 
   // ========================
-  // VERIFICAR CÓDIGO EMAIL
+  // VERIFY EMAIL - CORREGIDO CON SERVICIOS
   // ========================
-  // const verifyEmailCode = async (code: string) => {
-  //   try {
-  //     if (!pendingUser) {
-  //       return { success: false, error: "No hay sesión pendiente" };
-  //     }
-
-  //     const response = await fetch("/auth/verify-email", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         email: pendingUser.email,
-  //         code,
-  //       }),
-  //     });
-
-  //     const data = await response.json();
-
-  //     if (!response.ok || !data.success) {
-  //       return {
-  //         success: false,
-  //         error: data.error || "Código inválido",
-  //       };
-  //     }
-
-  //     // ✅ Guardar usuario y token
-  //     const loggedUser: User = {
-  //       id: data.userId.toString(),
-  //       email: data.email,
-  //       name: data.name,
-  //       role: data.rol,
-  //       token: data.accessToken,
-  //       refreshToken: data.accessToken, // en producción debería ser un refresh token diferente
-  //       avatar: "",
-  //       phone: "",
-  //       company: "",
-  //       position: "",
-  //       createdAt: new Date().toISOString(),
-  //       lastLogin: new Date().toISOString(),
-  //     };
-
-  //     setUser(loggedUser);
-  //     localStorage.setItem("user", JSON.stringify(loggedUser));
-  //     sessionStorage.setItem("token", data.accessToken);
-  //     setPendingUser(null);
-
-  //     // Redirigir según rol
-  //     setTimeout(() => {
-  //       switch (data.rol) {
-  //         case "jefe":
-  //           navigate("/dashboard");
-  //           break;
-  //         case "ejecutiva":
-  //           navigate("/dashboard/ejecutiva");
-  //           break;
-  //         case "cliente":
-  //           navigate("/dashboard/cliente");
-  //           break;
-  //         default:
-  //           navigate("/dashboard");
-  //       }
-  //     }, 300);
-
-  //     return { success: true };
-  //   } catch (error) {
-  //     console.error("Verify code error:", error);
-  //     return {
-  //       success: false,
-  //       error: "Error al verificar código",
-  //     };
-  //   }
-  // };
-
   const verifyEmailCode = async (code: string) => {
-  try {
-    if (!pendingUser) {
-      return { success: false, error: "No hay sesión pendiente" };
-    }
+    try {
+      if (!pendingUser) {
+        return { success: false, error: "No hay sesión pendiente" };
+      }
 
-    const response = await fetch("/auth/verify-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      const verifyData: VerifyEmailData = {
         email: pendingUser.email,
         code,
-      }),
-    });
+      };
 
-    const data = await response.json();
+      const data = await authService.verifyEmail(verifyData);
 
-    if (!response.ok || !data.success) {
+      if (!data.success) {
+        return {
+          success: false,
+          error: data.error || "Código inválido",
+        };
+      }
+
+      // ✅ Guardar usuario y token correctamente
+      const loggedUser: User = {
+        id: data.userId?.toString() || '',
+        email: data.email || '',
+        name: data.name || '',
+        role: data.rol as any || 'cliente',
+        token: data.accessToken || '',
+        refreshToken: data.accessToken || '',
+        avatar: "",
+        phone: "",
+        company: "",
+        position: "",
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+      };
+
+      setUser(loggedUser);
+      localStorage.setItem("user", JSON.stringify(loggedUser));
+      sessionStorage.setItem("token", data.accessToken || '');
+      setPendingUser(null);
+
+      // Redirigir según rol
+      setTimeout(() => {
+        switch (data.rol) {
+          case "jefe":
+            navigate("/dashboard/jefe");
+            break;
+          case "ejecutiva":
+            navigate("/dashboard/ejecutiva");
+            break;
+          case "cliente":
+            navigate("/dashboard/cliente");
+            break;
+          default:
+            navigate("/dashboard");
+        }
+      }, 300);
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Verify code error:", error);
       return {
         success: false,
-        error: data.error || "Código inválido",
+        error: error.message || "Error al verificar código",
       };
     }
-
-    // ✅ CORREGIR: Guardar usuario y token correctamente
-    const loggedUser: User = {
-      id: data.userId.toString(),
-      email: data.email,
-      name: data.name,
-      role: data.rol,
-      token: data.accessToken,
-      refreshToken: data.accessToken,
-      avatar: "",
-      phone: "",
-      company: "",
-      position: "",
-      createdAt: new Date().toISOString(),
-      lastLogin: new Date().toISOString(),
-    };
-
-    setUser(loggedUser);
-    localStorage.setItem("user", JSON.stringify(loggedUser));
-    sessionStorage.setItem("token", data.accessToken);
-    setPendingUser(null);
-    
-    // ✅ IMPORTANTE: Actualizar loading state
-    setLoading(false);
-
-    // Redirigir según rol
-    setTimeout(() => {
-      switch (data.rol) {
-        case "jefe":
-          navigate("/dashboard/jefe");
-          break;
-        case "ejecutiva":
-          navigate("/dashboard/ejecutiva");
-          break;
-        case "cliente":
-          navigate("/dashboard/cliente");
-          break;
-        default:
-          navigate("/dashboard");
-      }
-    }, 300);
-
-    return { success: true };
-  } catch (error) {
-    console.error("Verify code error:", error);
-    return {
-      success: false,
-      error: "Error al verificar código",
-    };
-  }
-};
-
-
+  };
 
   // ========================
-  // LOGOUT
+  // LOGOUT - CORREGIDO CON SERVICIOS
   // ========================
   const logout = useCallback(async () => {
     try {
-      await fetch("/auth/logout", { method: "POST" });
+      await authService.logout();
     } catch {
       // Si falla, igual limpiar sesión local
     } finally {
