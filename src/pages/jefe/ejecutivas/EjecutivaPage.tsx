@@ -99,22 +99,53 @@ export default function EjecutivasPage() {
     email: "",
     telefono: "",
     password: "",
+    dni: ""
   });
 
-  useEffect(() => {
-    if (!user || user.role !== "jefe") {
-      navigate("/login");
-      return;
-    }
+useEffect(() => {
+  console.log('📍 JefeDashboard - User context:', user);
+  
+  // ✅ SOLUCIÓN: Verificar tanto contexto como localStorage
+  const storedUser = localStorage.getItem('user');
+  const token = sessionStorage.getItem('token');
+  
+  console.log('📍 JefeDashboard - Stored user:', storedUser);
+  console.log('📍 JefeDashboard - Token:', token);
+  
+  // ✅ PERMITIR acceso si hay token, incluso si el contexto no se actualizó aún
+  if (!user && !storedUser) {
+    console.log('❌ JefeDashboard: Sin usuario en contexto ni storage, redirigiendo...');
+    navigate("/login");
+    return;
+  }
+  
+  // ✅ Usar el usuario del contexto O del localStorage
+  const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
+  
+  if (!currentUser) {
+    console.log('❌ JefeDashboard: No se pudo obtener usuario, redirigiendo...');
+    navigate("/login");
+    return;
+  }
+  
+  const allowedRoles = ["jefe", "Jefe", "Administrador"];
+  if (!allowedRoles.includes(currentUser.role)) {
+    console.log('❌ JefeDashboard: Rol no permitido:', currentUser.role);
+    navigate("/login");
+    return;
+  }
+  
+  console.log('✅ JefeDashboard: Acceso permitido para:', currentUser.role);
+  console.log('✅ JefeDashboard: Fuente del usuario:', user ? 'contexto' : 'localStorage');
     fetchEjecutivas();
   }, [user, navigate]);
 
   useEffect(() => {
     const filtered = ejecutivas.filter(
       (ejecutiva) =>
-        ejecutiva.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ejecutiva.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ejecutiva.email.toLowerCase().includes(searchTerm.toLowerCase()),
+        (ejecutiva.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (ejecutiva.apellido || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (ejecutiva.email || '').toLowerCase().includes(searchTerm.toLowerCase()),
     );
     setFilteredEjecutivas(filtered);
   }, [searchTerm, ejecutivas]);
@@ -140,9 +171,9 @@ export default function EjecutivasPage() {
   const handleOpenEditDialog = (ejecutiva: Ejecutiva) => {
     setCurrentEjecutiva(ejecutiva);
     setFormData({
-      nombre: ejecutiva.nombre,
-      apellido: ejecutiva.apellido,
-      email: ejecutiva.email,
+      nombre: ejecutiva.nombre || '',
+      apellido: ejecutiva.apellido || '',
+      email: ejecutiva.email || '',
       telefono: ejecutiva.telefono || "",
       activo: ejecutiva.activo,
     });
@@ -154,7 +185,7 @@ export default function EjecutivasPage() {
 
     try {
       if (!currentEjecutiva) return;
-      
+
       await jefeService.updateEjecutiva(currentEjecutiva.id_usuario, formData);
 
       toast({
@@ -200,12 +231,32 @@ export default function EjecutivasPage() {
       email: "",
       telefono: "",
       password: "",
+      dni: ""
     });
     setIsCreateDialogOpen(true);
   };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // ✅ VALIDACIÓN ADICIONAL
+    if (!createFormData.dni || createFormData.dni.length < 8) {
+      toast({
+        title: "Error de validación",
+        description: "El DNI debe tener al menos 8 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!createFormData.nombre || !createFormData.apellido) {
+      toast({
+        title: "Error de validación",
+        description: "Nombre y apellido son requeridos",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       await jefeService.createEjecutiva(createFormData);
@@ -229,9 +280,9 @@ export default function EjecutivasPage() {
 
   const totalEjecutivas = ejecutivas.length;
   const ejecutivasActivas = ejecutivas.filter((e) => e.activo).length;
-  const totalEmpresas = ejecutivas.reduce((sum, e) => sum + Number(e.total_empresas), 0);
-  const totalClientes = ejecutivas.reduce((sum, e) => sum + Number(e.total_clientes), 0);
-  const totalActividades = ejecutivas.reduce((sum, e) => sum + Number(e.total_actividades), 0);
+  const totalEmpresas = ejecutivas.reduce((sum, e) => sum + Number(e.total_empresas || 0), 0);
+  const totalClientes = ejecutivas.reduce((sum, e) => sum + Number(e.total_clientes || 0), 0);
+  const totalActividades = ejecutivas.reduce((sum, e) => sum + Number(e.total_actividades || 0), 0);
 
   return (
     <DashboardLayout
@@ -352,7 +403,7 @@ export default function EjecutivasPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredEjecutivas.length === 0 ? (
-                      <TableRow>
+                      <TableRow key="no-results"> {/* ✅ KEY AGREGADA */}
                         <TableCell colSpan={8} className="text-center py-8 text-white/60">
                           {searchTerm
                             ? "No se encontraron ejecutivas con ese criterio"
@@ -361,36 +412,36 @@ export default function EjecutivasPage() {
                       </TableRow>
                     ) : (
                       filteredEjecutivas.map((ejecutiva) => (
-                        <TableRow key={ejecutiva.id_usuario} className="border-white/10 hover:bg-white/5">
+                        <TableRow key={`ejecutiva-${ejecutiva.id_usuario}`} className="border-white/10 hover:bg-white/5">
                           <TableCell className="font-medium text-white">
                             <button
                               onClick={() => handleOpenDetailDialog(ejecutiva)}
                               className="flex items-center gap-2 hover:text-[#C7E196] transition-colors"
                             >
                               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C7E196] text-[#013936] text-sm font-semibold">
-                                {ejecutiva.nombre.charAt(0)}
-                                {ejecutiva.apellido.charAt(0)}
+                                {ejecutiva.nombre?.charAt(0) || ''}
+                                {ejecutiva.apellido?.charAt(0) || ''}
                               </div>
                               <span className="underline decoration-dotted">
-                                {ejecutiva.nombre} {ejecutiva.apellido}
+                                {(ejecutiva.nombre || '')} {(ejecutiva.apellido || '')}
                               </span>
                             </button>
                           </TableCell>
-                          <TableCell className="text-white/80">{ejecutiva.email}</TableCell>
+                          <TableCell className="text-white/80">{ejecutiva.email || 'N/A'}</TableCell>
                           <TableCell className="text-white/80">{ejecutiva.telefono || "N/A"}</TableCell>
                           <TableCell className="text-center">
                             <Badge className="bg-[#C7E196]/20 text-[#C7E196] border-[#C7E196]/30">
-                              {ejecutiva.total_empresas}
+                              {ejecutiva.total_empresas || 0}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                              {ejecutiva.total_clientes}
+                              {ejecutiva.total_clientes || 0}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                              {ejecutiva.total_actividades}
+                              {ejecutiva.total_actividades || 0}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
@@ -435,6 +486,117 @@ export default function EjecutivasPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Detail Dialog */}
+        <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+          <DialogContent className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 text-white max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-[#C7E196] text-xl">
+                {ejecutivaDetalle?.ejecutiva.nombre} {ejecutivaDetalle?.ejecutiva.apellido}
+              </DialogTitle>
+              <DialogDescription className="text-white/60">Información detallada de la ejecutiva</DialogDescription>
+            </DialogHeader>
+            {ejecutivaDetalle && (
+              <div className="space-y-6 py-4">
+                {/* Empresas Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Building2 className="w-5 h-5 text-[#C7E196]" />
+                      Empresas Asociadas ({ejecutivaDetalle.empresas.length})
+                    </h3>
+                  </div>
+                  {ejecutivaDetalle.empresas.length === 0 ? (
+                    <p key="no-empresas" className="text-white/60 text-sm">No tiene empresas asignadas</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {ejecutivaDetalle.empresas.map((empresa) => (
+                        <div
+                          key={`empresa-${empresa.id_empresa}`}
+                          className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="font-medium text-white">{empresa.nombre_empresa}</p>
+                            <p className="text-sm text-white/60">RUC: {empresa.rut}</p>
+                          </div>
+                          <Badge
+                            className={
+                              empresa.asignacion_activa ? "bg-[#C7E196] text-[#013936]" : "bg-white/10 text-white/60"
+                            }
+                          >
+                            {empresa.asignacion_activa ? "Activa" : "Inactiva"}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Clientes Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Users className="w-5 h-5 text-[#C7E196]" />
+                      Clientes Asignados ({ejecutivaDetalle.clientes.length})
+                    </h3>
+                  </div>
+                  {ejecutivaDetalle.clientes.length === 0 ? (
+                    <p key="no-clientes" className="text-white/60 text-sm">No tiene clientes asignados</p>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {ejecutivaDetalle.clientes.map((cliente) => (
+                        <div
+                          key={`cliente-${cliente.id_cliente}`}
+                          className="bg-white/5 border border-white/10 rounded-lg p-3"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="font-medium text-white">{cliente.nombre_cliente}</p>
+                              <p className="text-sm text-white/60">RUC: {cliente.rut_cliente}</p>
+                              <p className="text-sm text-white/60">Empresa: {cliente.nombre_empresa}</p>
+                              <p className="text-sm text-white/60">Email: {cliente.email}</p>
+                            </div>
+                            <Badge
+                              className={
+                                cliente.estado === "activo"
+                                  ? "bg-[#C7E196] text-[#013936]"
+                                  : "bg-white/10 text-white/60"
+                              }
+                            >
+                              {cliente.estado}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Trazabilidad Button */}
+                <div className="pt-4 border-t border-white/10">
+                  <Button
+                    onClick={() => handleGoToTrazabilidad(ejecutivaDetalle.ejecutiva.id_usuario)}
+                    className="w-full bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-medium"
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    Ver Trazabilidad Completa
+                    <ExternalLink className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsDetailDialogOpen(false)}
+                className="text-white/80 hover:text-white hover:bg-white/10"
+              >
+                Cerrar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -521,114 +683,6 @@ export default function EjecutivasPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Detail Dialog */}
-        <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-          <DialogContent className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 text-white max-w-3xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-[#C7E196] text-xl">
-                {ejecutivaDetalle?.ejecutiva.nombre} {ejecutivaDetalle?.ejecutiva.apellido}
-              </DialogTitle>
-              <DialogDescription className="text-white/60">Información detallada de la ejecutiva</DialogDescription>
-            </DialogHeader>
-            {ejecutivaDetalle && (
-              <div className="space-y-6 py-4">
-                {/* Empresas Section */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Building2 className="w-5 h-5 text-[#C7E196]" />
-                      Empresas Asociadas ({ejecutivaDetalle.empresas.length})
-                    </h3>
-                  </div>
-                  {ejecutivaDetalle.empresas.length === 0 ? (
-                    <p className="text-white/60 text-sm">No tiene empresas asignadas</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {ejecutivaDetalle.empresas.map((empresa) => (
-                        <div
-                          key={empresa.id_empresa}
-                          className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center justify-between"
-                        >
-                          <div>
-                            <p className="font-medium text-white">{empresa.nombre_empresa}</p>
-                            <p className="text-sm text-white/60">RUC: {empresa.rut}</p>
-                          </div>
-                          <Badge
-                            className={
-                              empresa.asignacion_activa ? "bg-[#C7E196] text-[#013936]" : "bg-white/10 text-white/60"
-                            }
-                          >
-                            {empresa.asignacion_activa ? "Activa" : "Inactiva"}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Clientes Section */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Users className="w-5 h-5 text-[#C7E196]" />
-                      Clientes Asignados ({ejecutivaDetalle.clientes.length})
-                    </h3>
-                  </div>
-                  {ejecutivaDetalle.clientes.length === 0 ? (
-                    <p className="text-white/60 text-sm">No tiene clientes asignados</p>
-                  ) : (
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {ejecutivaDetalle.clientes.map((cliente) => (
-                        <div key={cliente.id_cliente} className="bg-white/5 border border-white/10 rounded-lg p-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <p className="font-medium text-white">{cliente.nombre_cliente}</p>
-                              <p className="text-sm text-white/60">RUC: {cliente.rut_cliente}</p>
-                              <p className="text-sm text-white/60">Empresa: {cliente.nombre_empresa}</p>
-                              <p className="text-sm text-white/60">Email: {cliente.email}</p>
-                            </div>
-                            <Badge
-                              className={
-                                cliente.estado === "activo"
-                                  ? "bg-[#C7E196] text-[#013936]"
-                                  : "bg-white/10 text-white/60"
-                              }
-                            >
-                              {cliente.estado}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Trazabilidad Button */}
-                <div className="pt-4 border-t border-white/10">
-                  <Button
-                    onClick={() => handleGoToTrazabilidad(ejecutivaDetalle.ejecutiva.id_usuario)}
-                    className="w-full bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-medium"
-                  >
-                    <Activity className="w-4 h-4 mr-2" />
-                    Ver Trazabilidad Completa
-                    <ExternalLink className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </div>
-            )}
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setIsDetailDialogOpen(false)}
-                className="text-white/80 hover:text-white hover:bg-white/10"
-              >
-                Cerrar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
         {/* Create Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogContent className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 text-white max-w-md">
@@ -638,6 +692,24 @@ export default function EjecutivasPage() {
             </DialogHeader>
             <form onSubmit={handleCreateSubmit}>
               <div className="space-y-4 py-4">
+                {/* ✅ CAMPO DNI - REQUERIDO */}
+                <div className="space-y-2">
+                  <Label htmlFor="create-dni" className="text-white/80">
+                    DNI *
+                  </Label>
+                  <Input
+                    id="create-dni"
+                    value={createFormData.dni}
+                    onChange={(e) => setCreateFormData({ ...createFormData, dni: e.target.value })}
+                    required
+                    minLength={8}
+                    maxLength={20}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                    placeholder="Ingrese DNI (8-20 caracteres)"
+                  />
+                  <p className="text-xs text-white/60">Mínimo 8 caracteres</p>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="create-nombre" className="text-white/80">
                     Nombre *
@@ -647,9 +719,12 @@ export default function EjecutivasPage() {
                     value={createFormData.nombre}
                     onChange={(e) => setCreateFormData({ ...createFormData, nombre: e.target.value })}
                     required
+                    minLength={2}
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                    placeholder="Ingrese nombre"
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="create-apellido" className="text-white/80">
                     Apellido *
@@ -659,9 +734,12 @@ export default function EjecutivasPage() {
                     value={createFormData.apellido}
                     onChange={(e) => setCreateFormData({ ...createFormData, apellido: e.target.value })}
                     required
+                    minLength={2}
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                    placeholder="Ingrese apellido"
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="create-email" className="text-white/80">
                     Email *
@@ -673,8 +751,10 @@ export default function EjecutivasPage() {
                     onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
                     required
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                    placeholder="ejemplo@correo.com"
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="create-telefono" className="text-white/80">
                     Teléfono
@@ -684,8 +764,10 @@ export default function EjecutivasPage() {
                     value={createFormData.telefono}
                     onChange={(e) => setCreateFormData({ ...createFormData, telefono: e.target.value })}
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                    placeholder="+51 987 654 321"
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="create-password" className="text-white/80">
                     Contraseña *
@@ -698,6 +780,7 @@ export default function EjecutivasPage() {
                     required
                     minLength={6}
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                    placeholder="Mínimo 6 caracteres"
                   />
                   <p className="text-xs text-white/60">Mínimo 6 caracteres</p>
                 </div>

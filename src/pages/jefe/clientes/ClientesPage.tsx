@@ -84,14 +84,45 @@ export default function ClientesPage() {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [ejecutivas, setEjecutivas] = useState<Ejecutiva[]>([]);
 
-  useEffect(() => {
-    if (!user || user.role !== "jefe") {
-      navigate("/login");
-      return;
-    }
+useEffect(() => {
+  console.log('📍 JefeDashboard - User context:', user);
+  
+  // ✅ SOLUCIÓN: Verificar tanto contexto como localStorage
+  const storedUser = localStorage.getItem('user');
+  const token = sessionStorage.getItem('token');
+  
+  console.log('📍 JefeDashboard - Stored user:', storedUser);
+  console.log('📍 JefeDashboard - Token:', token);
+  
+  // ✅ PERMITIR acceso si hay token, incluso si el contexto no se actualizó aún
+  if (!user && !storedUser) {
+    console.log('❌ JefeDashboard: Sin usuario en contexto ni storage, redirigiendo...');
+    navigate("/login");
+    return;
+  }
+  
+  // ✅ Usar el usuario del contexto O del localStorage
+  const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
+  
+  if (!currentUser) {
+    console.log('❌ JefeDashboard: No se pudo obtener usuario, redirigiendo...');
+    navigate("/login");
+    return;
+  }
+  
+  const allowedRoles = ["jefe", "Jefe", "Administrador"];
+  if (!allowedRoles.includes(currentUser.role)) {
+    console.log('❌ JefeDashboard: Rol no permitido:', currentUser.role);
+    navigate("/login");
+    return;
+  }
+  
+  console.log('✅ JefeDashboard: Acceso permitido para:', currentUser.role);
+  console.log('✅ JefeDashboard: Fuente del usuario:', user ? 'contexto' : 'localStorage');
     fetchOptions();
     fetchClientes();
   }, [user, navigate]);
+
 
   useEffect(() => {
     const filtered = clientes.filter(

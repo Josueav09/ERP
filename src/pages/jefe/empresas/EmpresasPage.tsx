@@ -30,7 +30,10 @@ import {
   UserPlus,
   X,
   FileText,
-  User
+  User,
+  Filter,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -44,6 +47,22 @@ interface EjecutivaAsignada {
   fecha_asignacion?: string;
   activo?: boolean;
   total_empresas?: number;
+}
+
+interface FormErrors {
+  nombre_empresa?: string;
+  rut?: string;
+  direccion?: string;
+  telefono?: string;
+  email_contacto?: string;
+  contraseña?: string;
+  confirmarContraseña?: string;
+}
+
+interface Filters {
+  estado: 'todos' | 'activas' | 'inactivas';
+  tamanio: 'todos' | 'Pequeña' | 'Mediana' | 'Grande';
+  rubro: string;
 }
 
 export default function EmpresasPage() {
@@ -62,7 +81,28 @@ export default function EmpresasPage() {
     direccion: "",
     telefono: "",
     email_contacto: "",
+    contraseña: "",
+    confirmarContraseña: "",
+    pagina_web: "",
+    rubro: "",
+    tamanio_empresa: "Mediana" as "Pequeña" | "Mediana" | "Grande"
   });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // 🎛️ Filtros avanzados
+  const [filters, setFilters] = useState<Filters>({
+    estado: 'todos',
+    tamanio: 'todos',
+    rubro: ''
+  });
+  const [showFilters, setShowFilters] = useState(false);
+
+  // 📊 Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [isEjecutivasDialogOpen, setIsEjecutivasDialogOpen] = useState(false);
   const [currentEmpresaEjecutivas, setCurrentEmpresaEjecutivas] = useState<EjecutivaAsignada[]>([]);
@@ -79,12 +119,41 @@ export default function EmpresasPage() {
     { label: "Auditoria", icon: <FileText className="w-5 h-5" />, href: "/dashboard/jefe/auditoria" },
     { label: "Perfil", icon: <User className="w-5 h-5" />, href: "/dashboard/jefe/perfil" },
   ];
-
-  useEffect(() => {
-    if (!user || user.role !== "jefe") {
-      navigate("/login");
-      return;
-    }
+useEffect(() => {
+  console.log('📍 JefeDashboard - User context:', user);
+  
+  // ✅ SOLUCIÓN: Verificar tanto contexto como localStorage
+  const storedUser = localStorage.getItem('user');
+  const token = sessionStorage.getItem('token');
+  
+  console.log('📍 JefeDashboard - Stored user:', storedUser);
+  console.log('📍 JefeDashboard - Token:', token);
+  
+  // ✅ PERMITIR acceso si hay token, incluso si el contexto no se actualizó aún
+  if (!user && !storedUser) {
+    console.log('❌ JefeDashboard: Sin usuario en contexto ni storage, redirigiendo...');
+    navigate("/login");
+    return;
+  }
+  
+  // ✅ Usar el usuario del contexto O del localStorage
+  const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
+  
+  if (!currentUser) {
+    console.log('❌ JefeDashboard: No se pudo obtener usuario, redirigiendo...');
+    navigate("/login");
+    return;
+  }
+  
+  const allowedRoles = ["jefe", "Jefe", "Administrador"];
+  if (!allowedRoles.includes(currentUser.role)) {
+    console.log('❌ JefeDashboard: Rol no permitido:', currentUser.role);
+    navigate("/login");
+    return;
+  }
+  
+  console.log('✅ JefeDashboard: Acceso permitido para:', currentUser.role);
+  console.log('✅ JefeDashboard: Fuente del usuario:', user ? 'contexto' : 'localStorage');
     fetchEmpresas();
   }, [user, navigate]);
 
@@ -104,17 +173,68 @@ export default function EmpresasPage() {
     }
   };
 
+  // 🔒 Validación de formulario
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.nombre_empresa.trim()) {
+      newErrors.nombre_empresa = "El nombre de la empresa es requerido";
+    } else if (formData.nombre_empresa.trim().length < 2) {
+      newErrors.nombre_empresa = "El nombre debe tener al menos 2 caracteres";
+    }
+
+    if (!formData.rut.trim()) {
+      newErrors.rut = "El RUC es requerido";
+    } else if (!/^\d{11}$/.test(formData.rut)) {
+      newErrors.rut = "El RUC debe tener exactamente 11 dígitos";
+    }
+
+    if (!formData.direccion.trim()) {
+      newErrors.direccion = "La dirección es requerida";
+    }
+
+    if (!formData.telefono.trim()) {
+      newErrors.telefono = "El teléfono es requerido";
+    } else if (!/^[\d\s+\-()]{7,15}$/.test(formData.telefono)) {
+      newErrors.telefono = "El teléfono no es válido";
+    }
+
+    if (!formData.email_contacto.trim()) {
+      newErrors.email_contacto = "El email es requerido";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email_contacto)) {
+      newErrors.email_contacto = "El email no es válido";
+    }
+
+    // Solo validar contraseña al crear nueva empresa
+    if (!isEditing) {
+      if (!formData.contraseña) {
+        newErrors.contraseña = "La contraseña es requerida";
+      } else if (formData.contraseña.length < 6) {
+        newErrors.contraseña = "La contraseña debe tener al menos 6 caracteres";
+      } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.contraseña)) {
+        newErrors.contraseña = "La contraseña debe contener mayúsculas, minúsculas y números";
+      }
+
+      if (!formData.confirmarContraseña) {
+        newErrors.confirmarContraseña = "Confirma la contraseña";
+      } else if (formData.contraseña !== formData.confirmarContraseña) {
+        newErrors.confirmarContraseña = "Las contraseñas no coinciden";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleOpenEjecutivasDialog = async (empresaId: number) => {
     setSelectedEmpresaId(empresaId);
     setLoadingEjecutivas(true);
     setIsEjecutivasDialogOpen(true);
 
     try {
-      // Obtener ejecutivas de la empresa
       const empresaData = await jefeService.getEmpresaEjecutivas(empresaId);
       setCurrentEmpresaEjecutivas(empresaData.ejecutivas || []);
 
-      // Obtener todas las ejecutivas disponibles
       const ejecutivasData = await jefeService.getEjecutivas();
       setAvailableEjecutivas(ejecutivasData);
     } catch (error) {
@@ -134,13 +254,10 @@ export default function EmpresasPage() {
 
     try {
       await jefeService.addEjecutivaToEmpresa(selectedEmpresaId, ejecutivaId);
-
       toast({
         title: "Éxito",
         description: "Ejecutiva agregada correctamente",
       });
-
-      // Recargar ejecutivas de la empresa
       await handleOpenEjecutivasDialog(selectedEmpresaId);
       await fetchEmpresas();
     } catch (error: any) {
@@ -160,13 +277,10 @@ export default function EmpresasPage() {
 
     try {
       await jefeService.removeEjecutivaFromEmpresa(selectedEmpresaId, ejecutivaId);
-
       toast({
         title: "Éxito",
         description: "Ejecutiva removida correctamente",
       });
-
-      // Recargar ejecutivas de la empresa
       await handleOpenEjecutivasDialog(selectedEmpresaId);
       await fetchEmpresas();
     } catch (error) {
@@ -189,6 +303,11 @@ export default function EmpresasPage() {
         direccion: empresa.direccion || "",
         telefono: empresa.telefono || "",
         email_contacto: empresa.email_contacto || "",
+        contraseña: "",
+        confirmarContraseña: "",
+        pagina_web: empresa.pagina_web || "",
+        rubro: empresa.rubro || "",
+        tamanio_empresa: (empresa.tamanio_empresa as "Pequeña" | "Mediana" | "Grande") || "Mediana"
       });
     } else {
       setIsEditing(false);
@@ -199,8 +318,14 @@ export default function EmpresasPage() {
         direccion: "",
         telefono: "",
         email_contacto: "",
+        contraseña: "",
+        confirmarContraseña: "",
+        pagina_web: "",
+        rubro: "",
+        tamanio_empresa: "Mediana"
       });
     }
+    setErrors({});
     setIsDialogOpen(true);
   };
 
@@ -214,17 +339,47 @@ export default function EmpresasPage() {
       direccion: "",
       telefono: "",
       email_contacto: "",
+      contraseña: "",
+      confirmarContraseña: "",
+      pagina_web: "",
+      rubro: "",
+      tamanio_empresa: "Mediana"
     });
+    setErrors({});
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      toast({
+        title: "Error de validación",
+        description: "Por favor corrige los errores en el formulario",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    setSubmitting(true);
     try {
+      const empresaData = {
+        nombre_empresa: formData.nombre_empresa,
+        rut: formData.rut,
+        direccion: formData.direccion,
+        telefono: formData.telefono,
+        email_contacto: formData.email_contacto,
+        contraseña: formData.contraseña,
+        pagina_web: formData.pagina_web,
+        rubro: formData.rubro,
+        tamanio_empresa: formData.tamanio_empresa
+      };
+
       if (isEditing && currentEmpresa) {
-        await jefeService.updateEmpresa(currentEmpresa.id_empresa, formData);
+        await jefeService.updateEmpresa(currentEmpresa.id_empresa, empresaData);
       } else {
-        await jefeService.createEmpresa(formData);
+        await jefeService.createEmpresa(empresaData);
       }
 
       toast({
@@ -234,13 +389,15 @@ export default function EmpresasPage() {
 
       handleCloseDialog();
       fetchEmpresas();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving empresa:", error);
       toast({
         title: "Error",
-        description: "No se pudo guardar la empresa",
+        description: error.message || "No se pudo guardar la empresa",
         variant: "destructive",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -249,12 +406,10 @@ export default function EmpresasPage() {
 
     try {
       await jefeService.deleteEmpresa(id);
-
       toast({
         title: "Éxito",
         description: "Empresa eliminada correctamente",
       });
-
       fetchEmpresas();
     } catch (error) {
       console.error("Error deleting empresa:", error);
@@ -269,23 +424,20 @@ export default function EmpresasPage() {
   const handleToggleEstado = async (empresa: Empresa) => {
     const nuevoEstado = !empresa.activo;
 
-    // Mostrar confirmación si se va a desactivar
     if (!nuevoEstado) {
       const confirmacion = confirm(
         `¿Estás seguro de que deseas desactivar la empresa "${empresa.nombre_empresa}"?\n\n` +
-          `Esto también desactivará a todos los ${empresa.total_clientes} cliente(s) asociados a esta empresa.`,
+        `Esto también desactivará a todos los ${empresa.total_clientes} cliente(s) asociados a esta empresa.`,
       );
       if (!confirmacion) return;
     }
 
     try {
       await jefeService.toggleEmpresaEstado(empresa.id_empresa, nuevoEstado);
-
       toast({
         title: "Éxito",
         description: `Empresa ${nuevoEstado ? "activada" : "desactivada"} correctamente`,
       });
-
       fetchEmpresas();
     } catch (error: any) {
       console.error("Error toggling estado:", error);
@@ -297,17 +449,50 @@ export default function EmpresasPage() {
     }
   };
 
-  const filteredEmpresas = empresas.filter(
-    (empresa) =>
-      empresa.nombre_empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      empresa.rut.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (empresa.email_contacto ?? "").toLowerCase().includes(searchTerm.toLowerCase()),
+  // 🎛️ Filtrado avanzado
+  const filteredEmpresas = empresas.filter((empresa) => {
+    const matchesSearch = 
+      (empresa.nombre_empresa || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (empresa.rut || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (empresa.email_contacto || "").toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesEstado = 
+      filters.estado === 'todos' || 
+      (filters.estado === 'activas' && empresa.activo) ||
+      (filters.estado === 'inactivas' && !empresa.activo);
+    
+    const matchesTamanio = 
+      filters.tamanio === 'todos' || 
+      empresa.tamanio_empresa === filters.tamanio;
+    
+    const matchesRubro = 
+      !filters.rubro || 
+      (empresa.rubro || "").toLowerCase().includes(filters.rubro.toLowerCase());
+    
+    return matchesSearch && matchesEstado && matchesTamanio && matchesRubro;
+  });
+
+  // 📊 Paginación
+  const paginatedEmpresas = filteredEmpresas.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
+
+  const totalPages = Math.ceil(filteredEmpresas.length / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top cuando cambia de página
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const filteredAvailableEjecutivas = availableEjecutivas.filter(
     (ejecutiva) =>
       !currentEmpresaEjecutivas.some((assigned) => assigned.id_usuario === ejecutiva.id_usuario && assigned.activo),
   );
+
+  // Obtener rubros únicos para el filtro
+  const uniqueRubros = Array.from(new Set(empresas.map(emp => emp.rubro).filter(Boolean))) as string[];
 
   if (loading) {
     return (
@@ -363,25 +548,95 @@ export default function EmpresasPage() {
           </Card>
         </div>
 
-        {/* Search and Actions */}
+        {/* Search, Filters and Actions */}
         <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40" />
-              <Input
-                placeholder="Buscar por nombre, RUT o email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
-              />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40" />
+                <Input
+                  placeholder="Buscar por nombre, RUT o email..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1); // Resetear a primera página al buscar
+                  }}
+                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setShowFilters(!showFilters)}
+                  variant="outline"
+                  className="border-white/20 text-white hover:bg-white/10"
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filtros
+                </Button>
+                <Button
+                  onClick={() => handleOpenDialog()}
+                  className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-medium"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nueva Empresa
+                </Button>
+              </div>
             </div>
-            <Button
-              onClick={() => handleOpenDialog()}
-              className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-medium"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nueva Empresa
-            </Button>
+
+            {/* 🎛️ Filtros avanzados */}
+            {showFilters && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white/5 rounded-lg border border-white/10">
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">Estado</Label>
+                  <select
+                    value={filters.estado}
+                    onChange={(e) => {
+                      setFilters({ ...filters, estado: e.target.value as any });
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-[#C7E196] focus:outline-none text-sm"
+                  >
+                    <option value="todos">Todos los estados</option>
+                    <option value="activas">Solo activas</option>
+                    <option value="inactivas">Solo inactivas</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">Tamaño</Label>
+                  <select
+                    value={filters.tamanio}
+                    onChange={(e) => {
+                      setFilters({ ...filters, tamanio: e.target.value as any });
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-[#C7E196] focus:outline-none text-sm"
+                  >
+                    <option value="todos">Todos los tamaños</option>
+                    <option value="Pequeña">Pequeña</option>
+                    <option value="Mediana">Mediana</option>
+                    <option value="Grande">Grande</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">Rubro</Label>
+                  <select
+                    value={filters.rubro}
+                    onChange={(e) => {
+                      setFilters({ ...filters, rubro: e.target.value });
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-[#C7E196] focus:outline-none text-sm"
+                  >
+                    <option value="">Todos los rubros</option>
+                    {uniqueRubros.map((rubro) => (
+                      <option key={rubro} value={rubro}>{rubro}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -390,7 +645,7 @@ export default function EmpresasPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-white/10 hover:bg-transparent">
+                <TableRow key="table-header" className="border-white/10 hover:bg-transparent">
                   <TableHead className="text-[#C7E196] font-semibold">Estado</TableHead>
                   <TableHead className="text-[#C7E196] font-semibold">Empresa</TableHead>
                   <TableHead className="text-[#C7E196] font-semibold">RUC</TableHead>
@@ -401,15 +656,18 @@ export default function EmpresasPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredEmpresas.length === 0 ? (
-                  <TableRow>
+                {paginatedEmpresas.length === 0 ? (
+                  <TableRow key="no-results">
                     <TableCell colSpan={7} className="text-center text-white/60 py-8">
-                      No se encontraron empresas
+                      {filteredEmpresas.length === 0 ? "No se encontraron empresas" : "No hay resultados para los filtros aplicados"}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredEmpresas.map((empresa) => (
-                    <TableRow key={empresa.id_empresa} className="border-white/10 hover:bg-white/5">
+                  paginatedEmpresas.map((empresa) => (
+                    <TableRow
+                      key={`empresa-${empresa.id_empresa}`}
+                      className="border-white/10 hover:bg-white/5"
+                    >
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Switch
@@ -430,15 +688,20 @@ export default function EmpresasPage() {
                       </TableCell>
                       <TableCell className="font-medium text-white">
                         <div>
-                          <p className="font-semibold">{empresa.nombre_empresa}</p>
-                          <p className="text-sm text-white/60">{empresa.direccion}</p>
+                          <p className="font-semibold">{empresa.nombre_empresa || "Sin nombre"}</p>
+                          <p className="text-sm text-white/60">{empresa.direccion || "Sin dirección"}</p>
+                          {empresa.rubro && (
+                            <Badge variant="outline" className="mt-1 bg-blue-500/10 text-blue-300 border-blue-500/20 text-xs">
+                              {empresa.rubro}
+                            </Badge>
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-white/80">{empresa.rut}</TableCell>
+                      <TableCell className="text-white/80">{empresa.rut || "Sin RUC"}</TableCell>
                       <TableCell className="text-white/80">
                         <div>
-                          <p className="text-sm">{empresa.email_contacto}</p>
-                          <p className="text-sm text-white/60">{empresa.telefono}</p>
+                          <p className="text-sm">{empresa.email_contacto || "Sin email"}</p>
+                          <p className="text-sm text-white/60">{empresa.telefono || "Sin teléfono"}</p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -449,13 +712,13 @@ export default function EmpresasPage() {
                           className="p-0 h-auto hover:bg-transparent"
                         >
                           <Badge className="bg-[#C7E196]/20 text-[#C7E196] border-[#C7E196]/30 hover:bg-[#C7E196]/30 cursor-pointer">
-                            {empresa.total_ejecutivas} <UserPlus className="w-3 h-3 ml-1" />
+                            {empresa.total_ejecutivas || "0"} <UserPlus className="w-3 h-3 ml-1" />
                           </Badge>
                         </Button>
                       </TableCell>
                       <TableCell>
                         <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                          {empresa.total_clientes}
+                          {empresa.total_clientes || "0"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -484,11 +747,73 @@ export default function EmpresasPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* 📊 Paginación */}
+          {filteredEmpresas.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-white/10">
+              <div className="text-white/60 text-sm">
+                Mostrando {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredEmpresas.length)} de {filteredEmpresas.length} empresas
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="text-white border-white/20 hover:bg-white/10 disabled:opacity-50"
+                >
+                  Anterior
+                </Button>
+                
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(pageNum)}
+                        className={
+                          currentPage === pageNum 
+                            ? "bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90" 
+                            : "text-white border-white/20 hover:bg-white/10"
+                        }
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                  className="text-white border-white/20 hover:bg-white/10 disabled:opacity-50"
+                >
+                  Siguiente
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Dialog for Create/Edit */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 text-white">
+          <DialogContent className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 text-white max-w-2xl">
             <DialogHeader>
               <DialogTitle className="text-[#C7E196]">{isEditing ? "Editar Empresa" : "Nueva Empresa"}</DialogTitle>
               <DialogDescription className="text-white/60">
@@ -496,69 +821,188 @@ export default function EmpresasPage() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit}>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nombre_empresa" className="text-white/80">
-                    Nombre de la Empresa
-                  </Label>
-                  <Input
-                    id="nombre_empresa"
-                    value={formData.nombre_empresa}
-                    onChange={(e) => setFormData({ ...formData, nombre_empresa: e.target.value })}
-                    required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
-                  />
+              <ScrollArea className="max-h-[70vh]">
+                <div className="space-y-4 py-4 pr-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="nombre_empresa" className="text-white/80">
+                      Nombre de la Empresa *
+                    </Label>
+                    <Input
+                      id="nombre_empresa"
+                      value={formData.nombre_empresa}
+                      onChange={(e) => setFormData({ ...formData, nombre_empresa: e.target.value })}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                    />
+                    {errors.nombre_empresa && (
+                      <p className="text-red-400 text-sm">{errors.nombre_empresa}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="rut" className="text-white/80">
+                      RUC *
+                    </Label>
+                    <Input
+                      id="rut"
+                      value={formData.rut}
+                      onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                    />
+                    {errors.rut && (
+                      <p className="text-red-400 text-sm">{errors.rut}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="direccion" className="text-white/80">
+                      Dirección *
+                    </Label>
+                    <Input
+                      id="direccion"
+                      value={formData.direccion}
+                      onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                    />
+                    {errors.direccion && (
+                      <p className="text-red-400 text-sm">{errors.direccion}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="telefono" className="text-white/80">
+                        Teléfono *
+                      </Label>
+                      <Input
+                        id="telefono"
+                        value={formData.telefono}
+                        onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                      />
+                      {errors.telefono && (
+                        <p className="text-red-400 text-sm">{errors.telefono}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="tamanio_empresa" className="text-white/80">
+                        Tamaño de Empresa
+                      </Label>
+                      <select
+                        id="tamanio_empresa"
+                        value={formData.tamanio_empresa}
+                        onChange={(e) => setFormData({ ...formData, tamanio_empresa: e.target.value as any })}
+                        className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-[#C7E196] focus:outline-none"
+                      >
+                        <option value="Pequeña">Pequeña</option>
+                        <option value="Mediana">Mediana</option>
+                        <option value="Grande">Grande</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email_contacto" className="text-white/80">
+                      Email de Contacto *
+                    </Label>
+                    <Input
+                      id="email_contacto"
+                      type="email"
+                      value={formData.email_contacto}
+                      onChange={(e) => setFormData({ ...formData, email_contacto: e.target.value })}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                    />
+                    {errors.email_contacto && (
+                      <p className="text-red-400 text-sm">{errors.email_contacto}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="pagina_web" className="text-white/80">
+                        Página Web
+                      </Label>
+                      <Input
+                        id="pagina_web"
+                        value={formData.pagina_web}
+                        onChange={(e) => setFormData({ ...formData, pagina_web: e.target.value })}
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="rubro" className="text-white/80">
+                        Rubro
+                      </Label>
+                      <Input
+                        id="rubro"
+                        value={formData.rubro}
+                        onChange={(e) => setFormData({ ...formData, rubro: e.target.value })}
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 🔑 Campos de contraseña solo para crear nueva empresa */}
+                  {!isEditing && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="contraseña" className="text-white/80">
+                          Contraseña *
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="contraseña"
+                            type={showPassword ? "text" : "password"}
+                            value={formData.contraseña}
+                            onChange={(e) => setFormData({ ...formData, contraseña: e.target.value })}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196] pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white/60 hover:text-white"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                        {errors.contraseña && (
+                          <p className="text-red-400 text-sm">{errors.contraseña}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmarContraseña" className="text-white/80">
+                          Confirmar Contraseña *
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="confirmarContraseña"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={formData.confirmarContraseña}
+                            onChange={(e) => setFormData({ ...formData, confirmarContraseña: e.target.value })}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196] pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white/60 hover:text-white"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                        {errors.confirmarContraseña && (
+                          <p className="text-red-400 text-sm">{errors.confirmarContraseña}</p>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="rut" className="text-white/80">
-                    RUC
-                  </Label>
-                  <Input
-                    id="rut"
-                    value={formData.rut}
-                    onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
-                    required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="direccion" className="text-white/80">
-                    Dirección
-                  </Label>
-                  <Input
-                    id="direccion"
-                    value={formData.direccion}
-                    onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                    required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="telefono" className="text-white/80">
-                    Teléfono
-                  </Label>
-                  <Input
-                    id="telefono"
-                    value={formData.telefono}
-                    onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                    required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email_contacto" className="text-white/80">
-                    Email de Contacto
-                  </Label>
-                  <Input
-                    id="email_contacto"
-                    type="email"
-                    value={formData.email_contacto}
-                    onChange={(e) => setFormData({ ...formData, email_contacto: e.target.value })}
-                    required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
-                  />
-                </div>
-              </div>
+              </ScrollArea>
               <DialogFooter>
                 <Button
                   type="button"
@@ -568,14 +1012,19 @@ export default function EmpresasPage() {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-medium">
-                  {isEditing ? "Actualizar" : "Crear"}
+                <Button 
+                  type="submit" 
+                  className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-medium"
+                  disabled={submitting}
+                >
+                  {submitting ? "Guardando..." : isEditing ? "Actualizar" : "Crear"}
                 </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
 
+        {/* Resto del código para el diálogo de ejecutivas permanece igual */}
         <Dialog open={isEjecutivasDialogOpen} onOpenChange={setIsEjecutivasDialogOpen}>
           <DialogContent className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 text-white max-w-3xl">
             <DialogHeader>
@@ -600,10 +1049,7 @@ export default function EmpresasPage() {
                     ) : (
                       <div className="space-y-2">
                         {currentEmpresaEjecutivas.filter((e) => e.activo).map((ejecutiva) => (
-                          <div
-                            key={ejecutiva.id_usuario}
-                            className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                          >
+                          <div key={ejecutiva.id_usuario} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                             <div>
                               <p className="font-medium text-white">
                                 {ejecutiva.nombre} {ejecutiva.apellido}
@@ -638,10 +1084,7 @@ export default function EmpresasPage() {
                     ) : (
                       <div className="space-y-2">
                         {filteredAvailableEjecutivas.map((ejecutiva) => (
-                          <div
-                            key={ejecutiva.id_usuario}
-                            className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                          >
+                          <div key={ejecutiva.id_usuario} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                             <div>
                               <p className="font-medium text-white">
                                 {ejecutiva.nombre} {ejecutiva.apellido}

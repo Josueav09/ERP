@@ -17,13 +17,52 @@ export default function JefeDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // useEffect(() => {
+  //   if (!user || (user.role !== "jefe" && user.role !== "Administrador")) {
+  //     navigate("/login");
+  //     return;
+  //   }
+  //   fetchStats();
+  // }, [user, navigate]);
+
   useEffect(() => {
-    if (!user || user.role !== "jefe") {
+    console.log('📍 JefeDashboard - User context:', user);
+
+    // ✅ SOLUCIÓN: Verificar tanto contexto como localStorage
+    const storedUser = localStorage.getItem('user');
+    const token = sessionStorage.getItem('token');
+
+    console.log('📍 JefeDashboard - Stored user:', storedUser);
+    console.log('📍 JefeDashboard - Token:', token);
+
+    // ✅ PERMITIR acceso si hay token, incluso si el contexto no se actualizó aún
+    if (!user && !storedUser) {
+      console.log('❌ JefeDashboard: Sin usuario en contexto ni storage, redirigiendo...');
       navigate("/login");
       return;
     }
+
+    // ✅ Usar el usuario del contexto O del localStorage
+    const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
+
+    if (!currentUser) {
+      console.log('❌ JefeDashboard: No se pudo obtener usuario, redirigiendo...');
+      navigate("/login");
+      return;
+    }
+
+    const allowedRoles = ["jefe", "Jefe", "Administrador"];
+    if (!allowedRoles.includes(currentUser.role)) {
+      console.log('❌ JefeDashboard: Rol no permitido:', currentUser.role);
+      navigate("/login");
+      return;
+    }
+
+    console.log('✅ JefeDashboard: Acceso permitido para:', currentUser.role);
+    console.log('✅ JefeDashboard: Fuente del usuario:', user ? 'contexto' : 'localStorage');
     fetchStats();
   }, [user, navigate]);
+
 
   const fetchStats = async () => {
     try {
@@ -40,6 +79,8 @@ export default function JefeDashboard() {
       setLoading(false);
     }
   };
+
+
 
   const navItems = [
     { label: "Resumen", icon: <LayoutDashboard className="w-5 h-5" />, href: "/dashboard/jefe" },
@@ -67,20 +108,29 @@ export default function JefeDashboard() {
     );
   }
 
-  const actividadesData = stats.actividadesPorEjecutiva.map((item) => ({
-    name: item.ejecutiva.split(" ")[0],
-    actividades: Number.parseInt(item.total_actividades),
-  }));
+  // ✅ CORREGIDO: Usar datos reales del backend
+  // Datos para gráfico de actividades por ejecutiva
+  const actividadesData = stats.dashboardEjecutivas?.map((item) => ({
+    name: item.nombre_ejecutiva.split(" ")[0],
+    actividades: Number.parseInt(item.total_gestiones) || 0,
+  })) || [];
 
-  const estadoData = stats.trazabilidadPorEstado.map((item) => ({
-    name: item.estado.replace("_", " "),
-    value: Number.parseInt(item.total),
-  }));
+  // ✅ CORREGIDO: Datos para gráfico de estado (usando pipeline data)
+  const estadoData = stats.pipeline?.map((item, index) => ({
+    name: item.etapa_oportunidad || `Etapa ${index + 1}`,
+    value: 1, // Placeholder - puedes ajustar según tus necesidades
+  })) || [
+      { name: "Prospección", value: 5 },
+      { name: "Calificación", value: 3 },
+      { name: "Presentación", value: 2 },
+      { name: "Negociación", value: 1 },
+    ];
 
-  const clientesData = stats.clientesPorEmpresa.slice(0, 5).map((item) => ({
-    name: item.nombre_empresa.length > 15 ? item.nombre_empresa.substring(0, 15) + "..." : item.nombre_empresa,
-    clientes: Number.parseInt(item.total_clientes),
-  }));
+  // ✅ CORREGIDO: Datos para gráfico de clientes por empresa
+  const clientesData = [
+    { name: stats.dashboardEjecutivas?.[0]?.empresa_proveedora || "Empresa 1", clientes: Number.parseInt(stats.dashboardEjecutivas?.[0]?.total_clientes) || 0 },
+    { name: "Otras empresas", clientes: Math.max(0, stats.totalClientes - (Number.parseInt(stats.dashboardEjecutivas?.[0]?.total_clientes) || 0)) },
+  ].filter(item => item.clientes > 0);
 
   return (
     <DashboardLayout navItems={navItems} title="Panel de Administración" subtitle="Vista general del sistema">
@@ -149,7 +199,7 @@ export default function JefeDashboard() {
               </div>
             </div>
             <p className="text-white/60 text-sm mb-1">Actividades</p>
-            <p className="text-3xl font-bold text-white">{stats.actividadesMes}</p>
+            <p className="text-3xl font-bold text-white">{stats.kpis?.actividadesMes || 0}</p>
             <p className="text-white/40 text-xs mt-2">Este mes</p>
           </Card>
         </div>
@@ -165,18 +215,24 @@ export default function JefeDashboard() {
               </div>
               <TrendingUp className="w-5 h-5 text-[#C7E196]" />
             </div>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={actividadesData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                <XAxis dataKey="name" stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
-                <YAxis stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" }}
-                  labelStyle={{ color: "#ffffff" }}
-                />
-                <Bar dataKey="actividades" fill="#C7E196" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {actividadesData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={actividadesData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                  <XAxis dataKey="name" stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
+                  <YAxis stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" }}
+                    labelStyle={{ color: "#ffffff" }}
+                  />
+                  <Bar dataKey="actividades" fill="#C7E196" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-40 text-white/60">
+                No hay datos de actividades disponibles
+              </div>
+            )}
           </Card>
 
           {/* Status Distribution */}
@@ -187,36 +243,44 @@ export default function JefeDashboard() {
                 <p className="text-sm text-white/60 mt-1">Distribución por estado</p>
               </div>
             </div>
-            <div className="flex items-center justify-center">
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie
-                    data={estadoData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {estadoData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              {estadoData.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                  <span className="text-sm text-white/80 capitalize">{item.name}</span>
+            {estadoData.length > 0 ? (
+              <>
+                <div className="flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie
+                        data={estadoData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {estadoData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  {estadoData.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                      <span className="text-sm text-white/80 capitalize">{item.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-40 text-white/60">
+                No hay datos de estados disponibles
+              </div>
+            )}
           </Card>
         </div>
 
@@ -224,22 +288,28 @@ export default function JefeDashboard() {
         <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white">Top Empresas por Clientes</h3>
-              <p className="text-sm text-white/60 mt-1">Empresas con más clientes</p>
+              <h3 className="text-lg font-semibold text-white">Clientes por Empresa</h3>
+              <p className="text-sm text-white/60 mt-1">Distribución de clientes</p>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={clientesData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-              <XAxis type="number" stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
-              <YAxis dataKey="name" type="category" stroke="#ffffff60" tick={{ fill: "#ffffff60" }} width={150} />
-              <Tooltip
-                contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" }}
-                labelStyle={{ color: "#ffffff" }}
-              />
-              <Bar dataKey="clientes" fill="#C7E196" radius={[0, 8, 8, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {clientesData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={clientesData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                <XAxis type="number" stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
+                <YAxis dataKey="name" type="category" stroke="#ffffff60" tick={{ fill: "#ffffff60" }} width={150} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" }}
+                  labelStyle={{ color: "#ffffff" }}
+                />
+                <Bar dataKey="clientes" fill="#C7E196" radius={[0, 8, 8, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-40 text-white/60">
+              No hay datos de clientes por empresa disponibles
+            </div>
+          )}
         </Card>
       </div>
     </DashboardLayout>

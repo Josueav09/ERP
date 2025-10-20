@@ -116,7 +116,8 @@ export default function LoginPage() {
   //     }
   //   }
   // };
-const handleSubmit = async (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setError("");
 
@@ -174,14 +175,11 @@ const handleSubmit = async (e: React.FormEvent) => {
   
 
   // Agrega esto justo antes del return
-  console.log("🔍 DEBUG Modal state:", {
-    showEmailVerification,
-    userEmail,
-    modalShouldShow: showEmailVerification && userEmail
-  });
-
-  // Y también agrega esto para verificar que el componente se está renderizando
-  console.log("🔍 DEBUG Rendering EmailVerificationModal component");
+  // console.log("🔍 DEBUG Modal state:", {
+  //   showEmailVerification,
+  //   userEmail,
+  //   modalShouldShow: showEmailVerification && userEmail
+  // });
 
   
 

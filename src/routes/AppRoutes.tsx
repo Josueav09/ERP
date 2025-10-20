@@ -36,7 +36,8 @@ const LoadingSpinner: React.FC = () => (
 
 // Protected Route component
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return <LoadingSpinner />;
@@ -45,13 +46,17 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
+  //   console.log('🔐 AppRoutes - isAuthenticated:', isAuthenticated);
+  // console.log('🔐 AppRoutes - user:', user);
+  // console.log('🔐 AppRoutes - token:', sessionStorage.getItem('token'));
   return children;
 };
 
 
 
 const AppRoutes: React.FC = () => {
+  
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>

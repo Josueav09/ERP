@@ -1,6 +1,6 @@
 // frontend/src/types/auth.ts
 
-export type UserRole = 'jefe' | 'ejecutiva' | 'empresa' | 'cliente' | 'admin' | 'desarrollador';
+export type UserRole = 'jefe' | 'ejecutiva' | 'empresa' | 'cliente' | 'Administrador' | 'desarrollador';
 
 export interface User {
   id: string;
