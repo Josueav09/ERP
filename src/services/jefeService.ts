@@ -14,20 +14,33 @@ export interface AuditoriaRecord {
   responsable_nombre?: string;
 }
 
-export interface Cliente {
-  id_cliente: number;
-  nombre_cliente: string;
-  apellido_cliente?: string;
-  rut_cliente: string;
-  email: string;
+export interface ClienteFinal {
+  id_cliente_final: number;
+  ruc: string;
+  razon_social: string;
+  pagina_web?: string;
+  correo?: string;
   telefono?: string;
+  pais?: string;
+  departamento?: string;
+  provincia?: string;
   direccion?: string;
-  id_empresa: number;
-  nombre_empresa: string;
-  id_ejecutiva?: number;
+  linkedin?: string;
+  grupo_economico?: string;
+  rubro?: string;
+  sub_rubro?: string;
+  tamanio_empresa?: string;
+  facturacion_anual?: number;
+  cantidad_empleados?: number;
+  logo?: string;
+  id_ejecutiva: number;
   ejecutiva_nombre?: string;
-  estado: string;
+  id_empresa_prov: number;
+  empresa_nombre?: string;
+  fecha_creacion?: string;
+  fecha_actualizacion?: string;
   total_actividades: number;
+  estado: string;
 }
 
 export interface Empresa {
@@ -72,7 +85,6 @@ export interface Ejecutiva {
   total_empresas: number;
   total_clientes: number;
   total_actividades: number;
-  // Campos opcionales para compatibilidad
   estado_ejecutiva?: string;
   nombre_completo?: string;
   correo?: string;
@@ -103,32 +115,16 @@ export interface DashboardStats {
   actividadesMes?: number;
 }
 
-// export interface Trazabilidad {
-//   id_trazabilidad: number;
-//   id_ejecutiva: number;
-//   id_empresa: number;
-//   id_cliente: number;
-//   tipo_actividad: string;
-//   descripcion: string;
-//   fecha_actividad: string;
-//   estado: string;
-//   notas: string;
-//   ejecutiva_nombre: string;
-//   ejecutiva_activa: boolean;
-//   nombre_empresa: string;
-//   nombre_cliente: string;
-// }
-
 export interface Trazabilidad {
   id_trazabilidad: number;
   id_ejecutiva: number;
   id_empresa: number;
   id_cliente: number;
-  tipo_actividad: string;  // Viene de tipo_contacto en BD
-  descripcion: string;     // Generado desde observaciones + resultado_contacto
-  fecha_actividad: string; // Viene de fecha_contacto en BD
-  estado: string;          // Mapeado desde etapa_oportunidad
-  notas: string;           // Viene de observaciones en BD
+  tipo_actividad: string;
+  descripcion: string;
+  fecha_actividad: string;
+  estado: string;
+  notas: string;
   ejecutiva_nombre: string;
   ejecutiva_activa: boolean;
   nombre_empresa: string;
@@ -148,81 +144,109 @@ interface PerfilJefe {
 }
 
 export const jefeService = {
-  // Dashboard
+  // ============================================
+  // DASHBOARD
+  // ============================================
   async getStats(): Promise<DashboardStats> {
     return apiService.get('/jefe/stats');
   },
 
-  // Auditoría
+  // ============================================
+  // AUDITORÍA
+  // ============================================
   async getAuditoria(): Promise<AuditoriaRecord[]> {
     return apiService.get('/jefe/auditoria');
   },
 
-  // Clientes
-  async getClientes(): Promise<Cliente[]> {
-    return apiService.get('/jefe/clientes');
+  // ============================================
+  // CLIENTES
+  // ============================================
+  async getClientes(): Promise<ClienteFinal[]> {
+    const data = await apiService.get('/jefe/clientes');
+    console.log('📥 [jefeService] Clientes del backend:', data);
+    return data as ClienteFinal[];
   },
 
-  async createCliente(data: any): Promise<any> {
+ async createCliente(data: any): Promise<any> {
+    console.log('📤 [jefeService] Enviando cliente:', data);
     return apiService.post('/jefe/clientes', data);
   },
 
   async updateCliente(id: number, data: any): Promise<any> {
+    console.log('📤 [jefeService] Actualizando cliente:', data);
     return apiService.put(`/jefe/clientes/${id}`, data);
   },
+
 
   async deleteCliente(id: number): Promise<void> {
     return apiService.delete(`/jefe/clientes/${id}`);
   },
 
-  // Ejecutivas - CON MAPEO CORREGIDO
+  // ============================================
+  // EJECUTIVAS
+  // ============================================
+
+  // Obtener TODAS las ejecutivas
   async getEjecutivas(): Promise<Ejecutiva[]> {
     const data = await apiService.get('/jefe/ejecutivas');
-    console.log('📥 Datos CRUDOS de ejecutivas del backend:', data);
-    const ejecutivasMapeadas = (data as any[]).map((ejecutiva: any) => this.mapEjecutivaFromDB(ejecutiva));
-    console.log('📤 Ejecutivas mapeadas:', ejecutivasMapeadas);
+    console.log('📥 [jefeService] Datos CRUDOS de ejecutivas del backend:', data);
+    const ejecutivasMapeadas = (data as any[]).map((ejecutiva: any) => 
+      this.mapEjecutivaFromDB(ejecutiva)
+    );
+    console.log('📤 [jefeService] Ejecutivas mapeadas:', ejecutivasMapeadas);
+    return ejecutivasMapeadas;
+  },
+
+  // ✅ NUEVO: Obtener SOLO ejecutivas disponibles (sin empresa asignada)
+  async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
+    const data = await apiService.get('/jefe/ejecutivas/disponibles');
+    console.log('📥 [jefeService] Ejecutivas disponibles del backend:', data);
+    const ejecutivasMapeadas = (data as any[]).map((ejecutiva: any) => 
+      this.mapEjecutivaFromDB(ejecutiva)
+    );
+    console.log('📤 [jefeService] Ejecutivas disponibles mapeadas:', ejecutivasMapeadas);
     return ejecutivasMapeadas;
   },
 
   async getEjecutivaDetalle(id: number): Promise<any> {
     const data = await apiService.get(`/jefe/ejecutivas/${id}`);
-    console.log('📥 Detalle CRUDO de ejecutiva:', data);
+    console.log('📥 [jefeService] Detalle CRUDO de ejecutiva:', data);
     const detalleMapeado = this.mapEjecutivaDetalleFromDB(data);
-    console.log('📤 Detalle mapeado:', detalleMapeado);
+    console.log('📤 [jefeService] Detalle mapeado:', detalleMapeado);
     return detalleMapeado;
   },
 
-  // En tu jefeService.ts - CORREGIDO
   async createEjecutiva(data: any): Promise<any> {
-    // const user = await this.getPerfil(); // Obtener usuario actual desde getPerfil
-    // const idJefe = user.id_jefe || user.id; // Ajusta según tu estructura de usuario
     const idJefe = 1; // ✅ TEMPORAL - Reemplaza con el ID del jefe actual
     const dbData = {
-      dni: data.dni, // ✅ Usar el DNI del formulario
-      nombre_completo: `${data.nombre} ${data.apellido}`.trim(), // ✅ REQUERIDO
-      correo: data.email, // ✅ REQUERIDO (backend usa 'correo')
-      contraseña: data.password, // ✅ REQUERIDO
+      dni: data.dni,
+      nombre_completo: `${data.nombre} ${data.apellido}`.trim(),
+      correo: data.email,
+      contraseña: data.password,
       telefono: data.telefono || null,
       estado_ejecutiva: 'Activo',
-      id_jefe: idJefe// ✅ TEMPORAL - Asignar al jefe actual (deberías obtenerlo del contexto)
+      id_jefe: idJefe
     };
 
-    console.log('📤 Enviando datos CORRECTOS de ejecutiva al backend:', dbData);
+    console.log('📤 [jefeService] Enviando datos de ejecutiva al backend:', dbData);
     return apiService.post('/jefe/ejecutivas', dbData);
   },
 
   async updateEjecutiva(id: number, data: any): Promise<any> {
     const dbData = {
-      nombre_completo: `${data.nombre} ${data.apellido}`.trim(), // ✅ Usar nombre_completo
-      correo: data.email, // ✅ Usar correo
+      nombre_completo: `${data.nombre} ${data.apellido}`.trim(),
+      correo: data.email,
       telefono: data.telefono,
-      estado_ejecutiva: data.activo ? 'Activo' : 'Inactivo' // ✅ Mapear activo → estado_ejecutiva
+      estado_ejecutiva: data.activo ? 'Activo' : 'Inactivo'
     };
 
-    console.log('📤 Enviando datos de actualización:', dbData);
+    console.log('📤 [jefeService] Enviando datos de actualización:', dbData);
     return apiService.put(`/jefe/ejecutivas/${id}`, dbData);
   },
-  // Empresas - CON MAPEO CORREGIDO
+
+  // ============================================
+  // EMPRESAS
+  // ============================================
   async getEmpresas(): Promise<Empresa[]> {
     const data = await apiService.get('/jefe/empresas');
     return (data as any[]).map((empresa: any) => this.mapEmpresaFromDB(empresa));
@@ -241,7 +265,7 @@ export const jefeService = {
       tamanio_empresa: data.tamanio_empresa,
       estado: 'Activo'
     };
-    console.log('📤 Enviando datos al backend:', dbData);
+    console.log('📤 [jefeService] Enviando datos de empresa al backend:', dbData);
     return apiService.post('/jefe/empresas', dbData);
   },
 
@@ -256,6 +280,7 @@ export const jefeService = {
       rubro: data.rubro,
       tamanio_empresa: data.tamanio_empresa
     };
+    console.log('📤 [jefeService] Enviando datos de actualización de empresa:', dbData);
     return apiService.put(`/jefe/empresas/${id}`, dbData);
   },
 
@@ -267,28 +292,53 @@ export const jefeService = {
     return apiService.patch(`/jefe/empresas/${id}/estado`, { activo });
   },
 
-  async getEmpresaEjecutivas(id: number): Promise<any> {
-    return apiService.get(`/jefe/empresas/${id}/ejecutivas`);
-  },
+  // ✅ CORREGIDO: Mapear ejecutivas de empresa
+ // ✅ CORREGIDO: Mapear ejecutivas de empresa con validación
+async getEmpresaEjecutivas(empresaId: number): Promise<any> {
+  const data: any = await apiService.get(`/jefe/empresas/${empresaId}/ejecutivas`);
+  console.log('📥 [jefeService] Respuesta del backend:', data);
+  
+  // ✅ Extraer ejecutivas
+  const ejecutivasArray: any[] = Array.isArray(data) ? data : (data.ejecutivas || []);
+  
+  // ✅ Mapear ejecutivas
+  const ejecutivasMapeadas = ejecutivasArray.map((ej: any) => ({
+    id_usuario: ej.id_usuario || ej.id_ejecutiva,
+    nombre: ej.nombre || ej.nombre_completo?.split(' ')[0] || '',
+    apellido: ej.apellido || ej.nombre_completo?.split(' ').slice(1).join(' ') || '',
+    email: ej.email || ej.correo || '',
+    fecha_asignacion: ej.fecha_asignacion,
+    activo: ej.activo !== false,
+    total_clientes: ej.total_clientes || 0
+  }));
 
+  console.log('✅ [jefeService] Ejecutivas mapeadas:', ejecutivasMapeadas);
+
+  return {
+    id_empresa_prov: data.id_empresa_prov || empresaId,
+    razon_social: data.razon_social || '',
+    ruc: data.ruc || '',
+    ejecutivas: ejecutivasMapeadas
+  };
+},
+
+  // ✅ CORREGIDO: Usar la ruta correcta con parámetros en URL
   async addEjecutivaToEmpresa(empresaId: number, ejecutivaId: number): Promise<any> {
-    return apiService.post(`/jefe/empresas/${empresaId}/ejecutivas`, { id_ejecutiva: ejecutivaId });
+    console.log('➕ [jefeService] Asignando ejecutiva:', { empresaId, ejecutivaId });
+    // ✅ POST /empresas/:empresaId/ejecutivas/:ejecutivaId
+    return apiService.post(`/jefe/empresas/${empresaId}/ejecutivas/${ejecutivaId}`);
   },
 
+  // ✅ CORREGIDO: Usar DELETE con parámetros en URL
   async removeEjecutivaFromEmpresa(empresaId: number, ejecutivaId: number): Promise<any> {
+    console.log('➖ [jefeService] Removiendo ejecutiva:', { empresaId, ejecutivaId });
+    // ✅ DELETE /empresas/:empresaId/ejecutivas/:ejecutivaId
     return apiService.delete(`/jefe/empresas/${empresaId}/ejecutivas/${ejecutivaId}`);
   },
 
-  // Trazabilidad
-  // async getTrazabilidad(filters?: any): Promise<Trazabilidad[]> {
-  //   const params = new URLSearchParams();
-  //   if (filters?.empresa) params.append('empresa', filters.empresa);
-  //   if (filters?.ejecutiva) params.append('ejecutiva', filters.ejecutiva);
-  //   if (filters?.cliente) params.append('cliente', filters.cliente);
-
-  //   return apiService.get(`/jefe/trazabilidad?${params.toString()}`);
-  // },
-
+  // ============================================
+  // TRAZABILIDAD
+  // ============================================
   async getTrazabilidad(filters?: any): Promise<Trazabilidad[]> {
     const params = new URLSearchParams();
     if (filters?.empresa && filters.empresa !== 'all') params.append('empresa', filters.empresa);
@@ -296,35 +346,142 @@ export const jefeService = {
     if (filters?.cliente && filters.cliente !== 'all') params.append('cliente', filters.cliente);
 
     const data = await apiService.get(`/jefe/trazabilidad?${params.toString()}`);
-    console.log('📥 Datos CRUDOS de trazabilidad del backend:', data);
+    console.log('📥 [jefeService] Datos CRUDOS de trazabilidad del backend:', data);
 
-    // ✅ MAPEAR a la estructura que espera el frontend
     const trazabilidadMapeada = (data as any[]).map((item: any) =>
       this.mapTrazabilidadFromDB(item)
     );
-    console.log('📤 Trazabilidad mapeada:', trazabilidadMapeada);
+    console.log('📤 [jefeService] Trazabilidad mapeada:', trazabilidadMapeada);
 
     return trazabilidadMapeada;
   },
 
-  // // Perfil
-  // async getPerfil(): Promise<any> {
-  //   const token = sessionStorage.getItem('auth_token'); // o donde guardes el token
+  // ✅ NUEVO: Obtener KPIs de trazabilidad
+  async getTrazabilidadKPIs(filters?: {
+    ejecutivaId?: number;
+    empresaId?: number;
+    clienteId?: number;
+    fechaDesde?: string;
+    fechaHasta?: string;
+  }): Promise<any> {
+    const params = new URLSearchParams();
+    if (filters?.ejecutivaId) params.append('ejecutivaId', filters.ejecutivaId.toString());
+    if (filters?.empresaId) params.append('empresaId', filters.empresaId.toString());
+    if (filters?.clienteId) params.append('clienteId', filters.clienteId.toString());
+    if (filters?.fechaDesde) params.append('fechaDesde', filters.fechaDesde);
+    if (filters?.fechaHasta) params.append('fechaHasta', filters.fechaHasta);
 
-  //   console.log('Perfil obtenido:', token);
-  //   return apiService.get('/jefe/perfil', {
-  //     headers: {
-  //       'Authorization': `Bearer ${token}` // ← DEBE ESTAR PRESENTE
-  //     }
+    return apiService.get(`/jefe/trazabilidad/kpis?${params.toString()}`);
+  },
 
-  //   });
-  // },
+  // ✅ NUEVO: Obtener datos de Etapa 1
+  async getTrazabilidadEtapa1(filters?: {
+    ejecutivaId?: number;
+    empresaId?: number;
+    clienteId?: number;
+    resultadoContacto?: string;
+    tipoContacto?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<any> {
+    const params = new URLSearchParams();
+    if (filters?.ejecutivaId) params.append('ejecutivaId', filters.ejecutivaId.toString());
+    if (filters?.empresaId) params.append('empresaId', filters.empresaId.toString());
+    if (filters?.clienteId) params.append('clienteId', filters.clienteId.toString());
+    if (filters?.resultadoContacto && filters.resultadoContacto !== 'all') 
+      params.append('resultadoContacto', filters.resultadoContacto);
+    if (filters?.tipoContacto && filters.tipoContacto !== 'all') 
+      params.append('tipoContacto', filters.tipoContacto);
+    if (filters?.fechaDesde) params.append('fechaDesde', filters.fechaDesde);
+    if (filters?.fechaHasta) params.append('fechaHasta', filters.fechaHasta);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
 
-  // Actualiza tu servicio
+    return apiService.get(`/jefe/trazabilidad/etapa1?${params.toString()}`);
+  },
+
+  // ✅ NUEVO: Obtener datos de Etapa 2
+  async getTrazabilidadEtapa2(filters?: {
+    ejecutivaId?: number;
+    empresaId?: number;
+    clienteId?: number;
+    etapaOportunidad?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<any> {
+    const params = new URLSearchParams();
+    if (filters?.ejecutivaId) params.append('ejecutivaId', filters.ejecutivaId.toString());
+    if (filters?.empresaId) params.append('empresaId', filters.empresaId.toString());
+    if (filters?.clienteId) params.append('clienteId', filters.clienteId.toString());
+    if (filters?.etapaOportunidad && filters.etapaOportunidad !== 'all') 
+      params.append('etapaOportunidad', filters.etapaOportunidad);
+    if (filters?.fechaDesde) params.append('fechaDesde', filters.fechaDesde);
+    if (filters?.fechaHasta) params.append('fechaHasta', filters.fechaHasta);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+
+    return apiService.get(`/jefe/trazabilidad/etapa2?${params.toString()}`);
+  },
+
+  // ✅ NUEVO: KPI - Nuevos Clientes
+  async getTrazabilidadNuevosClientes(meses: number = 3, ejecutivaId?: number): Promise<any> {
+    const params = new URLSearchParams();
+    params.append('meses', meses.toString());
+    if (ejecutivaId) params.append('ejecutivaId', ejecutivaId.toString());
+
+    return apiService.get(`/jefe/trazabilidad/kpis/nuevos-clientes?${params.toString()}`);
+  },
+
+  // ✅ NUEVO: KPI - Contactos por Tipo
+  async getTrazabilidadContactosPorTipo(filters?: {
+    ejecutivaId?: number;
+    fechaDesde?: string;
+    fechaHasta?: string;
+  }): Promise<any> {
+    const params = new URLSearchParams();
+    if (filters?.ejecutivaId) params.append('ejecutivaId', filters.ejecutivaId.toString());
+    if (filters?.fechaDesde) params.append('fechaDesde', filters.fechaDesde);
+    if (filters?.fechaHasta) params.append('fechaHasta', filters.fechaHasta);
+
+    return apiService.get(`/jefe/trazabilidad/kpis/contactos-por-tipo?${params.toString()}`);
+  },
+
+  // ✅ NUEVO: KPI - Montos por Etapa
+  async getTrazabilidadMontosPorEtapa(filters?: {
+    ejecutivaId?: number;
+    fechaDesde?: string;
+    fechaHasta?: string;
+  }): Promise<any> {
+    const params = new URLSearchParams();
+    if (filters?.ejecutivaId) params.append('ejecutivaId', filters.ejecutivaId.toString());
+    if (filters?.fechaDesde) params.append('fechaDesde', filters.fechaDesde);
+    if (filters?.fechaHasta) params.append('fechaHasta', filters.fechaHasta);
+
+    return apiService.get(`/jefe/trazabilidad/kpis/montos-por-etapa?${params.toString()}`);
+  },
+
+  // ✅ NUEVO: KPI - Tasa de Conversión
+  async getTrazabilidadTasaConversion(filters?: {
+    fechaDesde?: string;
+    fechaHasta?: string;
+  }): Promise<any> {
+    const params = new URLSearchParams();
+    if (filters?.fechaDesde) params.append('fechaDesde', filters.fechaDesde);
+    if (filters?.fechaHasta) params.append('fechaHasta', filters.fechaHasta);
+
+    return apiService.get(`/jefe/trazabilidad/kpis/tasa-conversion?${params.toString()}`);
+  },
+
+  // ============================================
+  // PERFIL
+  // ============================================
   async getPerfil(): Promise<PerfilJefe> {
     const token = sessionStorage.getItem('auth_token');
-
-    console.log('🔐 Token para perfil:', token);
+    console.log('🔐 [jefeService] Token para perfil:', token);
 
     try {
       const response: any = await apiService.get('/jefe/perfil', {
@@ -333,66 +490,62 @@ export const jefeService = {
         }
       });
 
-      console.log('📋 Respuesta completa del perfil:', response);
+      console.log('📋 [jefeService] Respuesta completa del perfil:', response);
 
-      // Ajusta según la estructura real de tu API
-      const perfilData = response.data?.data || response.data || response;
+      const perfilData = response.data || response;
 
-      // Mapear a la interfaz si es necesario
       return {
         id_jefe: perfilData.id_jefe,
         dni: perfilData.dni,
         nombre_completo: perfilData.nombre_completo,
-        email: perfilData.correo,
+        email: perfilData.email || perfilData.correo,
         telefono: perfilData.telefono,
         linkedin: perfilData.linkedin,
-        rol: perfilData.rol || 'Jefe', // Valor por defecto
+        rol: perfilData.rol || 'Jefe',
         fecha_creacion: perfilData.fecha_creacion,
         fecha_actualizacion: perfilData.fecha_actualizacion
       };
-
     } catch (error) {
-      console.error('❌ Error obteniendo perfil:', error);
+      console.error('❌ [jefeService] Error obteniendo perfil:', error);
       throw error;
     }
   },
-
 
   async updatePerfil(data: any): Promise<any> {
     return apiService.put('/jefe/perfil', data);
   },
 
   async updatePassword(data: any): Promise<any> {
-    return apiService.put('/jefe/perfil/password', data);
+    return apiService.put('/jefe/password', data);
   },
 
-  // ✅ MÉTODO PARA MAPEAR EJECUTIVAS DESDE LA BD
+  // ============================================
+  // MÉTODOS DE MAPEO
+  // ============================================
+
   mapEjecutivaFromDB(dbEjecutiva: any): Ejecutiva {
-    // Dividir nombre_completo en nombre y apellido para el frontend
-    const nombreCompleto = dbEjecutiva.nombre_completo || '';
-    const nombreParts = nombreCompleto.split(' ');
-    const nombre = nombreParts[0] || '';
-    const apellido = nombreParts.slice(1).join(' ') || '';
+    // Si viene separado (nombre + apellido)
+    const nombre = dbEjecutiva.nombre || (dbEjecutiva.nombre_completo ? dbEjecutiva.nombre_completo.split(' ')[0] : '');
+    const apellido = dbEjecutiva.apellido || (dbEjecutiva.nombre_completo ? dbEjecutiva.nombre_completo.split(' ').slice(1).join(' ') : '');
 
     return {
-      id_usuario: dbEjecutiva.id_ejecutiva,
+      id_usuario: dbEjecutiva.id_usuario || dbEjecutiva.id_ejecutiva,
       nombre: nombre,
       apellido: apellido,
-      email: dbEjecutiva.correo, // ✅ Mapear correo → email
+      email: dbEjecutiva.email || dbEjecutiva.correo,
       telefono: dbEjecutiva.telefono,
       rol: 'ejecutiva',
-      activo: dbEjecutiva.estado_ejecutiva === 'Activo',
+      activo: dbEjecutiva.estado_ejecutiva ? dbEjecutiva.estado_ejecutiva === 'Activo' : true,
       total_empresas: dbEjecutiva.empresa_asignada && dbEjecutiva.empresa_asignada !== 'Sin asignar' ? 1 : 0,
       total_clientes: dbEjecutiva.total_clientes || 0,
       total_actividades: dbEjecutiva.total_actividades || 0,
-      // Campos opcionales para compatibilidad
-      estado_ejecutiva: dbEjecutiva.estado_ejecutiva,
-      nombre_completo: dbEjecutiva.nombre_completo,
-      correo: dbEjecutiva.correo
+      estado_ejecutiva: dbEjecutiva.estado_ejecutiva || 'Activo',
+      nombre_completo: dbEjecutiva.nombre_completo || `${nombre} ${apellido}`.trim(),
+      correo: dbEjecutiva.email || dbEjecutiva.correo
     };
   },
 
-  // ✅ MÉTODO PARA MAPEAR DETALLE DE EJECUTIVA
+
   mapEjecutivaDetalleFromDB(dbDetalle: any): any {
     return {
       ejecutiva: {
@@ -423,7 +576,6 @@ export const jefeService = {
     };
   },
 
-  // Método para mapear empresas
   mapEmpresaFromDB(dbEmpresa: any): Empresa {
     return {
       id_empresa: dbEmpresa.id_empresa_prov,
@@ -456,15 +608,14 @@ export const jefeService = {
       fecha_actualizacion: dbEmpresa.fecha_actualizacion
     };
   },
+
   mapTrazabilidadFromDB(dbTrazabilidad: any): Trazabilidad {
-    // Determinar estado para el frontend basado en etapa_oportunidad
     let estadoFrontend = 'pendiente';
     if (dbTrazabilidad.etapa_oportunidad === 'Venta ganada') estadoFrontend = 'completado';
     else if (['Negociación', 'Presentación de propuesta', 'Manejo de objeciones'].includes(dbTrazabilidad.etapa_oportunidad))
       estadoFrontend = 'en_proceso';
     else if (dbTrazabilidad.etapa_oportunidad === 'Venta perdida') estadoFrontend = 'cancelado';
 
-    // Generar descripción para el frontend
     const descripcion = dbTrazabilidad.observaciones ||
       `Contacto ${dbTrazabilidad.tipo_contacto} - ${dbTrazabilidad.resultado_contacto} - Etapa: ${dbTrazabilidad.etapa_oportunidad}`;
 
@@ -473,9 +624,9 @@ export const jefeService = {
       id_ejecutiva: dbTrazabilidad.id_ejecutiva || dbTrazabilidad.ejecutiva?.id_ejecutiva,
       id_empresa: dbTrazabilidad.id_empresa_prov || dbTrazabilidad.empresa_proveedora?.id_empresa_prov,
       id_cliente: dbTrazabilidad.id_cliente_final || dbTrazabilidad.cliente_final?.id_cliente_final,
-      tipo_actividad: dbTrazabilidad.tipo_contacto, // ✅ tipo_contacto → tipo_actividad
+      tipo_actividad: dbTrazabilidad.tipo_contacto,
       descripcion: descripcion,
-      fecha_actividad: dbTrazabilidad.fecha_contacto, // ✅ fecha_contacto → fecha_actividad
+      fecha_actividad: dbTrazabilidad.fecha_contacto,
       estado: estadoFrontend,
       notas: dbTrazabilidad.observaciones || '',
       ejecutiva_nombre: dbTrazabilidad.ejecutiva?.nombre_completo || dbTrazabilidad.ejecutiva_nombre || 'N/A',
