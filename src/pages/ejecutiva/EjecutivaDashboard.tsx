@@ -17,15 +17,32 @@ interface Stats {
   actividadesMes: number
 }
 
+// interface Trazabilidad {
+//   id_trazabilidad: number
+//   tipo_actividad: string
+//   descripcion: string
+//   fecha_actividad: string
+//   estado: string
+//   nombre_empresa: string
+//   nombre_cliente: string | null
+// }
+
 interface Trazabilidad {
   id_trazabilidad: number
-  tipo_actividad: string
-  descripcion: string
-  fecha_actividad: string
-  estado: string
-  nombre_empresa: string
-  nombre_cliente: string | null
+  tipo_contacto: string // ✅ Cambiado
+  fecha_contacto: string // ✅ Cambiado
+  resultado_contacto: string // ✅ Cambiado
+  empresa_proveedora: string // ✅ Cambiado
+  cliente_final: string | null // ✅ Cambiado
+  contacto: string
+  reunion_agendada: boolean
+  fecha_reunion?: string
+  pasa_embudo_ventas: boolean
+  nombre_oportunidad?: string
+  etapa_oportunidad?: string
+  observaciones?: string
 }
+
 
 export default function EjecutivaDashboard() {
   const { user } = useAuth()
@@ -51,10 +68,10 @@ export default function EjecutivaDashboard() {
         ejecutivaService.getStats(user.id),
         ejecutivaService.getTrazabilidad(user.id)
       ])
-      
+
       console.log("[v1] Ejecutiva stats:", statsData)
       console.log("[v1] Ejecutiva trazabilidad:", trazabilidadData)
-      
+
       setStats(statsData)
       setTrazabilidad(trazabilidadData)
     } catch (error) {
@@ -82,24 +99,44 @@ export default function EjecutivaDashboard() {
     return "Hace unos minutos"
   }
 
-  const getEstadoBadge = (estado: string) => {
+  // const getEstadoBadge = (estado: string) => {
+  //   const badges = {
+  //     completado: "bg-[#C7E196] text-[#013936]",
+  //     en_proceso: "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30",
+  //     pendiente: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
+  //     cancelado: "bg-red-500/20 text-red-400 border border-red-500/30",
+  //   }
+  //   return badges[estado as keyof typeof badges] || "bg-gray-500/20 text-gray-400"
+  // }
+
+  const getEstadoBadge = (resultado: string) => {
     const badges = {
-      completado: "bg-[#C7E196] text-[#013936]",
-      en_proceso: "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30",
-      pendiente: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
-      cancelado: "bg-red-500/20 text-red-400 border border-red-500/30",
+      Positivo: "bg-[#C7E196] text-[#013936]",
+      Negativo: "bg-red-500/20 text-red-400 border border-red-500/30",
+      Pendiente: "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30",
+      Neutro: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
     }
-    return badges[estado as keyof typeof badges] || "bg-gray-500/20 text-gray-400"
+    return badges[resultado as keyof typeof badges] || "bg-gray-500/20 text-gray-400"
   }
 
-  const getEstadoLabel = (estado: string) => {
+  // const getEstadoLabel = (estado: string) => {
+  //   const labels = {
+  //     completado: "Completado",
+  //     en_proceso: "En proceso",
+  //     pendiente: "Pendiente",
+  //     cancelado: "Cancelado",
+  //   }
+  //   return labels[estado as keyof typeof labels] || estado
+  // }
+
+  const getEstadoLabel = (resultado: string) => {
     const labels = {
-      completado: "Completado",
-      en_proceso: "En proceso",
-      pendiente: "Pendiente",
-      cancelado: "Cancelado",
+      Positivo: "Positivo",
+      Negativo: "Negativo",
+      Pendiente: "Pendiente",
+      Neutro: "Neutro",
     }
-    return labels[estado as keyof typeof labels] || estado
+    return labels[resultado as keyof typeof labels] || resultado
   }
 
   if (loading) {
@@ -120,7 +157,7 @@ export default function EjecutivaDashboard() {
 
   const actividadesPorEstado = trazabilidad.reduce(
     (acc, item) => {
-      acc[item.estado] = (acc[item.estado] || 0) + 1
+      acc[item.resultado_contacto] = (acc[item.resultado_contacto] || 0) + 1
       return acc
     },
     {} as Record<string, number>,
@@ -228,19 +265,19 @@ export default function EjecutivaDashboard() {
                 trazabilidad.slice(0, 5).map((item) => (
                   <div key={item.id_trazabilidad} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
                     <div className="p-2 bg-[#C7E196]/20 rounded flex-shrink-0">
-                      {item.estado === "completado" ? (
+                      {item.resultado_contacto === "Positivo" ? ( // ✅ Cambiado
                         <CheckCircle2 className="w-4 h-4 text-[#C7E196]" />
                       ) : (
                         <Clock className="w-4 h-4 text-yellow-400" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{item.tipo_actividad}</p>
-                      <p className="text-xs text-white/60 mt-1">{item.nombre_empresa}</p>
-                      <p className="text-xs text-white/40 mt-1">{getTimeAgo(item.fecha_actividad)}</p>
+                      <p className="text-sm font-medium text-white truncate">{item.tipo_contacto}</p> {/* ✅ Cambiado */}
+                      <p className="text-xs text-white/60 mt-1">{item.empresa_proveedora}</p> {/* ✅ Cambiado */}
+                      <p className="text-xs text-white/40 mt-1">{getTimeAgo(item.fecha_contacto)}</p> {/* ✅ Cambiado */}
                     </div>
-                    <span className={`px-2 py-1 text-xs font-medium rounded ${getEstadoBadge(item.estado)}`}>
-                      {getEstadoLabel(item.estado)}
+                    <span className={`px-2 py-1 text-xs font-medium rounded ${getEstadoBadge(item.resultado_contacto)}`}> {/* ✅ Cambiado */}
+                      {getEstadoLabel(item.resultado_contacto)} {/* ✅ Cambiado */}
                     </span>
                   </div>
                 ))
