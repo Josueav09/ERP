@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { useNavigate, useSearchParams } from "react-router-dom"
@@ -30,7 +28,7 @@ import {
   Download,
 } from "lucide-react"
 import { useToast } from "@/hooks/useToast"
-import { jefeService, type Trazabilidad, type Empresa, type Ejecutiva, type Cliente } from "@/services/jefeService"
+import { jefeService, type Trazabilidad, type Empresa, type Ejecutiva, type ClienteFinal } from "@/services/jefeService"
 import {
   LineChart,
   Line,
@@ -67,7 +65,7 @@ export default function TrazabilidadPage() {
   const [trazabilidad, setTrazabilidad] = useState<Trazabilidad[]>([])
   const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [ejecutivas, setEjecutivas] = useState<Ejecutiva[]>([])
-  const [clientes, setClientes] = useState<Cliente[]>([])
+  const [clientes, setClientes] = useState<ClienteFinal[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
@@ -299,9 +297,9 @@ export default function TrazabilidadPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos los clientes</SelectItem>
-                    {clientes.map((cliente) => (
-                      <SelectItem key={cliente.id_cliente} value={cliente.id_cliente.toString()}>
-                        {cliente.nombre_cliente}
+                    {clientes.map((cliente_final) => (
+                      <SelectItem key={cliente_final.id_cliente_final} value={cliente_final.id_cliente_final.toString()}>
+                        {cliente_final.razon_social}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -498,7 +498,7 @@ async getEmpresaEjecutivas(empresaId: number): Promise<any> {
         id_jefe: perfilData.id_jefe,
         dni: perfilData.dni,
         nombre_completo: perfilData.nombre_completo,
-        email: perfilData.correo,
+        email: perfilData.email,
         telefono: perfilData.telefono,
         linkedin: perfilData.linkedin,
         rol: perfilData.rol || 'Jefe',
