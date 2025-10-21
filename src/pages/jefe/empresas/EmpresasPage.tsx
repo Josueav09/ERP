@@ -232,16 +232,24 @@ useEffect(() => {
     setIsEjecutivasDialogOpen(true);
 
     try {
+      console.log('🔍 [EmpresasPage] Cargando ejecutivas para empresa:', empresaId);
+      
+      // ✅ Obtener ejecutivas asignadas a la empresa
       const empresaData = await jefeService.getEmpresaEjecutivas(empresaId);
+      console.log('✅ [EmpresasPage] Ejecutivas de empresa:', empresaData);
       setCurrentEmpresaEjecutivas(empresaData.ejecutivas || []);
 
-      const ejecutivasData = await jefeService.getEjecutivas();
-      setAvailableEjecutivas(ejecutivasData);
-    } catch (error) {
-      console.error("Error fetching ejecutivas:", error);
+      // ✅ IMPORTANTE: Obtener SOLO ejecutivas disponibles (sin empresa)
+      const ejecutivasDisponibles = await jefeService.getEjecutivasDisponibles();
+      console.log('✅ [EmpresasPage] Ejecutivas disponibles:', ejecutivasDisponibles);
+      setAvailableEjecutivas(ejecutivasDisponibles);
+      
+    } catch (error: any) {
+      console.error("❌ [EmpresasPage] Error fetching ejecutivas:", error);
+      console.error("❌ [EmpresasPage] Error response:", error.response);
       toast({
         title: "Error",
-        description: "No se pudieron cargar las ejecutivas",
+        description: error.message || "No se pudieron cargar las ejecutivas",
         variant: "destructive",
       });
     } finally {
