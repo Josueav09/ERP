@@ -251,7 +251,7 @@ export default function ClientesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-[#C7E196]/20 text-[#C7E196] border border-[#C7E196]/30">
+                    <Badge className="bg-[#C7E196]/20 text-[#white]/90 border border-[#C7E196]/30">
                       {cliente.tamanio_empresa || "N/A"}
                     </Badge>
                   </div>
@@ -315,7 +315,7 @@ export default function ClientesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleAddContacto(cliente.id_cliente_final)}
-                      className="border-[#C7E196]/30 text-[#C7E196] hover:bg-[#C7E196]/10"
+                      className=" !bg-[#C7E196]  border-[#C7E196]/30 text-[#012826] hover:bg-[#C7E196]/10"
                     >
                       <UserPlus className="w-4 h-4 mr-2" />
                       Agregar Contacto
@@ -324,7 +324,7 @@ export default function ClientesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => toggleExpand(cliente.id_cliente_final)}
-                      className="border-[#C7E196] text-[#C7E196] hover:bg-[#C7E196] hover:text-[#013936]"
+                      className="!bg-[#C7E196]  border-[#C7E196]/30 text-[#012826] hover:bg-[#C7E196]/10"
                     >
                       {expandedCliente === cliente.id_cliente_final ? (
                         <>
@@ -344,12 +344,12 @@ export default function ClientesPage() {
 
               {/* Personas de contacto expandible */}
               {expandedCliente === cliente.id_cliente_final && cliente.personas_contacto.length > 0 && (
-                <div className="border-t border-white/10 bg-white/5 p-6">
-                  <h4 className="text-sm font-semibold text-white mb-4">Personas de Contacto</h4>
-                  <div className="grid md:grid-cols-2 gap-4">
+                <div className="border-t border-white/10 !bg-[#C7E196]/5 p-6">
+                  <h4 className="text-sm font-semibold text-white mb-1">Personas de Contacto</h4>
+                  <div className="grid md:grid-cols-2 gap-4 ">
                     {cliente.personas_contacto.map((contacto) => (
-                      <Card key={contacto.id_contacto} className="bg-[#013936]/50 border-[#C7E196]/10 p-4">
-                        <div className="flex items-start justify-between mb-3">
+                      <Card key={contacto.id_contacto} className="bg-[#013936]/80 border-[#C7E196]/10 p-4">
+                        <div className="flex items-start justify-between mb-0">
                           <div>
                             <h5 className="font-semibold text-white">{contacto.nombre_completo}</h5>
                             {contacto.cargo && (
@@ -359,7 +359,7 @@ export default function ClientesPage() {
                         </div>
                         <div className="space-y-2">
                           {contacto.correo && (
-                            <div className="flex items-center gap-2 text-sm">
+                            <div className="flex items-center gap-2 text-sm mt-0">
                               <Mail className="w-3 h-3 text-[#C7E196]" />
                               <span className="text-white/80">{contacto.correo}</span>
                             </div>

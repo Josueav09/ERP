@@ -256,7 +256,7 @@ export default function EmpresasPage() {
         <div className="grid md:grid-cols-2 gap-6">
           {/* Información de contacto */}
           <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Información de Contacto</h3>
+            <h3 className="text-lg font-semibold text-white mb-1">Información de Contacto</h3>
             <div className="space-y-3">
               {empresaAsignada.correo && (
                 <div className="flex items-center gap-3">
@@ -284,7 +284,7 @@ export default function EmpresasPage() {
 
           {/* Ubicación */}
           <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Ubicación</h3>
+            <h3 className="text-lg font-semibold text-white mb-1">Ubicación</h3>
             <div className="space-y-3">
               {empresaAsignada.direccion && (
                 <div className="flex items-start gap-3">
@@ -306,7 +306,7 @@ export default function EmpresasPage() {
 
         {/* Información adicional */}
         <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Información Adicional</h3>
+          <h3 className="text-lg font-semibold text-white mb-1">Información Adicional</h3>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <p className="text-white/60 text-sm mb-1">Rubro</p>
@@ -353,13 +353,13 @@ export default function EmpresasPage() {
                 <p className="text-white/60">Puedes registrar más empresas para aprobación</p>
               </div>
               <Button
-                onClick={() => setShowRegistrarEmpresa(true)}
-                variant="outline"
-                className="border-[#C7E196] text-[#C7E196] hover:bg-[#C7E196] hover:text-[#013936]"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Registrar
-              </Button>
+                  onClick={() => setShowRegistrarEmpresa(true)}
+                  className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-semibold"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Registrar
+                </Button>
+
             </div>
           </Card>
         </div>
