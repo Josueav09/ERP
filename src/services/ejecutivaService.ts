@@ -164,6 +164,37 @@ export interface CreateContactoData {
   linkedin?: string
 }
 
+export interface CreateTrazabilidadData {
+  id_ejecutiva: string
+  id_empresa_prov: string
+  id_cliente_final: string
+  id_contacto: string
+  tipo_contacto: string
+  fecha_contacto: Date
+  resultado_contacto: string
+  informacion_importante?: string
+  reunion_agendada?: boolean
+  fecha_reunion?: Date
+  participantes?: string
+  se_dio_reunion?: boolean
+  resultados_reunion?: string
+  pasa_embudo_ventas?: boolean
+  nombre_oportunidad?: string
+  etapa_oportunidad?: string
+  producto_ofrecido?: string
+  monto_total_sin_imp?: number
+  probabilidad_cierre?: number
+  observaciones?: string
+}
+
+export interface TrazabilidadStats {
+  totalContactos: number
+  oportunidadesGeneradas: number
+  ventasGanadas: number
+  tasaConversion: number
+  montoTotal: number
+  enProceso: number
+}
 
 export interface Stats {
   totalEmpresas: number
@@ -285,11 +316,20 @@ export interface ActividadReciente {
 export const ejecutivaService = {
   // Obtener estadísticas
   async getStats(ejecutivaId: string): Promise<Stats> {
+        console.log('📊 getStats called for ejecutiva:', ejecutivaId)
     return apiService.get(`/ejecutiva/stats?ejecutivaId=${ejecutivaId}`)
   },
 
+    // ✅ Obtener estadísticas de trazabilidad (desde traceability-service)
+  async getTrazabilidadStats(ejecutivaId: string): Promise<TrazabilidadStats> {
+    console.log('📊 getTrazabilidadStats called for ejecutiva:', ejecutivaId)
+    return apiService.get(`/ejecutiva/trazabilidad/stats?ejecutivaId=${ejecutivaId}`)
+  },
+
+
   // Obtener trazabilidad
   async getTrazabilidad(ejecutivaId: string): Promise<Trazabilidad[]> {
+        console.log('🔍 getTrazabilidad called for ejecutiva:', ejecutivaId)
     return apiService.get(`/ejecutiva/trazabilidad?ejecutivaId=${ejecutivaId}`)
   },
 
@@ -372,6 +412,7 @@ export const ejecutivaService = {
 
   // Obtener pipeline de ventas
   async getPipeline(ejecutivaId: string, limit: number = 10): Promise<{
+    length: any;
     oportunidades: PipelineOportunidad[]
     agrupado_por_etapa: Record<string, PipelineOportunidad[]>
     metricas: {
@@ -395,6 +436,7 @@ export const ejecutivaService = {
     reuniones_agendadas: number
     inicio_semana: string
   }> {
+    console.log('📊 getKPIsSemanales called for ejecutiva:', ejecutivaId)
     return apiService.get(`/ejecutiva/kpis/semanales?ejecutivaId=${ejecutivaId}`)
   },
 
@@ -410,11 +452,13 @@ export const ejecutivaService = {
 
   // Actualizar etapa de oportunidad
   // Actualizar etapa (desde traceability-service)
+  // Actualizar etapa de oportunidad
   async updateEtapaOportunidad(data: {
     trazabilidadId: string
     nuevaEtapa: string
     ejecutivaId: string
   }) {
+    console.log('🔄 updateEtapaOportunidad called with data:', data)
     return apiService.put("/ejecutiva/trazabilidad/etapa", data)
   }
 }
