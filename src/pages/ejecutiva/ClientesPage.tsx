@@ -298,7 +298,6 @@
 //     </DashboardLayout>
 //   )
 // }
-
 // frontend/src/pages/ejecutiva/ClientesPage.tsx
 import { useState, useEffect } from "react"
 import { useAuth } from "@/context/AuthContext"
@@ -311,6 +310,7 @@ import { Badge } from "@/components/ui/badge"
 import { Users, Search, Plus, Mail, Phone, MapPin, Building2, UserPlus, ChevronDown, ChevronUp } from "lucide-react"
 import { AddClienteDialog } from "../../components/ejecutivaComponents/AddClienteDialog"
 import { AddContactoDialog } from "../../components/ejecutivaComponents/AddContactoDialog"
+import { ejecutivaService } from "@/services/ejecutivaService"
 
 interface PersonaContacto {
   id_contacto: number
@@ -338,67 +338,24 @@ interface ClienteFinal {
   sub_rubro?: string
   tamanio_empresa?: string
   personas_contacto: PersonaContacto[]
-  total_trazabilidad: number
-}
-
-// Datos mock
-const mockClientes: ClienteFinal[] = [
-  {
-    id_cliente_final: 1,
-    ruc: "20100130204",
-    razon_social: "Banco de Crédito del Perú",
-    correo: "contacto@bcp.com.pe",
-    telefono: "+51987654321",
-    pais: "Perú",
-    departamento: "Lima",
-    provincia: "Lima",
-    direccion: "Av. Centenario 156, La Molina",
-    rubro: "Finanzas",
-    sub_rubro: "Banca",
-    tamanio_empresa: "Grande",
-    total_trazabilidad: 12,
-    personas_contacto: [
-      {
-        id_contacto: 1,
-        nombre_completo: "Ana Torres",
-        cargo: "Jefa de Compras",
-        correo: "ana.torres@bcp.com.pe",
-        telefono: "+51987654321"
-      },
-      {
-        id_contacto: 2,
-        nombre_completo: "Carlos Vega",
-        cargo: "Coordinador de TI",
-        correo: "carlos.vega@bcp.com.pe",
-        telefono: "+51999888777"
-      }
-    ]
-  },
-  {
-    id_cliente_final: 2,
-    ruc: "20100070970",
-    razon_social: "Supermercados Peruanos S.A.",
-    correo: "ventas@spsa.pe",
-    telefono: "+51976543210",
-    pais: "Perú",
-    departamento: "Lima",
-    provincia: "Lima",
-    direccion: "Av. Morales Duárez 1372, Mirones",
-    rubro: "Retail",
-    sub_rubro: "Supermercados",
-    tamanio_empresa: "Grande",
-    total_trazabilidad: 8,
-    personas_contacto: [
-      {
-        id_contacto: 3,
-        nombre_completo: "María Gonzales",
-        cargo: "Gerente de Compras",
-        correo: "maria.gonzales@spsa.pe",
-        telefono: "+51965432109"
-      }
-    ]
+  total_actividades: number
+  contacto_principal?: {
+    nombre_completo: string
+    cargo?: string
+    correo?: string
   }
-]
+  ultima_actividad?: {
+    fecha: string
+    tipo: string
+    resultado: string
+    persona_contacto?: {
+      id: number
+      nombre_completo: string
+      email: string
+      telefono: string
+    }
+  }
+}
 
 const navItems = [
   { label: "Resumen", icon: <Building2 className="w-5 h-5" />, href: "/dashboard/ejecutiva" },
@@ -429,14 +386,54 @@ export default function ClientesPage() {
   const fetchClientes = async () => {
     setLoading(true)
     try {
-      // TODO: Reemplazar con llamada real al backend
-      // const response = await fetch(`/api/ejecutiva/${user.id}/clientes`)
-      // const data = await response.json()
-      setClientes(mockClientes)
+      // ✅ LLAMADA REAL AL BACKEND
+      const clientesData = await ejecutivaService.getClientes(user ?.id || "")
+      
+      // Transformar datos del backend a la interfaz esperada
+      const clientesTransformados: ClienteFinal[] = clientesData.map((cliente: any) => ({
+        id_cliente_final: cliente.id_cliente_final,
+        ruc: cliente.ruc,
+        razon_social: cliente.razon_social,
+        pagina_web: cliente.pagina_web,
+        correo: cliente.correo,
+        telefono: cliente.telefono,
+        pais: cliente.pais || "Perú",
+        departamento: cliente.departamento,
+        provincia: cliente.provincia,
+        direccion: cliente.direccion,
+        linkedin: cliente.linkedin,
+        rubro: cliente.rubro,
+        sub_rubro: cliente.sub_rubro,
+        tamanio_empresa: cliente.tamanio_empresa,
+        personas_contacto: cliente.personas_contacto || [],
+        total_actividades: cliente.total_actividades || 0,
+        contacto_principal: cliente.contacto_principal,
+        ultima_actividad: cliente.ultima_actividad
+      }))
+      
+      setClientes(clientesTransformados)
     } catch (error) {
-      console.error("Error fetching clientes:", error)
+      console.error("❌ Error fetching clientes:", error)
+      // En caso de error, mostrar array vacío
+      setClientes([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchContactos = async (clienteId: number) => {
+    try {
+      // ✅ OBTENER CONTACTOS DEL CLIENTE
+      const contactos = await ejecutivaService.getContactosCliente(clienteId.toString(), user?.id || "")
+      
+      // Actualizar el cliente con sus contactos
+      setClientes(prev => prev.map(cliente => 
+        cliente.id_cliente_final === clienteId 
+          ? { ...cliente, personas_contacto: contactos }
+          : cliente
+      ))
+    } catch (error) {
+      console.error("❌ Error fetching contactos:", error)
     }
   }
 
@@ -448,10 +445,14 @@ export default function ClientesPage() {
 
   const handleClienteCreated = () => {
     fetchClientes()
+    setShowAddCliente(false)
   }
 
   const handleContactoCreated = () => {
-    fetchClientes()
+    // Refrescar los contactos del cliente específico
+    if (selectedClienteId) {
+      fetchContactos(selectedClienteId)
+    }
     setShowAddContacto(false)
     setSelectedClienteId(null)
   }
@@ -461,8 +462,17 @@ export default function ClientesPage() {
     setShowAddContacto(true)
   }
 
-  const toggleExpand = (clienteId: number) => {
-    setExpandedCliente(expandedCliente === clienteId ? null : clienteId)
+  const toggleExpand = async (clienteId: number) => {
+    if (expandedCliente === clienteId) {
+      setExpandedCliente(null)
+    } else {
+      // Si el cliente no tiene contactos cargados, cargarlos
+      const cliente = clientes.find(c => c.id_cliente_final === clienteId)
+      if (cliente && cliente.personas_contacto.length === 0) {
+        await fetchContactos(clienteId)
+      }
+      setExpandedCliente(clienteId)
+    }
   }
 
   if (loading) {
@@ -519,7 +529,7 @@ export default function ClientesPage() {
           <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-4">
             <p className="text-white/60 text-sm">Actividades Totales</p>
             <p className="text-2xl font-bold text-white">
-              {clientes.reduce((sum, cli) => sum + cli.total_trazabilidad, 0)}
+              {clientes.reduce((sum, cli) => sum + cli.total_actividades, 0)}
             </p>
           </Card>
         </div>
@@ -580,7 +590,9 @@ export default function ClientesPage() {
                     </div>
                     <div className="text-sm">
                       <span className="text-white/60">Ubicación: </span>
-                      <span className="text-white">{cliente.provincia}, {cliente.departamento}</span>
+                      <span className="text-white">
+                        {[cliente.provincia, cliente.departamento].filter(Boolean).join(", ") || "No especificada"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -595,7 +607,7 @@ export default function ClientesPage() {
                       </span>
                     </div>
                     <div className="text-sm text-white/60">
-                      {cliente.total_trazabilidad} actividades
+                      {cliente.total_actividades} actividades
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -726,7 +738,7 @@ export default function ClientesPage() {
       {/* Dialogs */}
       {showAddCliente && (
         <AddClienteDialog
-           open={showAddCliente} 
+          open={showAddCliente} 
           ejecutivaId={user?.id || ""}
           onSuccess={handleClienteCreated}
           onClose={() => setShowAddCliente(false)}
@@ -737,6 +749,7 @@ export default function ClientesPage() {
         <AddContactoDialog
           open={showAddContacto}
           clienteId={selectedClienteId}
+          ejecutivaId={user?.id || ""}
           onSuccess={handleContactoCreated}
           onClose={() => {
             setShowAddContacto(false)
