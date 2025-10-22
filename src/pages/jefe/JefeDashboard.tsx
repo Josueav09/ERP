@@ -17,14 +17,6 @@ export default function JefeDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // useEffect(() => {
-  //   if (!user || (user.role !== "jefe" && user.role !== "Administrador")) {
-  //     navigate("/login");
-  //     return;
-  //   }
-  //   fetchStats();
-  // }, [user, navigate]);
-
   useEffect(() => {
     console.log('📍 JefeDashboard - User context:', user);
 

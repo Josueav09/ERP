@@ -1,5 +1,3 @@
-
-
 import { apiService } from './api';
 
 export interface AuditoriaRecord {
@@ -170,114 +168,73 @@ export const jefeService = {
   // ============================================
   // CLIENTES
   // ============================================
-  // ============================================
-// CLIENTES - VERSIÓN CORREGIDA
-// ============================================
-async getClientes(): Promise<ClienteFinal[]> {
-  console.log('🔄 [jefeService.getClientes] === INICIANDO ===');
-  
-  try {
-    console.log('📞 [jefeService.getClientes] Llamando a apiService.get...');
-    
-    const response = await apiService.get('/jefe/clientes');
-    
-    console.log('✅ [jefeService.getClientes] apiService.get completado');
-    console.log('📊 [jefeService.getClientes] Respuesta completa:', response);
-    console.log('📊 [jefeService.getClientes] Tipo de respuesta:', typeof response);
-    console.log('📊 [jefeService.getClientes] Es array?:', Array.isArray(response));
-    
-    // ✅ VERIFICAR SI LA RESPUESTA ES UN ARRAY VACÍO O NULL
-    if (!response) {
-      console.log('⚠️ [jefeService.getClientes] Respuesta es null/undefined');
-      return [];
-    }
-    
-    if (!Array.isArray(response)) {
-      console.log('⚠️ [jefeService.getClientes] Respuesta NO es array:', typeof response);
-      
-      // ✅ CORREGIDO: Verificar si es un objeto con propiedad data
-      if (response && typeof response === 'object' && 'data' in response && Array.isArray((response as any).data)) {
-        console.log('🔄 [jefeService.getClientes] Usando response.data');
-        const dataArray = (response as any).data;
-        return dataArray.map((cliente: any) => this.mapClienteFromDB(cliente));
-      }
-      
-      // Si es un objeto pero no tiene data, intentar mapearlo directamente
-      if (response && typeof response === 'object') {
-        console.log('🔄 [jefeService.getClientes] Intentando mapear objeto directamente');
-        return [this.mapClienteFromDB(response)];
-      }
-      
-      return [];
-    }
-    
-    // ✅ Mapear los campos
-    console.log('🔄 [jefeService.getClientes] Mapeando clientes...');
-    const clientesMapeados = response.map((cliente: any) => 
-      this.mapClienteFromDB(cliente)
-    );
-    
-    console.log('✅ [jefeService.getClientes] Mapeo completado');
-    console.log('📤 [jefeService.getClientes] Clientes mapeados:', clientesMapeados);
-    
-    return clientesMapeados;
-    
-  } catch (error: any) {
-    console.error('❌ [jefeService.getClientes] Error completo:', error);
-    console.error('🔍 [jefeService.getClientes] Mensaje:', error.message);
-    console.error('🏷️ [jefeService.getClientes] Tipo:', typeof error);
-    
-    // ✅ CORREGIDO: Usar type assertion para evitar error TypeScript
-    const axiosError = error as any;
-    console.error('📡 [jefeService.getClientes] Response data:', axiosError.response?.data);
-    console.error('🔢 [jefeService.getClientes] Status:', axiosError.response?.status);
-    console.error('🔧 [jefeService.getClientes] Headers:', axiosError.response?.headers);
-    
-    // ✅ MEJORADO: Manejo específico del error 500
-    if (axiosError.response?.status === 500) {
-      console.error('💥 Error 500 del servidor - Revisar logs del backend');
-      // Devolver array vacío en lugar de lanzar error
-      return [];
-    }
-    
-    // ✅ Devolver array vacío en lugar de lanzar error para otros casos también
-    console.log('🔄 [jefeService.getClientes] Devolviendo array vacío por error');
-    return [];
-  }
-}, // ← ✅ AQUÍ ESTÁ BIEN LA LLAVE DE CIERRE
+  async getClientes(): Promise<ClienteFinal[]> {
+    console.log('🔄 [jefeService.getClientes] === INICIANDO ===');
 
-mapClienteFromDB(dbCliente: any): ClienteFinal {
-  console.log('🔍 Cliente crudo del backend:', dbCliente);
-  
-  return {
-    id_cliente_final: dbCliente.id_cliente_final,
-    ruc: dbCliente.ruc,
-    razon_social: dbCliente.razon_social,
-    pagina_web: dbCliente.pagina_web,
-    correo: dbCliente.correo,
-    telefono: dbCliente.telefono,
-    pais: dbCliente.pais,
-    departamento: dbCliente.departamento,
-    provincia: dbCliente.provincia,
-    direccion: dbCliente.direccion,
-    linkedin: dbCliente.linkedin,
-    grupo_economico: dbCliente.grupo_economico,
-    rubro: dbCliente.rubro,
-    sub_rubro: dbCliente.sub_rubro,
-    tamanio_empresa: dbCliente.tamanio_empresa,
-    facturacion_anual: dbCliente.facturacion_anual,
-    cantidad_empleados: dbCliente.cantidad_empleados,
-    logo: dbCliente.logo,
-    id_ejecutiva: dbCliente.id_ejecutiva,
-    ejecutiva_nombre: dbCliente.ejecutiva_nombre,
-    id_empresa_prov: dbCliente.id_empresa_prov,
-    empresa_nombre: dbCliente.empresa_nombre,
-    fecha_creacion: dbCliente.fecha_creacion,
-    fecha_actualizacion: dbCliente.fecha_actualizacion,
-    total_actividades: dbCliente.total_actividades || 0,
-    estado: dbCliente.estado || 'Activo'
-  };
-},
+    try {
+      console.log('📞 [jefeService.getClientes] Llamando a apiService.get...');
+
+      const data = await apiService.get('/jefe/clientes');
+
+      console.log('✅ [jefeService.getClientes] apiService.get completado');
+      console.log('📊 [jefeService.getClientes] Respuesta completa:', data);
+      console.log('📊 [jefeService.getClientes] Tipo de respuesta:', typeof data);
+      console.log('📊 [jefeService.getClientes] Es array?:', Array.isArray(data));
+
+      // ✅ Mapear los campos
+      console.log('🔄 [jefeService.getClientes] Mapeando clientes...');
+      const clientesMapeados = (data as any[]).map((cliente: any) =>
+        this.mapClienteFromDB(cliente)
+      );
+
+      console.log('✅ [jefeService.getClientes] Mapeo completado');
+      console.log('📤 [jefeService.getClientes] Clientes mapeados:', clientesMapeados);
+
+      return clientesMapeados;
+
+    } catch (error) {
+      console.error('❌ [jefeService.getClientes] Error completo:', error);
+      console.error('🔍 [jefeService.getClientes] Mensaje:', error);
+      console.error('🏷️ [jefeService.getClientes] Tipo:', error);
+      console.error('📡 [jefeService.getClientes] Response data:', error);
+      console.error('🔢 [jefeService.getClientes] Status:', error);
+
+      throw error;
+    }
+  },
+
+  mapClienteFromDB(dbCliente: any): ClienteFinal {
+    console.log('🔍 Cliente crudo del backend:', dbCliente);
+
+    return {
+      id_cliente_final: dbCliente.id_cliente_final,
+      ruc: dbCliente.ruc,
+      razon_social: dbCliente.razon_social,
+      pagina_web: dbCliente.pagina_web,
+      correo: dbCliente.correo,
+      telefono: dbCliente.telefono,
+      pais: dbCliente.pais,
+      departamento: dbCliente.departamento,
+      provincia: dbCliente.provincia,
+      direccion: dbCliente.direccion,
+      linkedin: dbCliente.linkedin,
+      grupo_economico: dbCliente.grupo_economico,
+      rubro: dbCliente.rubro,
+      sub_rubro: dbCliente.sub_rubro,
+      tamanio_empresa: dbCliente.tamanio_empresa,
+      facturacion_anual: dbCliente.facturacion_anual,
+      cantidad_empleados: dbCliente.cantidad_empleados,
+      logo: dbCliente.logo,
+      id_ejecutiva: dbCliente.id_ejecutiva,
+      ejecutiva_nombre: dbCliente.ejecutiva_nombre,
+      id_empresa_prov: dbCliente.id_empresa_prov,
+      empresa_nombre: dbCliente.empresa_nombre,
+      fecha_creacion: dbCliente.fecha_creacion,
+      fecha_actualizacion: dbCliente.fecha_actualizacion,
+      total_actividades: dbCliente.total_actividades || 0,
+      estado: dbCliente.estado || 'Activo'
+    };
+  },
 
   async createCliente(data: any): Promise<any> {
     console.log('📤 [jefeService] Enviando cliente:', data);
@@ -308,7 +265,7 @@ mapClienteFromDB(dbCliente: any): ClienteFinal {
   async getEjecutivas(): Promise<Ejecutiva[]> {
     const data = await apiService.get('/jefe/ejecutivas');
     console.log('📥 [jefeService] Datos CRUDOS de ejecutivas del backend:', data);
-    const ejecutivasMapeadas = (data as any[]).map((ejecutiva: any) => 
+    const ejecutivasMapeadas = (data as any[]).map((ejecutiva: any) =>
       this.mapEjecutivaFromDB(ejecutiva)
     );
     console.log('📤 [jefeService] Ejecutivas mapeadas:', ejecutivasMapeadas);
@@ -320,11 +277,11 @@ mapClienteFromDB(dbCliente: any): ClienteFinal {
     try {
       const data = await apiService.get('/jefe/ejecutivas/disponibles');
       console.log('📥 [jefeService] Ejecutivas disponibles CRUDAS:', data);
-      
-      const ejecutivasMapeadas = (data as any[]).map((ejecutiva: any) => 
+
+      const ejecutivasMapeadas = (data as any[]).map((ejecutiva: any) =>
         this.mapEjecutivaDisponibleFromDB(ejecutiva)
       );
-      
+
       console.log('📤 [jefeService] Ejecutivas disponibles mapeadas:', ejecutivasMapeadas);
       return ejecutivasMapeadas;
     } catch (error) {
@@ -334,27 +291,27 @@ mapClienteFromDB(dbCliente: any): ClienteFinal {
   },
 
   // ✅ CORREGIDO: Mapeo específico para ejecutivas disponibles
-    mapEjecutivaDisponibleFromDB(dbEjecutiva: any): Ejecutiva {
-      console.log('🔍 [mapEjecutivaDisponibleFromDB] Datos crudos:', dbEjecutiva);
-      
-      return {
-        id_usuario: dbEjecutiva.id_ejecutiva || dbEjecutiva.id_usuario,
-        id_ejecutiva: dbEjecutiva.id_ejecutiva || dbEjecutiva.id_usuario,
-        nombre: dbEjecutiva.nombre || dbEjecutiva.nombre_completo?.split(' ')[0] || '',
-        apellido: dbEjecutiva.apellido || dbEjecutiva.nombre_completo?.split(' ').slice(1).join(' ') || '',
-        email: dbEjecutiva.correo || dbEjecutiva.email,
-        telefono: dbEjecutiva.telefono,
-        rol: 'ejecutiva',
-        activo: dbEjecutiva.estado_ejecutiva === 'Activo',
-        total_empresas: dbEjecutiva.total_empresas || 0,
-        total_clientes: dbEjecutiva.total_clientes || 0,
-        total_actividades: dbEjecutiva.total_actividades || 0,
-        estado_ejecutiva: dbEjecutiva.estado_ejecutiva || 'Activo',
-        nombre_completo: dbEjecutiva.nombre_completo || `${dbEjecutiva.nombre || ''} ${dbEjecutiva.apellido || ''}`.trim(),
-        correo: dbEjecutiva.correo || dbEjecutiva.email,
-        dni: dbEjecutiva.dni
-      };
-    },
+  mapEjecutivaDisponibleFromDB(dbEjecutiva: any): Ejecutiva {
+    console.log('🔍 [mapEjecutivaDisponibleFromDB] Datos crudos:', dbEjecutiva);
+
+    return {
+      id_usuario: dbEjecutiva.id_ejecutiva || dbEjecutiva.id_usuario,
+      id_ejecutiva: dbEjecutiva.id_ejecutiva || dbEjecutiva.id_usuario,
+      nombre: dbEjecutiva.nombre || dbEjecutiva.nombre_completo?.split(' ')[0] || '',
+      apellido: dbEjecutiva.apellido || dbEjecutiva.nombre_completo?.split(' ').slice(1).join(' ') || '',
+      email: dbEjecutiva.correo || dbEjecutiva.email,
+      telefono: dbEjecutiva.telefono,
+      rol: 'ejecutiva',
+      activo: dbEjecutiva.estado_ejecutiva === 'Activo',
+      total_empresas: dbEjecutiva.total_empresas || 0,
+      total_clientes: dbEjecutiva.total_clientes || 0,
+      total_actividades: dbEjecutiva.total_actividades || 0,
+      estado_ejecutiva: dbEjecutiva.estado_ejecutiva || 'Activo',
+      nombre_completo: dbEjecutiva.nombre_completo || `${dbEjecutiva.nombre || ''} ${dbEjecutiva.apellido || ''}`.trim(),
+      correo: dbEjecutiva.correo || dbEjecutiva.email,
+      dni: dbEjecutiva.dni
+    };
+  },
 
 
   async getEjecutivaDetalle(id: number): Promise<any> {
@@ -366,24 +323,24 @@ mapClienteFromDB(dbCliente: any): ClienteFinal {
   },
 
   async createEjecutiva(data: any): Promise<any> {
-  // Obtener el usuario del localStorage o sessionStorage
-  const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
-  const currentUser = storedUser ? JSON.parse(storedUser) : null;
-  
-  const dbData = {
-    dni: data.dni,
-    nombre_completo: data.nombre_completo,
-    correo: data.correo,
-    contraseña: data.contraseña,
-    telefono: data.telefono || null,
-    linkedin: data.linkedin || null,
-    estado_ejecutiva: data.estado_ejecutiva || 'Activo',
-    id_jefe: currentUser?.id || 1 // ✅ Usar el ID del jefe actual
-  };
+    // Obtener el usuario del localStorage o sessionStorage
+    const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const currentUser = storedUser ? JSON.parse(storedUser) : null;
 
-  console.log('📤 [jefeService] Enviando datos de ejecutiva al backend:', dbData);
-  return apiService.post('/jefe/ejecutivas', dbData);
-},
+    const dbData = {
+      dni: data.dni,
+      nombre_completo: data.nombre_completo,
+      correo: data.correo,
+      contraseña: data.contraseña,
+      telefono: data.telefono || null,
+      linkedin: data.linkedin || null,
+      estado_ejecutiva: data.estado_ejecutiva || 'Activo',
+      id_jefe: currentUser?.id || 1 // ✅ Usar el ID del jefe actual
+    };
+
+    console.log('📤 [jefeService] Enviando datos de ejecutiva al backend:', dbData);
+    return apiService.post('/jefe/ejecutivas', dbData);
+  },
 
   async updateEjecutiva(id: number, data: any): Promise<any> {
     const dbData = {
@@ -442,81 +399,81 @@ mapClienteFromDB(dbCliente: any): ClienteFinal {
   },
 
 
-// En jefeService.ts - CORREGIR completamente el método toggleEmpresaEstado
+  // En jefeService.ts - CORREGIR completamente el método toggleEmpresaEstado
 
-async toggleEmpresaEstado(id: number, activo: boolean): Promise<any> {
-  console.log('🔄 [jefeService] Cambiando estado de empresa:', { id, activo });
-  
-  // ✅ SOLO enviar el campo 'activo' como booleano, que es lo que espera tu backend
-  const requestData = {
-    activo: activo // ← Esto es lo CRÍTICO: debe ser booleano, no string
-  };
+  async toggleEmpresaEstado(id: number, activo: boolean): Promise<any> {
+    console.log('🔄 [jefeService] Cambiando estado de empresa:', { id, activo });
 
-  console.log('📤 [jefeService] Enviando datos:', requestData);
-  
-  try {
-    // ✅ Usar EXACTAMENTE el endpoint que tienes en tu backend
-    const response = await apiService.patch(`/jefe/empresas/${id}/estado`, requestData);
-    console.log('✅ [jefeService] Estado cambiado exitosamente');
-    return response;
-  } catch (error: any) {
-    console.error('❌ [jefeService] Error cambiando estado:', error);
-    
-    // ✅ Mostrar más detalles del error
-    if (error.response) {
-      console.error('🔍 [jefeService] Error response:', error.response.data);
-      console.error('🔍 [jefeService] Error status:', error.response.status);
+    // ✅ SOLO enviar el campo 'activo' como booleano, que es lo que espera tu backend
+    const requestData = {
+      activo: activo // ← Esto es lo CRÍTICO: debe ser booleano, no string
+    };
+
+    console.log('📤 [jefeService] Enviando datos:', requestData);
+
+    try {
+      // ✅ Usar EXACTAMENTE el endpoint que tienes en tu backend
+      const response = await apiService.patch(`/jefe/empresas/${id}/estado`, requestData);
+      console.log('✅ [jefeService] Estado cambiado exitosamente');
+      return response;
+    } catch (error: any) {
+      console.error('❌ [jefeService] Error cambiando estado:', error);
+
+      // ✅ Mostrar más detalles del error
+      if (error.response) {
+        console.error('🔍 [jefeService] Error response:', error.response.data);
+        console.error('🔍 [jefeService] Error status:', error.response.status);
+      }
+
+      throw error;
     }
-    
-    throw error;
-  }
-},
+  },
 
 
- // ✅ CORREGIDO: Mapear ejecutivas de empresa con validación
-async getEmpresaEjecutivas(empresaId: number): Promise<any> {
-  const data: any = await apiService.get(`/jefe/empresas/${empresaId}/ejecutivas`);
-  console.log('📥 [jefeService] Respuesta del backend:', data);
-  
-  // ✅ Extraer ejecutivas
-  const ejecutivasArray: any[] = Array.isArray(data) ? data : (data.ejecutivas || []);
-  
-  // ✅ Mapear ejecutivas
-  const ejecutivasMapeadas = ejecutivasArray.map((ej: any) => ({
-    id_usuario: ej.id_usuario || ej.id_ejecutiva,
-    nombre: ej.nombre || ej.nombre_completo?.split(' ')[0] || '',
-    apellido: ej.apellido || ej.nombre_completo?.split(' ').slice(1).join(' ') || '',
-    email: ej.email || ej.correo || '',
-    fecha_asignacion: ej.fecha_asignacion,
-    activo: ej.activo !== false,
-    total_clientes: ej.total_clientes || 0
-  }));
+  // ✅ CORREGIDO: Mapear ejecutivas de empresa con validación
+  async getEmpresaEjecutivas(empresaId: number): Promise<any> {
+    const data: any = await apiService.get(`/jefe/empresas/${empresaId}/ejecutivas`);
+    console.log('📥 [jefeService] Respuesta del backend:', data);
 
-  console.log('✅ [jefeService] Ejecutivas mapeadas:', ejecutivasMapeadas);
+    // ✅ Extraer ejecutivas
+    const ejecutivasArray: any[] = Array.isArray(data) ? data : (data.ejecutivas || []);
 
-  return {
-    id_empresa_prov: data.id_empresa_prov || empresaId,
-    razon_social: data.razon_social || '',
-    ruc: data.ruc || '',
-    ejecutivas: ejecutivasMapeadas
-  };
-},
+    // ✅ Mapear ejecutivas
+    const ejecutivasMapeadas = ejecutivasArray.map((ej: any) => ({
+      id_usuario: ej.id_usuario || ej.id_ejecutiva,
+      nombre: ej.nombre || ej.nombre_completo?.split(' ')[0] || '',
+      apellido: ej.apellido || ej.nombre_completo?.split(' ').slice(1).join(' ') || '',
+      email: ej.email || ej.correo || '',
+      fecha_asignacion: ej.fecha_asignacion,
+      activo: ej.activo !== false,
+      total_clientes: ej.total_clientes || 0
+    }));
+
+    console.log('✅ [jefeService] Ejecutivas mapeadas:', ejecutivasMapeadas);
+
+    return {
+      id_empresa_prov: data.id_empresa_prov || empresaId,
+      razon_social: data.razon_social || '',
+      ruc: data.ruc || '',
+      ejecutivas: ejecutivasMapeadas
+    };
+  },
 
   // ✅ CORREGIDO: Usar la ruta correcta con parámetros en URL
   async addEjecutivaToEmpresa(empresaId: number, ejecutivaId: number): Promise<any> {
     console.log('➕ [jefeService] Asignando ejecutiva:', { empresaId, ejecutivaId });
-    
+
     try {
       // ✅ Intenta primero con el formato que probablemente usa tu backend
       const response = await apiService.post(`/jefe/empresas/${empresaId}/ejecutivas`, {
         id_ejecutiva: ejecutivaId
       });
-      
+
       console.log('✅ [jefeService] Ejecutiva agregada exitosamente');
       return response;
     } catch (error: any) {
       console.error('❌ [jefeService] Error agregando ejecutiva:', error);
-      
+
       // ✅ Si falla, intenta con el otro formato
       try {
         console.log('🔄 [jefeService] Intentando formato alternativo...');
@@ -558,64 +515,64 @@ async getEmpresaEjecutivas(empresaId: number): Promise<any> {
 
   // ✅ NUEVO: Obtener KPIs de trazabilidad
   // En jefeService.ts - método getTrazabilidadKPIs
-async getTrazabilidadKPIs(filters?: {
-  ejecutivaId?: number;
-  empresaId?: number;
-  clienteId?: number;
-  fechaDesde?: string;
-  fechaHasta?: string;
-}): Promise<any> {
-  console.log('✅ [TrazabilidadController] Controller inicializado');
-  try {
-    console.log('🔄 [jefeService.getTrazabilidadKPIs] Iniciando con filters:', filters)
-    
-    const params = new URLSearchParams();
-    if (filters?.ejecutivaId) {
-      params.append('ejecutivaId', filters.ejecutivaId.toString());
-      console.log('📤 [jefeService] Agregando ejecutivaId:', filters.ejecutivaId)
-    }
-    if (filters?.empresaId) {
-      params.append('empresaId', filters.empresaId.toString());
-      console.log('📤 [jefeService] Agregando empresaId:', filters.empresaId)
-    }
-    if (filters?.clienteId) {
-      params.append('clienteId', filters.clienteId.toString());
-      console.log('📤 [jefeService] Agregando clienteId:', filters.clienteId)
-    }
-    if (filters?.fechaDesde) {
-      params.append('fechaDesde', filters.fechaDesde);
-      console.log('📤 [jefeService] Agregando fechaDesde:', filters.fechaDesde)
-    }
-    if (filters?.fechaHasta) {
-      params.append('fechaHasta', filters.fechaHasta);
-      console.log('📤 [jefeService] Agregando fechaHasta:', filters.fechaHasta)
-    }
+  async getTrazabilidadKPIs(filters?: {
+    ejecutivaId?: number;
+    empresaId?: number;
+    clienteId?: number;
+    fechaDesde?: string;
+    fechaHasta?: string;
+  }): Promise<any> {
+    console.log('✅ [TrazabilidadController] Controller inicializado');
+    try {
+      console.log('🔄 [jefeService.getTrazabilidadKPIs] Iniciando con filters:', filters)
 
-    const url = `/jefe/trazabilidad/kpis?${params.toString()}`
-    console.log('📞 [jefeService] Llamando a:', url)
-    
-    const data = await apiService.get(url);
-    console.log('📊 [jefeService] Respuesta recibida:', data)
+      const params = new URLSearchParams();
+      if (filters?.ejecutivaId) {
+        params.append('ejecutivaId', filters.ejecutivaId.toString());
+        console.log('📤 [jefeService] Agregando ejecutivaId:', filters.ejecutivaId)
+      }
+      if (filters?.empresaId) {
+        params.append('empresaId', filters.empresaId.toString());
+        console.log('📤 [jefeService] Agregando empresaId:', filters.empresaId)
+      }
+      if (filters?.clienteId) {
+        params.append('clienteId', filters.clienteId.toString());
+        console.log('📤 [jefeService] Agregando clienteId:', filters.clienteId)
+      }
+      if (filters?.fechaDesde) {
+        params.append('fechaDesde', filters.fechaDesde);
+        console.log('📤 [jefeService] Agregando fechaDesde:', filters.fechaDesde)
+      }
+      if (filters?.fechaHasta) {
+        params.append('fechaHasta', filters.fechaHasta);
+        console.log('📤 [jefeService] Agregando fechaHasta:', filters.fechaHasta)
+      }
 
-    return data;
-    
-  } catch (error: any) {
-    console.error('❌ [jefeService.getTrazabilidadKPIs] Error completo:', error)
-    console.error('❌ [jefeService] Mensaje:', error.message)
-    console.error('❌ [jefeService] Response:', error.response)
-    
-    // En caso de error, retornar datos de prueba
-    console.log('🔄 [jefeService] Usando datos de prueba por error')
-    return {
-      totalOportunidades: 18,
-      enProceso: 6,
-      ventasGanadas: 4,
-      ventasPerdidas: 3,
-      montoTotal: 3200000,
-      tasaConversion: 22.2
-    };
-  }
-},
+      const url = `/jefe/trazabilidad/kpis?${params.toString()}`
+      console.log('📞 [jefeService] Llamando a:', url)
+
+      const data = await apiService.get(url);
+      console.log('📊 [jefeService] Respuesta recibida:', data)
+
+      return data;
+
+    } catch (error: any) {
+      console.error('❌ [jefeService.getTrazabilidadKPIs] Error completo:', error)
+      console.error('❌ [jefeService] Mensaje:', error.message)
+      console.error('❌ [jefeService] Response:', error.response)
+
+      // En caso de error, retornar datos de prueba
+      console.log('🔄 [jefeService] Usando datos de prueba por error')
+      return {
+        totalOportunidades: 18,
+        enProceso: 6,
+        ventasGanadas: 4,
+        ventasPerdidas: 3,
+        montoTotal: 3200000,
+        tasaConversion: 22.2
+      };
+    }
+  },
 
   // ✅ NUEVO: Obtener datos de Etapa 1
   async getTrazabilidadEtapa1(filters?: {
@@ -633,9 +590,9 @@ async getTrazabilidadKPIs(filters?: {
     if (filters?.ejecutivaId) params.append('ejecutivaId', filters.ejecutivaId.toString());
     if (filters?.empresaId) params.append('empresaId', filters.empresaId.toString());
     if (filters?.clienteId) params.append('clienteId', filters.clienteId.toString());
-    if (filters?.resultadoContacto && filters.resultadoContacto !== 'all') 
+    if (filters?.resultadoContacto && filters.resultadoContacto !== 'all')
       params.append('resultadoContacto', filters.resultadoContacto);
-    if (filters?.tipoContacto && filters.tipoContacto !== 'all') 
+    if (filters?.tipoContacto && filters.tipoContacto !== 'all')
       params.append('tipoContacto', filters.tipoContacto);
     if (filters?.fechaDesde) params.append('fechaDesde', filters.fechaDesde);
     if (filters?.fechaHasta) params.append('fechaHasta', filters.fechaHasta);
@@ -660,7 +617,7 @@ async getTrazabilidadKPIs(filters?: {
     if (filters?.ejecutivaId) params.append('ejecutivaId', filters.ejecutivaId.toString());
     if (filters?.empresaId) params.append('empresaId', filters.empresaId.toString());
     if (filters?.clienteId) params.append('clienteId', filters.clienteId.toString());
-    if (filters?.etapaOportunidad && filters.etapaOportunidad !== 'all') 
+    if (filters?.etapaOportunidad && filters.etapaOportunidad !== 'all')
       params.append('etapaOportunidad', filters.etapaOportunidad);
     if (filters?.fechaDesde) params.append('fechaDesde', filters.fechaDesde);
     if (filters?.fechaHasta) params.append('fechaHasta', filters.fechaHasta);
@@ -718,80 +675,103 @@ async getTrazabilidadKPIs(filters?: {
 
     return apiService.get(`/jefe/trazabilidad/kpis/tasa-conversion?${params.toString()}`);
   },
+
   // ============================================
   // FILTROS DINÁMICOS - NUEVOS MÉTODOS
   // ============================================
 
-  // ✅ Obtener opciones para filtros
   async getFilterOptions(): Promise<FilterOptions> {
     try {
       console.log('🔄 [jefeService] Obteniendo opciones de filtro...');
-      
-      const data = await apiService.get('/jefe/trazabilidad/filter-options') as FilterOptions;
-      console.log('✅ [jefeService] Opciones de filtro recibidas:', data);
-      
+
+      // ✅ Usar apiService en lugar de fetch directo
+      const response = await apiService.get('/jefe/trazabilidad/filter-options');
+
+      console.log('📡 [jefeService] Respuesta completa:', response);
+
+      // ✅ Manejar diferentes estructuras de respuesta
+      let data;
+      if (response.data) {
+        // Si la respuesta tiene estructura { success, data }
+        data = response.data;
+      } else if (response.ejecutivas !== undefined) {
+        // Si la respuesta es directa { ejecutivas, empresas, clientes }
+        data = response;
+      } else {
+        throw new Error('Estructura de respuesta inválida');
+      }
+
+      console.log('✅ [jefeService] Opciones procesadas:', data);
       return data;
+
     } catch (error) {
       console.error('❌ [jefeService] Error obteniendo opciones de filtro:', error);
-      
-      // ✅ Datos de respaldo mientras implementas el backend
-      console.log('🔄 [jefeService] Usando datos de respaldo...');
+
+      // ✅ Llamar a la solución temporal
+      return await this.getRealDataFromOtherEndpoints();
+    }
+  },
+
+  // ✅ NUEVO MÉTODO: Obtener datos reales de endpoints existentes
+  async getRealDataFromOtherEndpoints(): Promise<FilterOptions> {
+    try {
+      console.log('🔄 [jefeService] Obteniendo datos reales de otros endpoints...');
+
+      const [ejecutivas, empresas, clientes] = await Promise.all([
+        this.getEjecutivas(),
+        this.getEmpresas(),
+        this.getClientes()
+      ]);
+
       return {
-        ejecutivas: [
-          { id: 1, nombre_completo: 'Jherson Medrano' },
-          { id: 2, nombre_completo: 'Pedro Suarez' }
-        ],
-        empresas: [
-          { id: 1, razon_social: 'Rimac Seguros' }
-        ],
-        clientes: [
-          { id: 4, razon_social: 'SuperMarket Perú S.A.' }
-        ]
+        ejecutivas: ejecutivas
+          .filter(e => e.estado_ejecutiva === 'Activo' || e.activo)
+          .map(e => ({
+            id: e.id_ejecutiva || e.id_usuario,
+            nombre_completo: e.nombre_completo || `${e.nombre} ${e.apellido}`
+          })),
+        empresas: empresas
+          .filter(emp => emp.estado === 'Activo' || emp.activo)
+          .map(emp => ({
+            id: emp.id_empresa,
+            razon_social: emp.razon_social || emp.nombre_empresa
+          })),
+        clientes: clientes.map(cli => ({
+          id: cli.id_cliente_final,
+          razon_social: cli.razon_social
+        }))
       };
+    } catch (error) {
+      console.error('❌ [jefeService] Error obteniendo datos reales:', error);
+
+      // 🔥 Último recurso: datos mock
+      return this.getMockFilterOptions();
     }
   },
 
-  // ✅ Obtener solo ejecutivas para filtros
-  async getEjecutivasForFilters(): Promise<Array<{ id: number; nombre_completo: string }>> {
-    try {
-      const ejecutivas = await this.getEjecutivas();
-      return ejecutivas.map(ej => ({
-        id: ej.id_ejecutiva || ej.id_usuario,
-        nombre_completo: ej.nombre_completo || `${ej.nombre} ${ej.apellido}`
-      }));
-    } catch (error) {
-      console.error('Error obteniendo ejecutivas para filtros:', error);
-      return [];
-    }
+  getMockFilterOptions(): FilterOptions {
+    console.log('⚠️ [jefeService] Usando datos mockeados como último recurso');
+    return {
+      ejecutivas: [
+        { id: 1, nombre_completo: 'Jherson Medrano' },
+        { id: 2, nombre_completo: 'Pedro Suarez' },
+        { id: 3, nombre_completo: 'Ana García' },
+        { id: 4, nombre_completo: 'Luis Fernández' }
+      ],
+      empresas: [
+        { id: 1, razon_social: 'Rimac Seguros' },
+        { id: 2, razon_social: 'Ron Cartavio S.A.' },
+        { id: 3, razon_social: 'Tech Solutions Perú' }
+      ],
+      clientes: [
+        { id: 1, razon_social: 'SuperMarket Perú S.A.' },
+        { id: 2, razon_social: 'Banco de Crédito del Perú' },
+        { id: 3, razon_social: 'Clínica Internacional' },
+        { id: 4, razon_social: 'Universidad San Marcos' }
+      ]
+    };
   },
 
-  // ✅ Obtener solo empresas para filtros
-  async getEmpresasForFilters(): Promise<Array<{ id: number; razon_social: string }>> {
-    try {
-      const empresas = await this.getEmpresas();
-      return empresas.map(emp => ({
-        id: emp.id_empresa,
-        razon_social: emp.razon_social || emp.nombre_empresa
-      }));
-    } catch (error) {
-      console.error('Error obteniendo empresas para filtros:', error);
-      return [];
-    }
-  },
-
-  // ✅ Obtener solo clientes para filtros
-  async getClientesForFilters(): Promise<Array<{ id: number; razon_social: string }>> {
-    try {
-      const clientes = await this.getClientes();
-      return clientes.map(cli => ({
-        id: cli.id_cliente_final,
-        razon_social: cli.razon_social
-      }));
-    } catch (error) {
-      console.error('Error obteniendo clientes para filtros:', error);
-      return [];
-    }
-  },
   // ============================================
   // PERFIL
   // ============================================
@@ -814,7 +794,7 @@ async getTrazabilidadKPIs(filters?: {
         id_jefe: perfilData.id_jefe,
         dni: perfilData.dni,
         nombre_completo: perfilData.nombre_completo,
-        email: perfilData.correo,
+        email: perfilData.email,
         telefono: perfilData.telefono,
         linkedin: perfilData.linkedin,
         rol: perfilData.rol || 'Jefe',
@@ -843,7 +823,7 @@ async getTrazabilidadKPIs(filters?: {
 
   mapEjecutivaFromDB(dbEjecutiva: any): Ejecutiva {
     console.log('🔍 [mapEjecutivaFromDB] Datos crudos:', dbEjecutiva);
-    
+
     // Separar nombre_completo en nombre y apellido para el frontend
     const nombreCompleto = dbEjecutiva.nombre_completo || '';
     const nombreParts = nombreCompleto.split(' ');
@@ -872,13 +852,13 @@ async getTrazabilidadKPIs(filters?: {
   // ✅ CORREGIDO: Mapeo de detalle de ejecutiva
   mapEjecutivaDetalleFromDB(dbDetalle: any): any {
     console.log('🔍 [mapEjecutivaDetalleFromDB] Datos crudos:', dbDetalle);
-    
+
     // Si dbDetalle ya tiene la estructura de tu backend
     if (dbDetalle.ejecutiva) {
       const ejecutiva = dbDetalle.ejecutiva;
       const nombreCompleto = ejecutiva.nombre_completo || '';
       const nombreParts = nombreCompleto.split(' ');
-      
+
       return {
         ejecutiva: {
           id_ejecutiva: ejecutiva.id_ejecutiva,
@@ -900,7 +880,7 @@ async getTrazabilidadKPIs(filters?: {
         clientes: dbDetalle.clientes || []
       };
     }
-    
+
     // Si es una ejecutiva básica
     return {
       ejecutiva: {
