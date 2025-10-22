@@ -233,7 +233,7 @@ export function DashboardLayout({ children, navItems, title, subtitle }: Dashboa
                 variant="ghost"
                 className={cn(
                   "w-full h-11 text-white/70 hover:text-white hover:bg-[#013936]/50 flex items-center justify-start",
-                  isActive && "bg-[#b5e385] text-[#012826] hover:bg-[#013936]/90 hover:text-[#013936] font-semibold"
+                  isActive && "bg-[#b5e385] !text-[#012826] hover:bg-[#013936]/90 hover:text-[#013936] font-semibold"
                 )}
                 onClick={() => {
                   navigate(item.href);

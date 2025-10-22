@@ -178,20 +178,7 @@ export default function EjecutivaDashboard() {
             <p className="text-white/60">Gestiona tus empresas, clientes y actividades</p>
           </div>
           <div className="flex gap-3">
-            <Button
-              onClick={() => setShowAddEmpresa(true)}
-              className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-semibold"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nueva Empresa
-            </Button>
-            <Button
-              onClick={() => setShowAddCliente(true)}
-              className="bg-white/10 text-white hover:bg-white/20 border border-white/20"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo Cliente
-            </Button>
+            
           </div>
         </div>
 
