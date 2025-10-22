@@ -66,7 +66,7 @@ const AppRoutes: React.FC = () => {
         {/* Protected routes - Dashboard Principal */}
         <Route path="/" element={
           <ProtectedRoute>
-            <Home />
+            <Login />
           </ProtectedRoute>
         } />
 
