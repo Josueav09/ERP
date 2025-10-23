@@ -27,7 +27,7 @@ export interface Trazabilidad {
 export const clienteService = {
   // Dashboard Stats
   async getStats(clienteUsuarioId: string): Promise<ClienteStats> {
-    return apiService.get(`/cliente/dashboard/stats?clienteUsuarioId=${clienteUsuarioId}`);
+    return apiService.get(`/empresa/dashboard/stats?clienteUsuarioId=${clienteUsuarioId}`);
   },
 
   // Trazabilidad

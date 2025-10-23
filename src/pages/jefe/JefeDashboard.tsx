@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card } from "@/components/ui/card";
-import { LayoutDashboard, Building2, Users, UserCheck, Activity, TrendingUp, ArrowUp, ArrowDown, FileText, User } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LayoutDashboard, Building2, Users, UserCheck, Activity, TrendingUp, ArrowUp, ArrowDown, FileText, User, Award, Badge, DollarSign, Minus } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useToast } from "@/hooks/useToast";
 import { jefeService, DashboardStats } from "@/services/jefeService";
@@ -72,6 +72,24 @@ export default function JefeDashboard() {
     }
   };
 
+  const getEstadoBadgeColor = (estado: string) => {
+    switch (estado?.toLowerCase()) {
+      case "completado":
+      case "venta ganada":
+        return "bg-[#C7E196] text-[#013936]";
+      case "en_proceso":
+      case "negociación":
+        return "bg-blue-500/20 text-blue-300 border-blue-500/30";
+      case "pendiente":
+      case "prospección":
+        return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+      case "cancelado":
+      case "venta perdida":
+        return "bg-red-500/20 text-red-300 border-red-500/30";
+      default:
+        return "bg-white/10 text-white/60";
+    }
+  };
 
 
   const navItems = [
@@ -102,27 +120,60 @@ export default function JefeDashboard() {
 
   // ✅ CORREGIDO: Usar datos reales del backend
   // Datos para gráfico de actividades por ejecutiva
+  // const actividadesData = stats.dashboardEjecutivas?.map((item) => ({
+  //   name: item.nombre_ejecutiva.split(" ")[0],
+  //   actividades: Number.parseInt(item.total_gestiones) || 0,
+  // })) || [];
+
+  // // ✅ CORREGIDO: Datos para gráfico de estado (usando pipeline data)
+  // const estadoData = stats.pipeline?.map((item, index) => ({
+  //   name: item.etapa_oportunidad || `Etapa ${index + 1}`,
+  //   value: 1, // Placeholder - puedes ajustar según tus necesidades
+  // })) || [
+  //   ];
+
+  // // ✅ CORREGIDO: Datos para gráfico de clientes por empresa
+  // const clientesData = [
+  //   { name: stats.dashboardEjecutivas?.[0]?.empresa_proveedora || "Empresa 1", clientes: Number.parseInt(stats.dashboardEjecutivas?.[0]?.total_clientes) || 0 },
+  //   { name: "Otras empresas", clientes: Math.max(0, stats.totalClientes - (Number.parseInt(stats.dashboardEjecutivas?.[0]?.total_clientes) || 0)) },
+  // ].filter(item => item.clientes > 0);
+
+  // ✅ CORREGIDO: Datos reales para gráficos
   const actividadesData = stats.dashboardEjecutivas?.map((item) => ({
-    name: item.nombre_ejecutiva.split(" ")[0],
+    name: item.nombre_ejecutiva.split(" ")[0], // Solo primer nombre
     actividades: Number.parseInt(item.total_gestiones) || 0,
   })) || [];
 
-  // ✅ CORREGIDO: Datos para gráfico de estado (usando pipeline data)
-  const estadoData = stats.pipeline?.map((item, index) => ({
-    name: item.etapa_oportunidad || `Etapa ${index + 1}`,
-    value: 1, // Placeholder - puedes ajustar según tus necesidades
-  })) || [
-      { name: "Prospección", value: 5 },
-      { name: "Calificación", value: 3 },
-      { name: "Presentación", value: 2 },
-      { name: "Negociación", value: 1 },
-    ];
+  // ✅ CORREGIDO: Datos reales para gráfico de estado
+  const estadoData = stats.pipeline?.reduce((acc: any[], item) => {
+    const etapa = item.etapa_oportunidad || 'Sin etapa';
+    const existing = acc.find(e => e.name === etapa);
 
-  // ✅ CORREGIDO: Datos para gráfico de clientes por empresa
-  const clientesData = [
-    { name: stats.dashboardEjecutivas?.[0]?.empresa_proveedora || "Empresa 1", clientes: Number.parseInt(stats.dashboardEjecutivas?.[0]?.total_clientes) || 0 },
-    { name: "Otras empresas", clientes: Math.max(0, stats.totalClientes - (Number.parseInt(stats.dashboardEjecutivas?.[0]?.total_clientes) || 0)) },
-  ].filter(item => item.clientes > 0);
+    if (existing) {
+      existing.value += 1;
+    } else {
+      acc.push({ name: etapa, value: 1 });
+    }
+    return acc;
+  }, []) || [];
+
+  // ✅ CORREGIDO: Datos reales para clientes por empresa
+  const clientesData = stats.dashboardEjecutivas?.reduce((acc: any[], item) => {
+    const empresa = item.empresa_proveedora || 'Sin empresa';
+    const clientes = Number.parseInt(item.total_clientes) || 0;
+
+    if (clientes > 0) {
+      const existing = acc.find(e => e.name === empresa);
+      if (existing) {
+        existing.clientes += clientes;
+      } else {
+        acc.push({ name: empresa, clientes });
+      }
+    }
+    return acc;
+  }, []).slice(0, 5) || []; // Mostrar solo top 5
+
+
 
   return (
     <DashboardLayout navItems={navItems} title="Panel de Administración" subtitle="Vista general del sistema">
@@ -135,7 +186,7 @@ export default function JefeDashboard() {
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
+          {/* <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-[#C7E196]/20 rounded-lg">
                 <Building2 className="w-6 h-6 text-[#C7E196]" />
@@ -193,6 +244,298 @@ export default function JefeDashboard() {
             <p className="text-white/60 text-sm mb-1">Actividades</p>
             <p className="text-3xl font-bold text-white">{stats.kpis?.actividadesMes || 0}</p>
             <p className="text-white/40 text-xs mt-2">Este mes</p>
+          </Card> */}
+
+          {/* Empresas */}
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-[#C7E196]/20 rounded-lg">
+                <Building2 className="w-6 h-6 text-[#C7E196]" />
+              </div>
+              <div className={`flex items-center gap-1 text-sm ${stats.totalEmpresas > 0 ? 'text-green-400' : 'text-gray-400'
+                }`}>
+                {stats.totalEmpresas > 0 ? <ArrowUp className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+                <span>{stats.totalEmpresas > 0 ? 'Activas' : 'Sin datos'}</span>
+              </div>
+            </div>
+            <p className="text-white/60 text-sm mb-1">Total Empresas</p>
+            <p className="text-3xl font-bold text-white">{stats.totalEmpresas}</p>
+            <p className="text-white/40 text-xs mt-2">Empresas registradas</p>
+          </Card>
+
+          {/* Ejecutivas */}
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-[#C7E196]/20 rounded-lg">
+                <UserCheck className="w-6 h-6 text-[#C7E196]" />
+              </div>
+              <div className={`flex items-center gap-1 text-sm ${stats.totalEjecutivas > 0 ? 'text-green-400' : 'text-gray-400'
+                }`}>
+                {stats.totalEjecutivas > 0 ? <ArrowUp className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+                <span>{stats.totalEjecutivas > 0 ? 'Activas' : 'Sin datos'}</span>
+              </div>
+            </div>
+            <p className="text-white/60 text-sm mb-1">Ejecutivas</p>
+            <p className="text-3xl font-bold text-white">{stats.totalEjecutivas}</p>
+            <p className="text-white/40 text-xs mt-2">Ejecutivas activas</p>
+          </Card>
+
+          {/* Clientes */}
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-[#C7E196]/20 rounded-lg">
+                <Users className="w-6 h-6 text-[#C7E196]" />
+              </div>
+              <div className={`flex items-center gap-1 text-sm ${stats.totalClientes > 0 ? 'text-green-400' : 'text-gray-400'
+                }`}>
+                {stats.totalClientes > 0 ? <ArrowUp className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+                <span>{stats.totalClientes > 0 ? 'Activos' : 'Sin datos'}</span>
+              </div>
+            </div>
+            <p className="text-white/60 text-sm mb-1">Total Clientes</p>
+            <p className="text-3xl font-bold text-white">{stats.totalClientes}</p>
+            <p className="text-white/40 text-xs mt-2">Clientes activos</p>
+          </Card>
+
+          {/* Actividades */}
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-[#C7E196]/20 rounded-lg">
+                <Activity className="w-6 h-6 text-[#C7E196]" />
+              </div>
+              <div className={`flex items-center gap-1 text-sm ${stats.kpis.actividadesMes > 0 ? 'text-green-400' : 'text-gray-400'
+                }`}>
+                {stats.kpis.actividadesMes > 0 ? <TrendingUp className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+                <span>Este mes</span>
+              </div>
+            </div>
+            <p className="text-white/60 text-sm mb-1">Actividades</p>
+            <p className="text-3xl font-bold text-white">{stats.kpis.actividadesMes || 0}</p>
+            <p className="text-white/40 text-xs mt-2">Gestiones comerciales</p>
+          </Card>
+
+
+
+        </div>
+
+        {/* Top Performance Cards */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Top Ejecutivas */}
+          {/* <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-[#C7E196]" />
+                <CardTitle className="text-white">Top Ejecutivas</CardTitle>
+              </div>
+              <CardDescription className="text-white/60">Por número de clientes gestionados</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {mockTopEjecutivas.map((ejecutiva, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${index === 0 ? 'bg-yellow-400 text-[#013936]' :
+                        index === 1 ? 'bg-gray-300 text-[#013936]' :
+                          index === 2 ? 'bg-orange-400 text-[#013936]' :
+                            'bg-[#C7E196] text-[#013936]'
+                        }`}>
+                        #{index + 1}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">{ejecutiva.nombre}</p>
+                        <p className="text-xs text-white/60">{ejecutiva.clientes} clientes • {ejecutiva.conversion} conversión</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-[#C7E196] text-[#013936] font-semibold">{ejecutiva.actividades}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card> */}
+
+          {/* Top Empresas */}
+          {/* <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-[#C7E196]" />
+                <CardTitle className="text-white">Top Empresas Proveedoras</CardTitle>
+              </div>
+              <CardDescription className="text-white/60">Mayor actividad comercial</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {mockTopEmpresas.map((empresa, index) => (
+                  <div key={index} className="p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all border border-white/10">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium text-white">{empresa.nombre}</p>
+                      <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
+                        <DollarSign className="w-3 h-3 mr-1" />
+                        {empresa.revenue}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-white/60">
+                      <span>{empresa.actividades} actividades</span>
+                      <span>{empresa.ejecutivas} ejecutivas asignadas</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card> */}
+
+          {/* Top Clientes */}
+          {/* <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-[#C7E196]" />
+                <CardTitle className="text-white">Top Clientes Finales</CardTitle>
+              </div>
+              <CardDescription className="text-white/60">Mayor volumen de gestiones</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {mockTopClientes.map((cliente, index) => (
+                  <div key={index} className="p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all border border-white/10">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium text-white">{cliente.nombre}</p>
+                      <Badge className={getEstadoBadgeColor(cliente.estado)}>
+                        {cliente.estado}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-white/60">
+                      <span>{cliente.gestiones} gestiones</span>
+                      <span>{cliente.etapa}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card> */}
+
+          {/* Top Ejecutivas - CON DATOS REALES */}
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-[#C7E196]" />
+                <CardTitle className="text-white">Top Ejecutivas</CardTitle>
+              </div>
+              <CardDescription className="text-white/60">
+                Por número de actividades realizadas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats.topEjecutivas && stats.topEjecutivas.length > 0 ? (
+                  stats.topEjecutivas.map((ejecutiva, index) => (
+                    <div key={ejecutiva.id_ejecutiva} className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all border border-white/10">
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${index === 0 ? 'bg-yellow-400 text-[#013936]' :
+                            index === 1 ? 'bg-gray-300 text-[#013936]' :
+                              index === 2 ? 'bg-orange-400 text-[#013936]' :
+                                'bg-[#C7E196] text-[#013936]'
+                          }`}>
+                          #{index + 1}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{ejecutiva.nombre}</p>
+                          <p className="text-xs text-white/60">
+                            {ejecutiva.clientes} clientes • {ejecutiva.conversion} conversión
+                          </p>
+                        </div>
+                      </div>
+                      <Badge className="bg-[#C7E196] text-[#013936] font-semibold">
+                        {ejecutiva.actividades}
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-white/60">
+                    <UserCheck className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No hay datos de ejecutivas</p>
+                    <p className="text-sm">Las ejecutivas aún no han registrado actividades</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Top Empresas - CON DATOS REALES */}
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-[#C7E196]" />
+                <CardTitle className="text-white">Top Empresas Proveedoras</CardTitle>
+              </div>
+              <CardDescription className="text-white/60">
+                Mayor actividad comercial
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats.topEmpresas && stats.topEmpresas.length > 0 ? (
+                  stats.topEmpresas.map((empresa, index) => (
+                    <div key={empresa.id_empresa_prov} className="p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all border border-white/10">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium text-white">{empresa.nombre}</p>
+                        <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
+                          <DollarSign className="w-3 h-3 mr-1" />
+                          ${empresa.revenue.toLocaleString()}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-white/60">
+                        <span>{empresa.actividades} actividades</span>
+                        <span>{empresa.ejecutivas} ejecutivas</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-white/60">
+                    <Building2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No hay datos de empresas</p>
+                    <p className="text-sm">No se han registrado actividades comerciales</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Top Clientes - CON DATOS REALES */}
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-[#C7E196]" />
+                <CardTitle className="text-white">Top Clientes Finales</CardTitle>
+              </div>
+              <CardDescription className="text-white/60">
+                Mayor volumen de gestiones
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats.topClientes && stats.topClientes.length > 0 ? (
+                  stats.topClientes.map((cliente, index) => (
+                    <div key={cliente.id_cliente_final} className="p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all border border-white/10">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium text-white">{cliente.nombre}</p>
+                        <Badge className={getEstadoBadgeColor(cliente.estado)}>
+                          {cliente.estado}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-white/60">
+                        <span>{cliente.gestiones} gestiones</span>
+                        <span>{cliente.etapa}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-white/60">
+                    <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No hay datos de clientes</p>
+                    <p className="text-sm">No se han registrado gestiones comerciales</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
           </Card>
         </div>
 

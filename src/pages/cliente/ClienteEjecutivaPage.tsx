@@ -9,9 +9,9 @@ const ClienteEjecutivaPage: React.FC = () => {
   const { user } = useAuth();
 
   const navItems = [
-    { label: "Mi Progreso", icon: <div>📊</div>, href: "/dashboard/cliente" },
-    { label: "Mi Ejecutiva", icon: <div>👤</div>, href: "/dashboard/cliente/ejecutiva" },
-    { label: "Actividades", icon: <div>📋</div>, href: "/dashboard/cliente/actividades" },
+    { label: "Mi Progreso", icon: <div>📊</div>, href: "/dashboard/empresa" },
+    { label: "Mi Ejecutiva", icon: <div>👤</div>, href: "/dashboard/empresa/ejecutiva" },
+    { label: "Actividades", icon: <div>📋</div>, href: "/dashboard/empresa/actividades" },
   ];
 
   // Datos de ejemplo - luego conectar con servicio

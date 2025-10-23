@@ -597,7 +597,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           navigate("/dashboard/ejecutiva", { replace: true });
         }
         else if (data.rol === "empresa") {
-          navigate("/dashboard/cliente", { replace: true });
+          navigate("/dashboard/empresa", { replace: true });
         }
         else if (data.rol === "cliente") {
           navigate("/dashboard/cliente", { replace: true });

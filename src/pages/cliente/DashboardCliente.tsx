@@ -17,7 +17,7 @@ export default function ClienteDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || user.role !== "cliente") {
+    if (!user || user.role !== "empresa") {
       navigate("/login");
       return;
     }
@@ -47,9 +47,9 @@ export default function ClienteDashboard() {
   };
 
   const navItems = [
-    { label: "Mi Progreso", icon: <LayoutDashboard className="w-5 h-5" />, href: "/dashboard/cliente" },
-    { label: "Mi Ejecutiva", icon: <User className="w-5 h-5" />, href: "/dashboard/cliente/ejecutiva" },
-    { label: "Actividades", icon: <Activity className="w-5 h-5" />, href: "/dashboard/cliente/actividades" },
+    { label: "Mi Progreso", icon: <LayoutDashboard className="w-5 h-5" />, href: "/dashboard/empresa" },
+    { label: "Mi Ejecutiva", icon: <User className="w-5 h-5" />, href: "/dashboard/empresa/ejecutiva" },
+    { label: "Actividades", icon: <Activity className="w-5 h-5" />, href: "/dashboard/empresa/actividades" },
   ];
 
   const getTimeAgo = (dateString: string) => {

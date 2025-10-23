@@ -113,19 +113,19 @@ const AppRoutes: React.FC = () => {
         } />
 
         {/* ✅ NUEVAS RUTAS DEL CLIENTE */}
-        <Route path="/dashboard/cliente" element={
+        <Route path="/dashboard/empresa" element={
           <ProtectedRoute>
             <ClienteDashboard />
           </ProtectedRoute>
         } />
 
-        <Route path="/dashboard/cliente/ejecutiva" element={
+        <Route path="/dashboard/empresa/ejecutiva" element={
           <ProtectedRoute >
             <ClienteEjecutivaPage />
           </ProtectedRoute>
         } />
 
-        <Route path="/dashboard/cliente/actividades" element={
+        <Route path="/dashboard/empresa/actividades" element={
           <ProtectedRoute>
             <ClienteActividadesPage />
           </ProtectedRoute>
