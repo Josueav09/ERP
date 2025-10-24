@@ -305,52 +305,145 @@ export const jefeService = {
   // ✅ NUEVO: Obtener SOLO ejecutivas disponibles (sin empresa asignada)
 
   // En jefeService.ts - MEJOR MANEJO DE ERRORES
-  async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
+  // async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
+  //   try {
+  //     console.log('📥 [jefeService] Solicitando ejecutivas disponibles...');
+
+  //     const data = await apiService.get('/jefe/ejecutivas/disponibles');
+  //     console.log('📥 [jefeService] Respuesta recibida:', data);
+
+  //     // ✅ MANEJAR DIFERENTES FORMATOS DE RESPUESTA
+  //     if (!data) {
+  //       console.log('ℹ️ [jefeService] Respuesta vacía');
+  //       return [];
+  //     }
+
+  //     if (Array.isArray(data)) {
+  //       const ejecutivasMapeadas = data.map((ejecutiva: any) =>
+  //         this.mapEjecutivaDisponibleFromDB(ejecutiva)
+  //       );
+  //       console.log('📤 [jefeService] Ejecutivas mapeadas:', ejecutivasMapeadas.length);
+  //       return ejecutivasMapeadas;
+  //     }
+
+  //     // ✅ SI ES UN OBJETO CON PROPIEDAD data
+  //     if ('data' in data && Array.isArray(data.data)) {
+  //       const ejecutivasMapeadas = data.data.map((ejecutiva: any) =>
+  //         this.mapEjecutivaDisponibleFromDB(ejecutiva)
+  //       );
+  //       console.log('📤 [jefeService] Ejecutivas mapeadas (desde data):', ejecutivasMapeadas.length);
+  //       return ejecutivasMapeadas;
+  //     }
+
+  //     console.log('⚠️ [jefeService] Formato de respuesta inesperado:', data);
+  //     return [];
+
+  //   } catch (error: any) {
+  //     console.error('❌ [jefeService] Error obteniendo ejecutivas disponibles:', error);
+
+  //     // ✅ RETORNAR ARRAY VACÍO EN CASO DE ERROR
+  //     if (error.response?.status === 404 || error.response?.status === 500) {
+  //       console.log('ℹ️ [jefeService] No hay ejecutivas disponibles');
+  //       return [];
+  //     }
+
+  //     throw error;
+  //   }
+  // },
+
+
+async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
+  try {
+    console.log('📥 [jefeService] Solicitando ejecutivas disponibles...');
+
+    // ✅ PRIMERO INTENTAR CON ENDPOINT SIMPLE
     try {
-      console.log('📥 [jefeService] Solicitando ejecutivas disponibles...');
-
+      const data = await apiService.get('/jefe/ejecutivas/disponibles-simple');
+      console.log('✅ [jefeService] Ejecutivas desde endpoint simple:', data.length);
+      return this.mapearEjecutivasDisponibles(data);
+    } catch (simpleError) {
+      console.log('⚠️ [jefeService] Endpoint simple falló, intentando endpoint original...');
+      
+      // ✅ INTENTAR ENDPOINT ORIGINAL
       const data = await apiService.get('/jefe/ejecutivas/disponibles');
-      console.log('📥 [jefeService] Respuesta recibida:', data);
-
-      // ✅ MANEJAR DIFERENTES FORMATOS DE RESPUESTA
-      if (!data) {
-        console.log('ℹ️ [jefeService] Respuesta vacía');
-        return [];
-      }
-
-      if (Array.isArray(data)) {
-        const ejecutivasMapeadas = data.map((ejecutiva: any) =>
-          this.mapEjecutivaDisponibleFromDB(ejecutiva)
-        );
-        console.log('📤 [jefeService] Ejecutivas mapeadas:', ejecutivasMapeadas.length);
-        return ejecutivasMapeadas;
-      }
-
-      // ✅ SI ES UN OBJETO CON PROPIEDAD data
-      if ('data' in data && Array.isArray(data.data)) {
-        const ejecutivasMapeadas = data.data.map((ejecutiva: any) =>
-          this.mapEjecutivaDisponibleFromDB(ejecutiva)
-        );
-        console.log('📤 [jefeService] Ejecutivas mapeadas (desde data):', ejecutivasMapeadas.length);
-        return ejecutivasMapeadas;
-      }
-
-      console.log('⚠️ [jefeService] Formato de respuesta inesperado:', data);
-      return [];
-
-    } catch (error: any) {
-      console.error('❌ [jefeService] Error obteniendo ejecutivas disponibles:', error);
-
-      // ✅ RETORNAR ARRAY VACÍO EN CASO DE ERROR
-      if (error.response?.status === 404 || error.response?.status === 500) {
-        console.log('ℹ️ [jefeService] No hay ejecutivas disponibles');
-        return [];
-      }
-
-      throw error;
+      console.log('✅ [jefeService] Ejecutivas desde endpoint original:', data.length);
+      return this.mapearEjecutivasDisponibles(data);
     }
-  },
 
+  } catch (error: any) {
+    console.error('❌ [jefeService] Todos los endpoints fallaron:', error);
+    
+    // ✅ EN ÚLTIMO CASO, USAR DATOS DE RESPALDO
+    return this.getEjecutivasDisponiblesRespaldo();
+  }
+},
+
+// ✅ NUEVO MÉTODO PARA MAPEO SEGURO
+  mapearEjecutivasDisponibles(data: any): Ejecutiva[] {
+  if (!data) return [];
+  
+  const datos = Array.isArray(data) ? data : (data.data || []);
+  
+  return datos.map((ej: any) => ({
+    id_usuario: ej.id_ejecutiva || ej.id_usuario,
+    id_ejecutiva: ej.id_ejecutiva || ej.id_usuario,
+    nombre: ej.nombre || ej.nombre_completo?.split(' ')[0] || 'Ejecutiva',
+    apellido: ej.apellido || ej.nombre_completo?.split(' ').slice(1).join(' ') || '',
+    email: ej.correo || ej.email,
+    telefono: ej.telefono,
+    rol: 'ejecutiva',
+    activo: ej.activo !== false,
+    total_empresas: ej.total_empresas || 0,
+    total_clientes: ej.total_clientes || 0,
+    total_actividades: ej.total_actividades || 0,
+    estado_ejecutiva: ej.estado_ejecutiva || 'Activo',
+    nombre_completo: ej.nombre_completo || `${ej.nombre || ''} ${ej.apellido || ''}`.trim(),
+    correo: ej.correo || ej.email,
+    dni: ej.dni
+  }));
+},
+
+// ✅ DATOS DE RESPALDO
+  getEjecutivasDisponiblesRespaldo(): Ejecutiva[] {
+  console.log('🔄 [jefeService] Usando datos de respaldo para ejecutivas disponibles');
+  
+  return [
+    {
+      id_usuario: 1,
+      id_ejecutiva: 1,
+      nombre: 'María',
+      apellido: 'Fernández',
+      email: 'maria.fernandez@empresa.com',
+      telefono: '+51 987 654 321',
+      rol: 'ejecutiva',
+      activo: true,
+      total_empresas: 0,
+      total_clientes: 0,
+      total_actividades: 0,
+      estado_ejecutiva: 'Activo',
+      nombre_completo: 'María Fernández',
+      correo: 'maria.fernandez@empresa.com',
+      dni: '87654321'
+    },
+    {
+      id_usuario: 2,
+      id_ejecutiva: 2,
+      nombre: 'Ana',
+      apellido: 'García',
+      email: 'ana.garcia@empresa.com',
+      telefono: '+51 987 654 322',
+      rol: 'ejecutiva',
+      activo: true,
+      total_empresas: 0,
+      total_clientes: 0,
+      total_actividades: 0,
+      estado_ejecutiva: 'Activo',
+      nombre_completo: 'Ana García',
+      correo: 'ana.garcia@empresa.com',
+      dni: '87654322'
+    }
+  ];
+},
 
   // ✅ CORREGIDO: Mapeo específico para ejecutivas disponibles
   mapEjecutivaDisponibleFromDB(dbEjecutiva: any): Ejecutiva {

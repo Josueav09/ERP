@@ -127,37 +127,38 @@ export default function EmpresasPage() {
 
   useEffect(() => {
     console.log('📍 JefeDashboard - User context:', user);
-    
+
     const storedUser = localStorage.getItem('user');
     const token = sessionStorage.getItem('token');
-    
+
     console.log('📍 JefeDashboard - Stored user:', storedUser);
     console.log('📍 JefeDashboard - Token:', token);
-    
+
     if (!user && !storedUser) {
       console.log('❌ JefeDashboard: Sin usuario en contexto ni storage, redirigiendo...');
       navigate("/login");
       return;
     }
-    
+
     const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
-    
+
     if (!currentUser) {
       console.log('❌ JefeDashboard: No se pudo obtener usuario, redirigiendo...');
       navigate("/login");
       return;
     }
-    
+
     const allowedRoles = ["jefe", "Jefe", "Administrador"];
     if (!allowedRoles.includes(currentUser.role)) {
       console.log('❌ JefeDashboard: Rol no permitido:', currentUser.role);
       navigate("/login");
       return;
     }
-    
+
     console.log('✅ JefeDashboard: Acceso permitido para:', currentUser.role);
     console.log('✅ JefeDashboard: Fuente del usuario:', user ? 'contexto' : 'localStorage');
     fetchEmpresas();
+    fetchEjecutivasDisponibles();
   }, [user, navigate]);
 
   const fetchEmpresas = async () => {
@@ -175,6 +176,27 @@ export default function EmpresasPage() {
       setLoading(false);
     }
   };
+
+  const fetchEjecutivasDisponibles = async () => {
+    try {
+      console.log('🔄 [EmpresasPage] Cargando ejecutivas disponibles...');
+
+      // ✅ VALIDAR QUE selectedEmpresa NO SEA NULL
+      if (!selectedEmpresaId || !selectedEmpresaId) {
+        console.log('⚠️ [EmpresasPage] No hay empresa seleccionada');
+        setAvailableEjecutivas([]);
+        return;
+      }
+
+      const data = await jefeService.getEjecutivasDisponibles();
+      console.log('✅ [EmpresasPage] Ejecutivas disponibles cargadas:', data.length);
+      setAvailableEjecutivas(data);
+    } catch (error) {
+      console.error('❌ [EmpresasPage] Error cargando ejecutivas disponibles:', error);
+      setAvailableEjecutivas([]);
+    }
+  };
+
 
   // 🔒 Validación de formulario
   const validateForm = (): boolean => {
@@ -252,7 +274,7 @@ export default function EmpresasPage() {
 
     try {
       console.log('🔍 [EmpresasPage] Cargando ejecutivas para empresa:', empresaId);
-      
+
       const empresaData = await jefeService.getEmpresaEjecutivas(empresaId);
       console.log('✅ [EmpresasPage] Ejecutivas de empresa:', empresaData);
       setCurrentEmpresaEjecutivas(empresaData.ejecutivas || []);
@@ -260,7 +282,7 @@ export default function EmpresasPage() {
       const ejecutivasDisponibles = await jefeService.getEjecutivasDisponibles();
       console.log('✅ [EmpresasPage] Ejecutivas disponibles:', ejecutivasDisponibles);
       setAvailableEjecutivas(ejecutivasDisponibles);
-      
+
     } catch (error: any) {
       console.error("❌ [EmpresasPage] Error fetching ejecutivas:", error);
       console.error("❌ [EmpresasPage] Error response:", error.response);
@@ -275,21 +297,67 @@ export default function EmpresasPage() {
   };
 
   const handleAddEjecutiva = async (ejecutivaId: number) => {
-    if (!selectedEmpresaId) return;
+    // if (!selectedEmpresaId) return;
 
-    try {
-      await jefeService.addEjecutivaToEmpresa(selectedEmpresaId, ejecutivaId);
-      toast({
-        title: "Éxito",
-        description: "Ejecutiva agregada correctamente",
-      });
-      await handleOpenEjecutivasDialog(selectedEmpresaId);
-      await fetchEmpresas();
-    } catch (error: any) {
-      console.error("Error adding ejecutiva:", error);
+    // try {
+    //   await jefeService.addEjecutivaToEmpresa(selectedEmpresaId, ejecutivaId);
+    //   toast({
+    //     title: "Éxito",
+    //     description: "Ejecutiva agregada correctamente",
+    //   });
+    //   await handleOpenEjecutivasDialog(selectedEmpresaId);
+    //   await fetchEmpresas();
+    // } catch (error: any) {
+    //   console.error("Error adding ejecutiva:", error);
+    //   toast({
+    //     title: "Error",
+    //     description: error.message || "No se pudo agregar la ejecutiva",
+    //     variant: "destructive",
+    //   });
+    // }
+
+    if (!selectedEmpresaId || !ejecutivaId) {
       toast({
         title: "Error",
-        description: error.message || "No se pudo agregar la ejecutiva",
+        description: "Debe seleccionar una empresa y una ejecutiva",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      console.log('🔄 [EmpresasPage] Asignando ejecutiva:', {
+        empresaId: selectedEmpresaId,
+        ejecutivaId: ejecutivaId
+      });
+
+      // ✅ VALIDAR IDs VÁLIDOS
+      if (!selectedEmpresaId || !ejecutivaId) {
+        throw new Error('IDs de empresa o ejecutiva inválidos');
+      }
+
+      await jefeService.addEjecutivaToEmpresa(
+        selectedEmpresaId,
+        ejecutivaId
+      );
+
+      toast({
+        title: "Éxito",
+        description: "Ejecutiva asignada correctamente",
+      });
+
+      // Recargar datos
+      handleOpenEjecutivasDialog(selectedEmpresaId);
+      fetchEjecutivasDisponibles();
+
+      // Limpiar selección
+      //setSelectedEjecutiva(null);
+
+    } catch (error: any) {
+      console.error('❌ [EmpresasPage] Error asignando ejecutiva:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo asignar la ejecutiva",
         variant: "destructive",
       });
     }
@@ -377,7 +445,7 @@ export default function EmpresasPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast({
         title: "Error de validación",
@@ -439,7 +507,7 @@ export default function EmpresasPage() {
       `¿Estás seguro de que deseas ${accion.toUpperCase()} la empresa "${empresa.nombre_empresa}"?\n\n` +
       `Esto también ${nuevoEstado ? "activará" : "desactivará"} todos los clientes asociados.`
     );
-    
+
     if (!confirmacion) return;
 
     try {
@@ -464,26 +532,27 @@ export default function EmpresasPage() {
     setIsDetailsDialogOpen(true);
   };
 
+
   // 🎛️ Filtrado avanzado
   const filteredEmpresas = empresas.filter((empresa) => {
-    const matchesSearch = 
+    const matchesSearch =
       (empresa.nombre_empresa || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (empresa.rut || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (empresa.email_contacto || "").toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesEstado = 
-      filters.estado === 'todos' || 
+
+    const matchesEstado =
+      filters.estado === 'todos' ||
       (filters.estado === 'activas' && empresa.activo) ||
       (filters.estado === 'inactivas' && !empresa.activo);
-    
-    const matchesTamanio = 
-      filters.tamanio === 'todos' || 
+
+    const matchesTamanio =
+      filters.tamanio === 'todos' ||
       empresa.tamanio_empresa === filters.tamanio;
-    
-    const matchesRubro = 
-      !filters.rubro || 
+
+    const matchesRubro =
+      !filters.rubro ||
       (empresa.rubro || "").toLowerCase().includes(filters.rubro.toLowerCase());
-    
+
     return matchesSearch && matchesEstado && matchesTamanio && matchesRubro;
   });
 
@@ -691,14 +760,14 @@ export default function EmpresasPage() {
                             className="data-[state=checked]:bg-[#C7E196]"
                           />
                           <Badge
-                          className={
-                            empresa.activo
-                              ? "bg-[#012826] text-012826 border-[#012826]"
-                              : "bg-[#FF0000] text-red-500 border-[#FF0000]"
-                          }
-                        >
-                          {empresa.activo ? "Activa" : "Inactiva"}
-                        </Badge>
+                            className={
+                              empresa.activo
+                                ? "bg-[#012826] text-012826 border-[#012826]"
+                                : "bg-[#FF0000] text-red-500 border-[#FF0000]"
+                            }
+                          >
+                            {empresa.activo ? "Activa" : "Inactiva"}
+                          </Badge>
                         </div>
                       </TableCell>
                       <TableCell className="font-medium text-white pt-5">
@@ -750,7 +819,7 @@ export default function EmpresasPage() {
                           >
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          
+
                           <Button
                             size="icon"
                             variant="ghost"
@@ -760,8 +829,8 @@ export default function EmpresasPage() {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          
-                          
+
+
                         </div>
                       </TableCell>
                     </TableRow>
@@ -777,20 +846,19 @@ export default function EmpresasPage() {
               <div className="text-white/60 text-sm">
                 Mostrando {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredEmpresas.length)} de {filteredEmpresas.length} empresas
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === 1 ? "bg-gray-500/30 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
-                  } disabled:opacity-50`}
+                  className={`px-3 py-1 rounded ${currentPage === 1 ? "bg-gray-500/30 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
+                    } disabled:opacity-50`}
                 >
                   Anterior
                 </Button>
 
-                
+
                 <div className="flex gap-1">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum;
@@ -803,7 +871,7 @@ export default function EmpresasPage() {
                     } else {
                       pageNum = currentPage - 2 + i;
                     }
-                    
+
                     return (
                       <Button
                         key={pageNum}
@@ -811,8 +879,8 @@ export default function EmpresasPage() {
                         size="sm"
                         onClick={() => handlePageChange(pageNum)}
                         className={
-                          currentPage === pageNum 
-                            ? "bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90" 
+                          currentPage === pageNum
+                            ? "bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90"
                             : "text-white border-white/20 hover:bg-white/10"
                         }
                       >
@@ -821,14 +889,13 @@ export default function EmpresasPage() {
                     );
                   })}
                 </div>
-                
+
                 <Button
                   size="sm"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === totalPages ? "bg-gray-500/30 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
-                  } disabled:opacity-50`}
+                  className={`px-3 py-1 rounded ${currentPage === totalPages ? "bg-gray-500/30 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
+                    } disabled:opacity-50`}
                 >
                   Siguiente
                 </Button>
@@ -846,7 +913,7 @@ export default function EmpresasPage() {
                 {isEditing ? "Actualiza la información de la empresa" : "Completa los datos de la nueva empresa"}
               </DialogDescription>
             </DialogHeader>
-            
+
             {/* ScrollArea que funciona correctamente */}
             <ScrollArea className="h-[70vh] pr-4">
               <form onSubmit={handleSubmit}>
@@ -984,7 +1051,7 @@ export default function EmpresasPage() {
                         </p>
                       </div>
                     )}
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="contraseña" className="text-white/80">
                         {isEditing ? "Nueva Contraseña" : "Contraseña *"}
@@ -1057,8 +1124,8 @@ export default function EmpresasPage() {
                   >
                     Cancelar
                   </Button>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-medium"
                     disabled={submitting}
                   >
@@ -1179,7 +1246,7 @@ export default function EmpresasPage() {
                 Información completa de la empresa
               </DialogDescription>
             </DialogHeader>
-            
+
             {selectedEmpresaDetails && (
               <ScrollArea className="max-h-[70vh]">
                 <div className="space-y-6 py-4 pr-6">
@@ -1192,52 +1259,52 @@ export default function EmpresasPage() {
                           {selectedEmpresaDetails.nombre_empresa || "No especificado"}
                         </p>
                       </div>
-                      
+
                       <div>
                         <Label className="text-[#C7E196] text-sm font-medium">RUC</Label>
                         <p className="text-white mt-1">{selectedEmpresaDetails.rut || "No especificado"}</p>
                       </div>
-                      
+
                       <div>
                         <Label className="text-[#C7E196] text-sm font-medium">Estado</Label>
                         <Badge className={
-                          selectedEmpresaDetails.activo 
+                          selectedEmpresaDetails.activo
                             ? "bg-green-500/20 text-green-300 border-green-500/30 mt-1"
                             : "bg-red-500/20 text-red-300 border-red-500/30 mt-1"
                         }>
                           {selectedEmpresaDetails.activo ? "Activa" : "Inactiva"}
                         </Badge>
                       </div>
-                      
+
                       <div>
                         <Label className="text-[#C7E196] text-sm font-medium">Tamaño de Empresa</Label>
                         <p className="text-white mt-1">{selectedEmpresaDetails.tamanio_empresa || "No especificado"}</p>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <Label className="text-[#C7E196] text-sm font-medium">Email de Contacto</Label>
                         <p className="text-white mt-1">{selectedEmpresaDetails.email_contacto || "No especificado"}</p>
                       </div>
-                      
+
                       <div>
                         <Label className="text-[#C7E196] text-sm font-medium">Teléfono</Label>
                         <p className="text-white mt-1">{selectedEmpresaDetails.telefono || "No especificado"}</p>
                       </div>
-                      
+
                       <div>
                         <Label className="text-[#C7E196] text-sm font-medium">Rubro</Label>
                         <p className="text-white mt-1">{selectedEmpresaDetails.rubro || "No especificado"}</p>
                       </div>
-                      
+
                       <div>
                         <Label className="text-[#C7E196] text-sm font-medium">Página Web</Label>
                         <p className="text-white mt-1">
                           {selectedEmpresaDetails.pagina_web ? (
-                            <a 
-                              href={selectedEmpresaDetails.pagina_web} 
-                              target="_blank" 
+                            <a
+                              href={selectedEmpresaDetails.pagina_web}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-[#C7E196] hover:underline"
                             >
@@ -1263,18 +1330,18 @@ export default function EmpresasPage() {
                         {selectedEmpresaDetails.total_ejecutivas || "0"}
                       </p>
                     </div>
-                    
+
                     <div className="text-center p-4 bg-white/5 rounded-lg">
                       <Label className="text-[#C7E196] text-sm font-medium">Total Clientes</Label>
                       <p className="text-2xl font-bold text-white mt-2">
                         {selectedEmpresaDetails.total_clientes || "0"}
                       </p>
                     </div>
-                    
+
                     <div className="text-center p-4 bg-white/5 rounded-lg">
                       <Label className="text-[#C7E196] text-sm font-medium">Fecha de Creación</Label>
                       <p className="text-white mt-2">
-                        {selectedEmpresaDetails.fecha_creacion 
+                        {selectedEmpresaDetails.fecha_creacion
                           ? new Date(selectedEmpresaDetails.fecha_creacion).toLocaleDateString('es-ES')
                           : "No disponible"
                         }
@@ -1318,9 +1385,9 @@ export default function EmpresasPage() {
                           <div>
                             <Label className="text-white/60 text-xs">LinkedIn</Label>
                             <p className="text-white">
-                              <a 
-                                href={selectedEmpresaDetails.linkedin} 
-                                target="_blank" 
+                              <a
+                                href={selectedEmpresaDetails.linkedin}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-[#C7E196] hover:underline"
                               >
