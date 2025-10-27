@@ -1,5 +1,5 @@
 // frontend/src/pages/ejecutiva/ClientesPage.tsx
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Users, Search, Plus, Mail, Phone, MapPin, Building2, UserPlus, ChevronDown, ChevronUp } from "lucide-react"
+import { Users, Search, Plus, Mail, Phone, MapPin, Building2, UserPlus, ChevronDown, ChevronUp, Download, Upload } from "lucide-react"
 import { AddClienteDialog } from "../../components/ejecutivaComponents/AddClienteDialog"
 import { AddContactoDialog } from "../../components/ejecutivaComponents/AddContactoDialog"
 import { ejecutivaService } from "@/services/ejecutivaService"
@@ -74,6 +74,8 @@ export default function ClientesPage() {
   const [showAddContacto, setShowAddContacto] = useState(false)
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null)
   const [expandedCliente, setExpandedCliente] = useState<number | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!user || user.role !== "ejecutiva") {
@@ -87,8 +89,8 @@ export default function ClientesPage() {
     setLoading(true)
     try {
       // ✅ LLAMADA REAL AL BACKEND
-      const clientesData = await ejecutivaService.getClientes(user ?.id || "")
-      
+      const clientesData = await ejecutivaService.getClientes(user?.id || "")
+
       // Transformar datos del backend a la interfaz esperada
       const clientesTransformados: ClienteFinal[] = clientesData.map((cliente: any) => ({
         id_cliente_final: cliente.id_cliente_final,
@@ -110,7 +112,7 @@ export default function ClientesPage() {
         contacto_principal: cliente.contacto_principal,
         ultima_actividad: cliente.ultima_actividad
       }))
-      
+
       setClientes(clientesTransformados)
     } catch (error) {
       console.error("❌ Error fetching clientes:", error)
@@ -125,10 +127,10 @@ export default function ClientesPage() {
     try {
       // ✅ OBTENER CONTACTOS DEL CLIENTE
       const contactos = await ejecutivaService.getContactosCliente(clienteId.toString(), user?.id || "")
-      
+
       // Actualizar el cliente con sus contactos
-      setClientes(prev => prev.map(cliente => 
-        cliente.id_cliente_final === clienteId 
+      setClientes(prev => prev.map(cliente =>
+        cliente.id_cliente_final === clienteId
           ? { ...cliente, personas_contacto: contactos }
           : cliente
       ))
@@ -175,6 +177,65 @@ export default function ClientesPage() {
     }
   }
 
+  /**
+   * ✅ NUEVO: Manejar subida de archivo CSV
+   */
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !user?.id) return
+
+    // Validar que sea CSV
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      alert('Por favor, sube un archivo CSV')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const result = await ejecutivaService.bulkCreateClientes(file, user.id)
+
+      // Mostrar resultados
+      alert(`
+        📊 Resultado del proceso:
+        • Total registros: ${result.total}
+        • Creados exitosamente: ${result.creados}
+        • Duplicados en archivo: ${result.duplicados_en_archivo}
+        • Registros inválidos: ${result.invalidos}
+      `)
+
+      // Refrescar la lista de clientes
+      if (result.creados > 0) {
+        fetchClientes()
+      }
+
+    } catch (error: any) {
+      console.error('Error en bulk upload:', error)
+      alert(`Error al procesar archivo: ${error.response?.data?.message || error.message}`)
+    } finally {
+      setUploading(false)
+      // Limpiar input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  /**
+   * ✅ NUEVO: Descargar plantilla
+   */
+  const handleDownloadTemplate = async () => {
+    if (!user?.id) return
+
+    try {
+      await ejecutivaService.downloadPlantillaClientes(user.id)
+    } catch (error: any) {
+      console.error('Error descargando plantilla:', error)
+      alert('Error al descargar plantilla')
+    }
+  }
+
+
+
   if (loading) {
     return (
       <DashboardLayout navItems={navItems} title="Mis Clientes" subtitle="Clientes finales de tu empresa">
@@ -194,6 +255,44 @@ export default function ClientesPage() {
             <h2 className="text-2xl font-bold text-white">Mis Clientes</h2>
             <p className="text-white/60">Gestiona los clientes finales de tu empresa proveedora</p>
           </div>
+          {/* <Button
+            onClick={() => setShowAddCliente(true)}
+            className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-semibold"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo Cliente
+          </Button> */}
+
+          <Button
+            onClick={handleDownloadTemplate}
+            variant="outline"
+            className="border-[#C7E196] text-[#C7E196] hover:bg-[#C7E196] hover:text-[#013936] font-semibold"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Plantilla
+          </Button>
+
+          {/* ✅ NUEVO: Botón Subir CSV */}
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            variant="outline"
+            className="border-[#C7E196] text-[#C7E196] hover:bg-[#C7E196] hover:text-[#013936] font-semibold"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {uploading ? 'Subiendo...' : 'Subir CSV'}
+          </Button>
+
+          {/* Input oculto para subir archivo */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept=".csv"
+            className="hidden"
+          />
+
+          {/* Botón existente: Nuevo Cliente */}
           <Button
             onClick={() => setShowAddCliente(true)}
             className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-semibold"
@@ -201,6 +300,7 @@ export default function ClientesPage() {
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Cliente
           </Button>
+
         </div>
 
         {/* Search */}
@@ -373,9 +473,9 @@ export default function ClientesPage() {
                           {contacto.linkedin && (
                             <div className="flex items-center gap-2 text-sm">
                               <Users className="w-3 h-3 text-[#C7E196]" />
-                              <a 
-                                href={contacto.linkedin} 
-                                target="_blank" 
+                              <a
+                                href={contacto.linkedin}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-[#C7E196] hover:underline"
                               >
@@ -418,8 +518,8 @@ export default function ClientesPage() {
             <Building2 className="w-12 h-12 text-white/40 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">No se encontraron clientes</h3>
             <p className="text-white/60 mb-6">
-              {searchTerm 
-                ? "No hay clientes que coincidan con tu búsqueda" 
+              {searchTerm
+                ? "No hay clientes que coincidan con tu búsqueda"
                 : "Aún no tienes clientes registrados"}
             </p>
             {!searchTerm && (
@@ -438,7 +538,7 @@ export default function ClientesPage() {
       {/* Dialogs */}
       {showAddCliente && (
         <AddClienteDialog
-          open={showAddCliente} 
+          open={showAddCliente}
           ejecutivaId={user?.id || ""}
           onSuccess={handleClienteCreated}
           onClose={() => setShowAddCliente(false)}

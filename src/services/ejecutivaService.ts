@@ -1,133 +1,3 @@
-// frontend/src/services/ejecutivaService.ts - CORREGIDO
-// import { apiService } from "./api";
-
-// export interface Stats {
-//   totalEmpresas: number
-//   totalClientes: number
-//   actividadesMes: number
-//   revenueGenerado: number
-//   empresaAsignada: boolean
-//   pipelineCount?: number
-// }
-
-// export interface Trazabilidad {
-//   id_trazabilidad: number
-//   tipo_contacto: string  // ✅ Cambiado de tipo_actividad
-//   fecha_contacto: string // ✅ Cambiado de fecha_actividad
-//   resultado_contacto: string // ✅ Cambiado de estado
-//   empresa_proveedora: string // ✅ Cambiado de nombre_empresa
-//   cliente_final: string // ✅ Cambiado de nombre_cliente
-//   contacto: string
-//   reunion_agendada: boolean
-//   fecha_reunion?: string
-//   pasa_embudo_ventas: boolean
-//   nombre_oportunidad?: string
-//   etapa_oportunidad?: string
-//   monto_total_sin_imp?: number
-//   observaciones?: string
-//   informacion_importante?: string
-// }
-
-// export interface Empresa {
-//   id_empresa_prov: number // ✅ Cambiado de id_empresa
-//   razon_social: string // ✅ Cambiado de nombre_empresa
-//   ruc: string
-//   direccion?: string
-//   telefono?: string
-//   correo?: string // ✅ Cambiado de email_contacto
-//   total_clientes?: number
-// }
-
-// export interface Cliente {
-//   id_cliente_final: number // ✅ Cambiado de id_cliente
-//   razon_social: string // ✅ Cambiado de nombre_cliente
-//   ruc: string // ✅ Cambiado de rut_cliente
-//   direccion?: string
-//   telefono?: string
-//   correo?: string // ✅ Cambiado de email
-//   empresa_proveedora?: string
-//   total_actividades?: number
-//   contacto_principal?: {
-//     nombre_completo: string
-//     cargo?: string
-//     correo?: string
-//   }
-// }
-
-// export const ejecutivaService = {
-//   // Obtener estadísticas
-//   ///user-service - /traceability-service
-//   async getStats(ejecutivaId: string): Promise<Stats> {
-//     return apiService.get(`/ejecutiva/stats?ejecutivaId=${ejecutivaId}`)
-//   },
-
-//   // Obtener trazabilidad
-//   async getTrazabilidad(ejecutivaId: string): Promise<Trazabilidad[]> {
-//     return apiService.get(`/ejecutiva/trazabilidad?ejecutivaId=${ejecutivaId}`)
-//   },
-
-//   // Obtener empresas
-//   async getEmpresas(ejecutivaId: string): Promise<Empresa[]> {
-//     return apiService.get(`/ejecutiva/empresas?ejecutivaId=${ejecutivaId}`)
-//   },
-
-//   // Crear empresa
-//   async createEmpresa(data: {
-//     razon_social: string
-//     ruc: string
-//     direccion: string
-//     telefono: string
-//     correo: string
-//     ejecutivaId: string
-//   }): Promise<Empresa> {
-//     return apiService.post("/ejecutiva/empresas/registrar", data)
-//   },
-
-//   // Obtener clientes
-//   async getClientes(ejecutivaId: string): Promise<Cliente[]> {
-//     return apiService.get(`/ejecutiva/clientes?ejecutivaId=${ejecutivaId}`)
-//   },
-
-//   // Crear cliente
-//   async createCliente(data: {
-//     id_empresa: string
-//     id_ejecutiva: string
-//     razon_social: string // ✅ Cambiado
-//     ruc: string // ✅ Cambiado
-//     direccion: string
-//     telefono: string
-//     correo: string // ✅ Cambiado
-//   }): Promise<Cliente> {
-//     return apiService.post("/ejecutiva/clientes", data)
-//   },
-
-//   // Crear trazabilidad
-//   async createTrazabilidad(data: {
-//     id_ejecutiva: string
-//     id_empresa_prov: string // ✅ Cambiado
-//     id_cliente_final: string // ✅ Cambiado
-//     id_contacto: string
-//     tipo_contacto: string // ✅ Cambiado
-//     fecha_contacto: Date // ✅ Cambiado
-//     resultado_contacto: string // ✅ Cambiado
-//     informacion_importante?: string
-//     reunion_agendada?: boolean
-//     fecha_reunion?: Date
-//     participantes?: string
-//     se_dio_reunion?: boolean
-//     resultados_reunion?: string
-//     pasa_embudo_ventas?: boolean
-//     nombre_oportunidad?: string
-//     etapa_oportunidad?: string
-//     producto_ofrecido?: string
-//     monto_total_sin_imp?: number
-//     probabilidad_cierre?: number
-//     observaciones?: string
-//   }): Promise<Trazabilidad> {
-//     return apiService.post("/ejecutiva/trazabilidad", data)
-//   }
-// }
-
 // frontend/src/services/ejecutivaService.ts - ACTUALIZADO
 import { apiService } from "./api";
 
@@ -316,11 +186,11 @@ export interface ActividadReciente {
 export const ejecutivaService = {
   // Obtener estadísticas
   async getStats(ejecutivaId: string): Promise<Stats> {
-        console.log('📊 getStats called for ejecutiva:', ejecutivaId)
+    console.log('📊 getStats called for ejecutiva:', ejecutivaId)
     return apiService.get(`/ejecutiva/stats?ejecutivaId=${ejecutivaId}`)
   },
 
-    // ✅ Obtener estadísticas de trazabilidad (desde traceability-service)
+  // ✅ Obtener estadísticas de trazabilidad (desde traceability-service)
   async getTrazabilidadStats(ejecutivaId: string): Promise<TrazabilidadStats> {
     console.log('📊 getTrazabilidadStats called for ejecutiva:', ejecutivaId)
     return apiService.get(`/ejecutiva/trazabilidad/stats?ejecutivaId=${ejecutivaId}`)
@@ -329,7 +199,7 @@ export const ejecutivaService = {
 
   // Obtener trazabilidad
   async getTrazabilidad(ejecutivaId: string): Promise<Trazabilidad[]> {
-        console.log('🔍 getTrazabilidad called for ejecutiva:', ejecutivaId)
+    console.log('🔍 getTrazabilidad called for ejecutiva:', ejecutivaId)
     return apiService.get(`/ejecutiva/trazabilidad?ejecutivaId=${ejecutivaId}`)
   },
 
@@ -460,5 +330,117 @@ export const ejecutivaService = {
   }) {
     console.log('🔄 updateEtapaOportunidad called with data:', data)
     return apiService.put("/ejecutiva/trazabilidad/etapa", data)
+  },
+
+  /**
+  * ✅ NUEVO: Subir archivo CSV para crear clientes en lote
+  */
+  async bulkCreateClientes(file: File, ejecutivaId: string): Promise<{
+    total: number
+    creados: number
+    duplicados_en_archivo: number
+    invalidos: number
+    resumen: {
+      exitosos: number
+      con_errores: number
+    }
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('ejecutivaId', ejecutivaId);
+
+    return apiService.post("/ejecutiva/clientes/bulk", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+
+  /**
+   * ✅ VERSIÓN CORREGIDA: Generar plantilla directamente en el frontend
+   */
+  async downloadPlantillaClientes(ejecutivaId: string): Promise<void> {
+    try {
+      // Definir interface para el ejemplo
+      interface EjemploCliente {
+        razon_social: string;
+        ruc: string;
+        direccion: string;
+        telefono: string;
+        correo: string;
+        pagina_web: string;
+        pais: string;
+        departamento: string;
+        provincia: string;
+        linkedin: string;
+        grupo_economico: string;
+        rubro: string;
+        sub_rubro: string;
+        tamanio_empresa: string;
+        facturacion_anual: string;
+        cantidad_empleados: string;
+      }
+
+      const headers = [
+        'razon_social',
+        'ruc',
+        'direccion',
+        'telefono',
+        'correo',
+        'pagina_web',
+        'pais',
+        'departamento',
+        'provincia',
+        'linkedin',
+        'grupo_economico',
+        'rubro',
+        'sub_rubro',
+        'tamanio_empresa',
+        'facturacion_anual',
+        'cantidad_empleados'
+      ] as const; // ✅ 'as const' para tipo literal
+
+      const ejemplo: EjemploCliente = {
+        razon_social: 'Mi Empresa Ejemplo SAC',
+        ruc: '20123456789',
+        direccion: 'Av. Ejemplo 123, Lima',
+        telefono: '+51 987 654 321',
+        correo: 'contacto@miempresa.com',
+        pagina_web: 'https://miempresa.com',
+        pais: 'Perú',
+        departamento: 'Lima',
+        provincia: 'Lima',
+        linkedin: 'https://linkedin.com/company/miempresa',
+        grupo_economico: 'Grupo Ejemplo',
+        rubro: 'Tecnología',
+        sub_rubro: 'Desarrollo Software',
+        tamanio_empresa: 'Mediana',
+        facturacion_anual: '500000.00',
+        cantidad_empleados: '50'
+      };
+
+      let csvContent = headers.join(',') + '\n';
+
+      // ✅ CORRECCIÓN: Usar tipo seguro para el header
+      const row = headers.map(header => `"${ejemplo[header]}"`).join(',');
+      csvContent += row + '\n';
+
+      // Crear y descargar archivo
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'plantilla_clientes.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      console.log('✅ Plantilla CSV generada y descargada exitosamente');
+
+    } catch (error) {
+      console.error('❌ Error generando plantilla:', error);
+      throw error;
+    }
   }
 }
