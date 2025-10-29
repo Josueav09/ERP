@@ -207,7 +207,7 @@ const handleEmailVerify = async (code: string): Promise<{ success: boolean; erro
           
         {/* Login Form */}
         <Card className="w-full shadow-2xl border-0">
-          <CardHeader className="space-y-3 pb-6">
+          <CardHeader className="space-y-3 pb-0">
             <div className="lg:hidden mb-4">
               <img src="/growvia-logo.png" alt="Growvia" className="w-48 mx-auto" />
             </div>
