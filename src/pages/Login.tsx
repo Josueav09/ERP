@@ -32,62 +32,6 @@ export default function LoginPage() {
     setCaptchaResponse(userInput);
   };
 
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//   e.preventDefault();
-//   setError("");
-
-//   if (!captchaToken || !captchaResponse) {
-//     setError("Por favor complete la verificación captcha");
-//     return;
-//   }
-
-//   if (!username.trim() || !password.trim()) {
-//     setError("Email y contraseña son obligatorios");
-//     return;
-//   }
-
-//   setIsLoading(true);
-
-//   try {
-//     const result = await login(username, password, captchaToken, captchaResponse);
-
-//     if (result.success && result.requiresEmailVerification) {
-//       console.log("✅ Login exitoso, requiere verificación");
-      
-//       // ✅ DESACTIVAR loading inmediatamente
-//       setIsLoading(false);
-      
-//       setUserEmail(result.email || username);
-//       setShowEmailVerification(true);
-      
-//     } else if (result.success) {
-//       navigate("/dashboard");
-//     } else {
-//       setError(result.error || "Error al iniciar sesión");
-//       setCaptchaToken("");
-//       setCaptchaResponse("");
-//       setIsLoading(false);
-//     }
-//   } catch (err) {
-//     console.error("Error en login:", err);
-//     setError("Error de conexión con el servidor");
-//     setIsLoading(false);
-//   }
-// };
-
-//   const handleEmailVerify = async (code: string): Promise<{ success: boolean; error?: string }> => {
-//     const result = await verifyEmailCode(code);
-//     if (result.success) {
-//       setShowEmailVerification(false);
-//       navigate("/dashboard");
-//       return { success: true };
-//     } else {
-//       setError(result.error || "Código incorrecto");
-//       return { success: false, error: result.error || "Código incorrecto" };
-//     }
-//   };
-
 // frontend/src/pages/LoginPage.tsx
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -113,8 +57,6 @@ const handleSubmit = async (e: React.FormEvent) => {
       setIsLoading(false);
       setUserEmail(result.email || username);
       setShowEmailVerification(true);
-    } else if (result.success) {
-      navigate("/dashboard");
     } else {
       // ✅ MOSTRAR ERROR ESPECÍFICO DEL BACKEND
       setError(result.error || "Error al iniciar sesión");
@@ -150,7 +92,7 @@ const handleEmailVerify = async (code: string): Promise<{ success: boolean; erro
     const result = await verifyEmailCode(code);
     if (result.success) {
       setShowEmailVerification(false);
-      navigate("/dashboard");
+//      navigate("/dashboard");
       return { success: true };
     } else {
       // ✅ MOSTRAR ERROR ESPECÍFICO DEL BACKEND EN VERIFICACIÓN

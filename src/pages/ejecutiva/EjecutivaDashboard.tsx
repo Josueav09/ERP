@@ -17,16 +17,6 @@ interface Stats {
   actividadesMes: number
 }
 
-// interface Trazabilidad {
-//   id_trazabilidad: number
-//   tipo_actividad: string
-//   descripcion: string
-//   fecha_actividad: string
-//   estado: string
-//   nombre_empresa: string
-//   nombre_cliente: string | null
-// }
-
 interface Trazabilidad {
   id_trazabilidad: number
   tipo_contacto: string // ✅ Cambiado
@@ -99,15 +89,6 @@ export default function EjecutivaDashboard() {
     return "Hace unos minutos"
   }
 
-  // const getEstadoBadge = (estado: string) => {
-  //   const badges = {
-  //     completado: "bg-[#C7E196] text-[#013936]",
-  //     en_proceso: "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30",
-  //     pendiente: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
-  //     cancelado: "bg-red-500/20 text-red-400 border border-red-500/30",
-  //   }
-  //   return badges[estado as keyof typeof badges] || "bg-gray-500/20 text-gray-400"
-  // }
 
   const getEstadoBadge = (resultado: string) => {
     const badges = {
@@ -119,15 +100,6 @@ export default function EjecutivaDashboard() {
     return badges[resultado as keyof typeof badges] || "bg-gray-500/20 text-gray-400"
   }
 
-  // const getEstadoLabel = (estado: string) => {
-  //   const labels = {
-  //     completado: "Completado",
-  //     en_proceso: "En proceso",
-  //     pendiente: "Pendiente",
-  //     cancelado: "Cancelado",
-  //   }
-  //   return labels[estado as keyof typeof labels] || estado
-  // }
 
   const getEstadoLabel = (resultado: string) => {
     const labels = {

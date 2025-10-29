@@ -321,8 +321,6 @@ export const ejecutivaService = {
   },
 
   // Actualizar etapa de oportunidad
-  // Actualizar etapa (desde traceability-service)
-  // Actualizar etapa de oportunidad
   async updateEtapaOportunidad(data: {
     trazabilidadId: string
     nuevaEtapa: string

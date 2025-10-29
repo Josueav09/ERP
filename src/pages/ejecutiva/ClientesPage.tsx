@@ -255,13 +255,6 @@ export default function ClientesPage() {
             <h2 className="text-2xl font-bold text-white">Mis Clientes</h2>
             <p className="text-white/60">Gestiona los clientes finales de tu empresa proveedora</p>
           </div>
-          {/* <Button
-            onClick={() => setShowAddCliente(true)}
-            className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 font-semibold"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nuevo Cliente
-          </Button> */}
 
           <Button
             onClick={handleDownloadTemplate}

@@ -84,44 +84,6 @@ export default function ProveedorDashboard() {
     fetchData();
   }, [user, navigate]);
 
-  // const fetchData = async () => {
-  //   setLoading(true);
-  //   try {
-  //     console.log('🔄 [ProveedorDashboard] Cargando datos REALES...');
-
-  //     const clienteUsuarioId = user?.id || '1';
-  //     console.log('🔍 ID de empresa:', clienteUsuarioId);
-
-  //     const [statsData, trazabilidadData, ejecutivaData, clientesData] = await Promise.all([
-  //       clienteService.getStats(clienteUsuarioId),
-  //       clienteService.getTrazabilidad(clienteUsuarioId),
-  //       clienteService.getEjecutivaInfo(clienteUsuarioId),
-  //       clienteService.getClientesRecientes(clienteUsuarioId), // ✅ NUEVO
-  //       clienteService.getEjecutivasByEmpresa(clienteUsuarioId) // ✅ CAMBIAR A getEjecutivasByEmpresa
-
-  //     ]);
-
-  //     console.log('✅ [ProveedorDashboard] Datos REALES cargados:');
-  //     console.log('📊 Stats:', statsData);
-  //     console.log('📋 Trazabilidad:', trazabilidadData.length, 'registros');
-  //     console.log('👩‍💼 Ejecutiva:', ejecutivaData);
-
-  //     setStats(statsData as StatsCompletas);
-  //     setTrazabilidad(trazabilidadData);
-  //     setEjecutivaInfo(ejecutivaData);
-  //     setEjecutivas(ejecutivaData); // ✅ GUARDAR ARRAY COMPLETO
-  //     setClientesRecientes(clientesData); // ✅ NUEVO
-
-
-  //   } catch (error) {
-  //     console.error('❌ [ProveedorDashboard] Error cargando datos REALES:', error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // Agrega esto después del fetchData
-  
   const fetchData = async () => {
   setLoading(true);
   try {
@@ -670,8 +632,6 @@ export default function ProveedorDashboard() {
         {/* Two Columns Section - DATOS REALES */}
 
         <div className="grid gap-6 lg:grid-cols-2">
-
-          {/* Clientes Recientes - DATOS REALES */}
           {/* Clientes Recientes - DATOS REALES CON ESTADÍSTICAS INDIVIDUALES */}
           <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
             <div className="mb-6">

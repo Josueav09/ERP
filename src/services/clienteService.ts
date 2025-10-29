@@ -194,66 +194,6 @@ export const clienteService = {
   // EJECUTIVAS
   //
 
-  // En clienteService.ts - actualizar getEjecutivasByEmpresa
-  // async getEjecutivasByEmpresa(empresaId: string): Promise<EjecutivaCompleta[]> {
-  //   try {
-  //     console.log('👥 [clienteService] Obteniendo ejecutivas REALES para empresa:', empresaId);
-
-  //     const ejecutivasReales: EjecutivaReal[] = await apiService.get(`/empresa/ejecutivas?empresaId=${empresaId}`);
-  //     console.log('✅ [clienteService] Ejecutivas REALES obtenidas:', ejecutivasReales);
-
-  //     const ejecutivasCompletas = await Promise.all(
-  //       ejecutivasReales.map(async (ejecutiva, index) => {
-  //         try {
-  //           // ✅ USAR LA INTERFAZ COMPLETA
-  //           const estadisticas: EjecutivaEstadisticasCompletas = await apiService.get(`/empresa/ejecutiva/${ejecutiva.id_ejecutiva}/estadisticas?empresaId=${empresaId}`);
-  //           const embudo: EmbudoVentas[] = await apiService.get(`/empresa/ejecutiva/${ejecutiva.id_ejecutiva}/embudo?empresaId=${empresaId}`);
-
-  //           console.log(`📊 [clienteService] Estadísticas REALES para ${ejecutiva.nombre_completo}:`, estadisticas);
-  //           console.log(`🎯 [clienteService] Embudo REAL para ${ejecutiva.nombre_completo}:`, embudo);
-
-  //           // ✅ CONVERTIR LA TASA DE CONVERSIÓN DE FORMA SEGURA
-  //           const tasaConversionNum = estadisticas.tasa_conversion
-  //             ? parseFloat(estadisticas.tasa_conversion.replace('%', ''))
-  //             : 0;
-
-  //           return {
-  //             ...ejecutiva,
-  //             especialidad: this.getEspecialidadPorIndice(index),
-  //             experiencia: this.getExperienciaPorIndice(index),
-  //             // ✅ USAR DATOS REALES DEL BACKEND
-  //             clientesAsignados: estadisticas.clientes_activos || 0,
-  //             clientesPotenciales: estadisticas.total_oportunidades || 0,
-  //             ventasMes: estadisticas.revenue_total || 0,
-  //             tasaConversion: tasaConversionNum,
-  //             certificaciones: this.getCertificacionesPorIndice(index),
-  //             embudoVentas: embudo.length > 0 ? embudo : this.getEmbudoVacio()
-  //           };
-  //         } catch (error) {
-  //           console.error(`❌ Error obteniendo datos para ejecutiva ${ejecutiva.id_ejecutiva}:`, error);
-  //           // Fallback a datos vacíos
-  //           return {
-  //             ...ejecutiva,
-  //             especialidad: this.getEspecialidadPorIndice(index),
-  //             experiencia: this.getExperienciaPorIndice(index),
-  //             clientesAsignados: 0,
-  //             clientesPotenciales: 0,
-  //             ventasMes: 0,
-  //             tasaConversion: 0,
-  //             certificaciones: this.getCertificacionesPorIndice(index),
-  //             embudoVentas: this.getEmbudoVacio()
-  //           };
-  //         }
-  //       })
-  //     );
-
-  //     return ejecutivasCompletas;
-  //   } catch (error) {
-  //     console.error('❌ [clienteService] Error obteniendo ejecutivas reales:', error);
-  //     return [];
-  //   }
-  // },
-  // En clienteService.ts - verifica que este método esté bien implementado
   async getEjecutivasByEmpresa(empresaId: string): Promise<EjecutivaCompleta[]> {
     try {
       console.log('👥 [clienteService] Obteniendo ejecutivas REALES para empresa:', empresaId);

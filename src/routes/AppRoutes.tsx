@@ -46,9 +46,6 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  //   console.log('🔐 AppRoutes - isAuthenticated:', isAuthenticated);
-  // console.log('🔐 AppRoutes - user:', user);
-  // console.log('🔐 AppRoutes - token:', sessionStorage.getItem('token'));
   return children;
 };
 

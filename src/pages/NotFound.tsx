@@ -19,9 +19,6 @@ const NotFound: React.FC = () => {
           Lo sentimos, la página que estás buscando no existe o ha sido movida.
         </p>
         <div className="space-x-4">
-          <Button variant="primary" onClick={() => navigate('dashboard')}>
-            Ir al Dashboard
-          </Button>
           <Button variant="outline" onClick={() => window.history.back()}>
             Volver Atrás
           </Button>
