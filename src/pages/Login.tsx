@@ -32,92 +32,64 @@ export default function LoginPage() {
     setCaptchaResponse(userInput);
   };
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setError("");
 
-  //   if (!captchaToken || !captchaResponse) {
-  //     setError("Por favor complete la verificación captcha");
-  //     return;
-  //   }
+//   const handleSubmit = async (e: React.FormEvent) => {
+//   e.preventDefault();
+//   setError("");
 
-  //   if (!username.trim() || !password.trim()) {
-  //     setError("Email y contraseña son obligatorios");
-  //     return;
-  //   }
+//   if (!captchaToken || !captchaResponse) {
+//     setError("Por favor complete la verificación captcha");
+//     return;
+//   }
 
-  //   setIsLoading(true);
+//   if (!username.trim() || !password.trim()) {
+//     setError("Email y contraseña son obligatorios");
+//     return;
+//   }
 
-  //   try {
-  //     const result = await login(username, password, captchaToken, captchaResponse);
+//   setIsLoading(true);
 
-  //     // ✅ CORRECCIÓN: Verificar mejor la respuesta
-  //     if (result.success && result.requiresEmailVerification) {
-  //       console.log("Requiere verificación de email:", result);
-  //       setUserEmail(result.email || username); // Usar el email de la respuesta o el username
-  //       setShowEmailVerification(true);
-  //     } else if (result.success) {
-  //       // Login exitoso sin verificación (no debería pasar en tu caso)
-  //       navigate("/dashboard");
-  //     } else {
-  //       setError(result.error || "Error al iniciar sesión");
-  //       // Resetear captcha en caso de error
-  //       setCaptchaToken("");
-  //       setCaptchaResponse("");
-  //     }
-  //   } catch (err) {
-  //     console.error("Error en login:", err);
-  //     setError("Error de conexión con el servidor");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+//   try {
+//     const result = await login(username, password, captchaToken, captchaResponse);
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setError("");
+//     if (result.success && result.requiresEmailVerification) {
+//       console.log("✅ Login exitoso, requiere verificación");
+      
+//       // ✅ DESACTIVAR loading inmediatamente
+//       setIsLoading(false);
+      
+//       setUserEmail(result.email || username);
+//       setShowEmailVerification(true);
+      
+//     } else if (result.success) {
+//       navigate("/dashboard");
+//     } else {
+//       setError(result.error || "Error al iniciar sesión");
+//       setCaptchaToken("");
+//       setCaptchaResponse("");
+//       setIsLoading(false);
+//     }
+//   } catch (err) {
+//     console.error("Error en login:", err);
+//     setError("Error de conexión con el servidor");
+//     setIsLoading(false);
+//   }
+// };
 
-  //   if (!captchaToken || !captchaResponse) {
-  //     setError("Por favor complete la verificación captcha");
-  //     return;
-  //   }
+//   const handleEmailVerify = async (code: string): Promise<{ success: boolean; error?: string }> => {
+//     const result = await verifyEmailCode(code);
+//     if (result.success) {
+//       setShowEmailVerification(false);
+//       navigate("/dashboard");
+//       return { success: true };
+//     } else {
+//       setError(result.error || "Código incorrecto");
+//       return { success: false, error: result.error || "Código incorrecto" };
+//     }
+//   };
 
-  //   if (!username.trim() || !password.trim()) {
-  //     setError("Email y contraseña son obligatorios");
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-
-  //   try {
-  //     const result = await login(username, password, captchaToken, captchaResponse);
-
-  //     console.log("🔐 Login result:", result);
-
-  //     if (result.success && result.requiresEmailVerification) {
-  //       console.log("🎯 Mostrando modal de verificación para:", result.email);
-  //       setUserEmail(result.email || username);
-  //       setShowEmailVerification(true); // ✅ Esto debería funcionar ahora
-  //     } else if (result.success) {
-  //       // Login exitoso sin verificación
-  //       navigate("/dashboard");
-  //     } else {
-  //       setError(result.error || "Error al iniciar sesión");
-  //       setCaptchaToken("");
-  //       setCaptchaResponse("");
-  //     }
-  //   } catch (err) {
-  //     console.error("Error en login:", err);
-  //     setError("Error de conexión con el servidor");
-  //   } finally {
-  //     // ✅ Solo desactivar loading si NO es un caso de verificación de email
-  //     if (!showEmailVerification) {
-  //       setIsLoading(false);
-  //     }
-  //   }
-  // };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+// frontend/src/pages/LoginPage.tsx
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setError("");
 
@@ -138,50 +110,72 @@ export default function LoginPage() {
 
     if (result.success && result.requiresEmailVerification) {
       console.log("✅ Login exitoso, requiere verificación");
-      
-      // ✅ DESACTIVAR loading inmediatamente
       setIsLoading(false);
-      
       setUserEmail(result.email || username);
       setShowEmailVerification(true);
-      
     } else if (result.success) {
       navigate("/dashboard");
     } else {
+      // ✅ MOSTRAR ERROR ESPECÍFICO DEL BACKEND
       setError(result.error || "Error al iniciar sesión");
       setCaptchaToken("");
       setCaptchaResponse("");
       setIsLoading(false);
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error("Error en login:", err);
-    setError("Error de conexión con el servidor");
+    
+    // ✅ MEJOR MANEJO DE ERRORES HTTP
+    if (err.response?.data?.message) {
+      // Error del backend con mensaje específico
+      setError(err.response.data.message);
+    } else if (err.response?.data?.error) {
+      // Error del backend con campo 'error'
+      setError(err.response.data.error);
+    } else if (err.message) {
+      // Error de conexión
+      setError(err.message);
+    } else {
+      setError("Error de conexión con el servidor");
+    }
+    
+    setCaptchaToken("");
+    setCaptchaResponse("");
     setIsLoading(false);
   }
 };
 
-  const handleEmailVerify = async (code: string): Promise<{ success: boolean; error?: string }> => {
+const handleEmailVerify = async (code: string): Promise<{ success: boolean; error?: string }> => {
+  try {
     const result = await verifyEmailCode(code);
     if (result.success) {
       setShowEmailVerification(false);
       navigate("/dashboard");
       return { success: true };
     } else {
-      setError(result.error || "Código incorrecto");
-      return { success: false, error: result.error || "Código incorrecto" };
+      // ✅ MOSTRAR ERROR ESPECÍFICO DEL BACKEND EN VERIFICACIÓN
+      const errorMsg = result.error || "Código incorrecto";
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
     }
-  };
+  } catch (err: any) {
+    console.error("Error en verificación:", err);
+    
+    // ✅ MEJOR MANEJO DE ERRORES EN VERIFICACIÓN
+    let errorMsg = "Error al verificar el código";
+    if (err.response?.data?.message) {
+      errorMsg = err.response.data.message;
+    } else if (err.response?.data?.error) {
+      errorMsg = err.response.data.error;
+    } else if (err.message) {
+      errorMsg = err.message;
+    }
+    
+    setError(errorMsg);
+    return { success: false, error: errorMsg };
+  }
+};  
 
-  
-
-  // Agrega esto justo antes del return
-  // console.log("🔍 DEBUG Modal state:", {
-  //   showEmailVerification,
-  //   userEmail,
-  //   modalShouldShow: showEmailVerification && userEmail
-  // });
-
-  
 
   return (
     <div className="min-h-screen bg-[#013936] flex items-center justify-center p-4 relative overflow-hidden">
