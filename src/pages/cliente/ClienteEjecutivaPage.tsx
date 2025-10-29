@@ -1,462 +1,437 @@
-// import React from 'react';
-// import { useAuth } from '@/context/AuthContext';
-// import { DashboardLayout } from '@/components/layout/DashboardLayout';
-// import { Card } from '@/components/ui/card';
-// import { Button } from '@/components/ui/button';
-// import { Mail, Phone, Calendar } from 'lucide-react';
+// frontend/src/pages/empresa/EquipoPage.tsx
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Users, User, Award, Star, Target, TrendingUp, BookOpen,
+  Activity, Calendar, Filter, Mail, Phone, Linkedin
+} from "lucide-react";
+import { clienteService, ClienteReal, EjecutivaCompleta } from "@/services/clienteService";
 
-// const ClienteEjecutivaPage: React.FC = () => {
-//   const { user } = useAuth();
-
-//   const navItems = [
-//     { label: "Mi Progreso", icon: <div>📊</div>, href: "/dashboard/empresa" },
-//     { label: "Mi Ejecutiva", icon: <div>👤</div>, href: "/dashboard/empresa/ejecutiva" },
-//     { label: "Actividades", icon: <div>📋</div>, href: "/dashboard/empresa/actividades" },
-//   ];
-
-//   // Datos de ejemplo - luego conectar con servicio
-//   const ejecutivaInfo = {
-//     nombre: "María González",
-//     email: "maria.gonzalez@growvia.com",
-//     telefono: "+56 9 1234 5678",
-//     especialidad: "Onboarding y Desarrollo de Negocio",
-//     experiencia: "3 años en Growvia",
-//     ultimoContacto: "2024-01-15"
-//   };
-
-//   return (
-//     <DashboardLayout 
-//       navItems={navItems} 
-//       title="Mi Ejecutiva de Cuenta" 
-//       subtitle="Información de contacto y seguimiento"
-//     >
-//       <div className="space-y-6">
-//         {/* Tarjeta de Información */}
-//         <Card className="bg-gradient-to-r from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
-//           <div className="flex items-start gap-6">
-//             <div className="w-20 h-20 bg-[#C7E196] rounded-full flex items-center justify-center flex-shrink-0">
-//               <span className="text-2xl font-bold text-[#013936]">
-//                 {ejecutivaInfo.nombre.split(' ').map(n => n[0]).join('').toUpperCase()}
-//               </span>
-//             </div>
-            
-//             <div className="flex-1">
-//               <h2 className="text-2xl font-bold text-white mb-2">{ejecutivaInfo.nombre}</h2>
-//               <p className="text-[#C7E196] mb-4">{ejecutivaInfo.especialidad}</p>
-              
-//               <div className="grid gap-3 md:grid-cols-2">
-//                 <div className="flex items-center gap-2 text-white/80">
-//                   <Mail className="w-4 h-4" />
-//                   <span>{ejecutivaInfo.email}</span>
-//                 </div>
-//                 <div className="flex items-center gap-2 text-white/80">
-//                   <Phone className="w-4 h-4" />
-//                   <span>{ejecutivaInfo.telefono}</span>
-//                 </div>
-//                 <div className="flex items-center gap-2 text-white/80">
-//                   <Calendar className="w-4 h-4" />
-//                   <span>Experiencia: {ejecutivaInfo.experiencia}</span>
-//                 </div>
-//                 <div className="flex items-center gap-2 text-white/80">
-//                   <Calendar className="w-4 h-4" />
-//                   <span>Último contacto: {new Date(ejecutivaInfo.ultimoContacto).toLocaleDateString('es-ES')}</span>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         </Card>
-
-//         {/* Acciones Rápidas */}
-//         <div className="grid gap-4 md:grid-cols-3">
-//           <Button 
-//             className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 h-16"
-//             onClick={() => window.location.href = `mailto:${ejecutivaInfo.email}`}
-//           >
-//             <Mail className="w-5 h-5 mr-2" />
-//             Enviar Email
-//           </Button>
-          
-//           <Button 
-//             className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-16"
-//             onClick={() => window.location.href = `tel:${ejecutivaInfo.telefono}`}
-//           >
-//             <Phone className="w-5 h-5 mr-2" />
-//             Llamar
-//           </Button>
-          
-//           <Button 
-//             className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-16"
-//             onClick={() => window.location.href = `https://wa.me/${ejecutivaInfo.telefono.replace(/\D/g, '')}`}
-//           >
-//             <div className="w-5 h-5 mr-2">💬</div>
-//             WhatsApp
-//           </Button>
-//         </div>
-
-//         {/* Información Adicional */}
-//         <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
-//           <h3 className="text-lg font-semibold text-white mb-4">Horarios de Contacto</h3>
-//           <div className="grid gap-4 md:grid-cols-2 text-white/80">
-//             <div>
-//               <p className="font-semibold">Lunes - Viernes</p>
-//               <p>9:00 - 18:00 hrs</p>
-//             </div>
-//             <div>
-//               <p className="font-semibold">Sábados</p>
-//               <p>10:00 - 14:00 hrs</p>
-//             </div>
-//           </div>
-//         </Card>
-//       </div>
-//     </DashboardLayout>
-//   );
-// };
-
-// export default ClienteEjecutivaPage;
-
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Mail, 
-  Phone, 
-  Calendar, 
-  User, 
-  Activity, 
-  Users,
-  Star,
-  Award,
-  Clock,
-  MessageCircle
-} from 'lucide-react';
-import { clienteService } from '@/services/clienteService';
-import { useToast } from '@/hooks/useToast';
-
-interface EjecutivaInfo {
-  ejecutiva: {
-    nombre_completo: string;
-    correo: string;
-    telefono: string;
-    linkedin?: string;
-    especialidad: string;
-    experiencia: string;
-    fecha_asignacion: string;
-  };
-  estadisticas: {
-    clientes_activos: number;
-    tasa_conversion: string;
-    ventas_ganadas: number;
-    tiempo_respuesta: string;
-  };
-  proxima_reunion?: {
-    fecha: string;
-    tipo: string;
-    descripcion: string;
-  };
+interface Certificacion {
+  id: number;
+  nombre: string;
+  institucion: string;
+  fecha_obtencion: string;
+  nivel: string;
 }
 
-const ClienteEjecutivaPage: React.FC = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [ejecutivaInfo, setEjecutivaInfo] = useState<EjecutivaInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+interface EmbudoVentas {
+  etapa: string;
+  cantidad: number;
+  tasa_conversion: string;
+  monto_potencial: number;
+}
 
-  const navItems = [
-    { label: "Dashboard", icon: <Activity className="w-5 h-5" />, href: "/dashboard/empresa" },
-    { label: "Mi Ejecutiva", icon: <User className="w-5 h-5" />, href: "/dashboard/empresa/ejecutiva" },
-    { label: "Actividades", icon: <Calendar className="w-5 h-5" />, href: "/dashboard/empresa/actividades" },
-    { label: "Perfil", icon: <Users className="w-5 h-5" />, href: "/dashboard/empresa/perfil" },
-  ];
+interface EquipoStats {
+  totalEjecutivas: number;
+  totalClientes: number;
+  ventasTotales: number;
+  pipelineTotal: number;
+  actividadesMes: number;
+  conversionPromedio: string;
+}
+
+export default function ProveedorDashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [ejecutivas, setEjecutivas] = useState<EjecutivaCompleta[]>([]);
+  const [ejecutivaSeleccionada, setEjecutivaSeleccionada] = useState<EjecutivaCompleta | null>(null);
+  const [clientesRecientes, setClientesRecientes] = useState<ClienteReal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [equipoStats, setEquipoStats] = useState<EquipoStats>({
+    totalEjecutivas: 0,
+    totalClientes: 0,
+    ventasTotales: 0,
+    pipelineTotal: 0,
+    actividadesMes: 0,
+    conversionPromedio: '0%'
+  });
 
   useEffect(() => {
-    fetchEjecutivaInfo();
-  }, [user]);
+    if (!user || user.role !== "empresa") {
+      navigate("/login");
+      return;
+    }
+    fetchData();
+  }, [user, navigate]);
 
-  const fetchEjecutivaInfo = async () => {
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      console.log('🔄 [ClienteEjecutivaPage] Cargando información de ejecutiva...');
-
-      const clienteUsuarioId = user?.id || '1';
-      const data = await clienteService.getEjecutivaInfo(clienteUsuarioId);
+      const empresaId = user!.id.toString();
       
-      setEjecutivaInfo(data);
-      console.log('✅ [ClienteEjecutivaPage] Información de ejecutiva cargada', data);
+      console.log('🔄 Cargando datos COMPLETOS para empresa:', empresaId);
+
+      // Obtener TODAS las ejecutivas de la empresa
+      const todasEjecutivas = await clienteService.getEjecutivasByEmpresa(empresaId);
+      console.log('✅ Ejecutivas obtenidas:', todasEjecutivas);
+
+      // Obtener estadísticas del equipo
+      const stats = await getEquipoStats(empresaId, todasEjecutivas);
+      setEquipoStats(stats);
+
+      // Obtener clientes recientes
+      const clientes = await clienteService.getClientesRecientes(empresaId);
+      setClientesRecientes(clientes);
+
+      setEjecutivas(todasEjecutivas);
+      
+      // Seleccionar la primera ejecutiva por defecto si existe
+      if (todasEjecutivas.length > 0) {
+        setEjecutivaSeleccionada(todasEjecutivas[0]);
+      } else {
+        setEjecutivaSeleccionada(null);
+      }
+
     } catch (error) {
-      console.error('❌ [ClienteEjecutivaPage] Error cargando información:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo cargar la información de tu ejecutiva",
-        variant: "destructive",
-      });
+      console.error('❌ Error cargando datos del equipo:', error);
+      setEjecutivas([]);
+      setEjecutivaSeleccionada(null);
     } finally {
       setLoading(false);
     }
   };
 
+  const getEquipoStats = async (empresaId: string, ejecutivas: EjecutivaCompleta[]): Promise<EquipoStats> => {
+    try {
+      const totalEjecutivas = ejecutivas.length;
+      const totalClientes = ejecutivas.reduce((sum, e) => sum + e.clientesAsignados, 0);
+      const ventasTotales = ejecutivas.reduce((sum, e) => sum + e.ventasMes, 0);
+      const actividadesMes = ejecutivas.reduce((sum, e) => sum + e.clientesPotenciales, 0);
+      const conversionPromedio = ejecutivas.length > 0 
+        ? Math.round(ejecutivas.reduce((sum, e) => sum + e.tasaConversion, 0) / ejecutivas.length)
+        : 0;
+
+      return {
+        totalEjecutivas,
+        totalClientes,
+        ventasTotales,
+        pipelineTotal: actividadesMes * 2, // Estimado
+        actividadesMes,
+        conversionPromedio: `${conversionPromedio}%`
+      };
+    } catch (error) {
+      console.error('Error obteniendo stats del equipo:', error);
+      return {
+        totalEjecutivas: 0,
+        totalClientes: 0,
+        ventasTotales: 0,
+        pipelineTotal: 0,
+        actividadesMes: 0,
+        conversionPromedio: '0%'
+      };
+    }
+  };
+
+
+  const navItems = [
+    { label: "Dashboard", icon: <Activity className="w-5 h-5" />, href: "/dashboard/empresa" },
+    { label: "Mi Equipo", icon: <Users className="w-5 h-5" />, href: "/dashboard/empresa/ejecutiva" },
+    { label: "Actividades", icon: <Calendar className="w-5 h-5" />, href: "/dashboard/empresa/actividades" },
+  ];
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
-  const handleContact = (type: 'email' | 'phone' | 'whatsapp') => {
-    if (!ejecutivaInfo) return;
-
-    const { ejecutiva } = ejecutivaInfo;
-
-    switch (type) {
-      case 'email':
-        window.location.href = `mailto:${ejecutiva.correo}`;
-        break;
-      case 'phone':
-        window.location.href = `tel:${ejecutiva.telefono}`;
-        break;
-      case 'whatsapp':
-        const phoneNumber = ejecutiva.telefono.replace(/\D/g, '');
-        window.open(`https://wa.me/${phoneNumber}`, '_blank');
-        break;
+  const handleEjecutivaChange = (ejecutivaId: string) => {
+    const ejecutiva = ejecutivas.find(e => e.id_ejecutiva.toString() === ejecutivaId);
+    if (ejecutiva) {
+      setEjecutivaSeleccionada(ejecutiva);
     }
   };
 
   if (loading) {
     return (
-      <DashboardLayout 
-        navItems={navItems} 
-        title="Mi Ejecutiva de Cuenta" 
-        subtitle="Cargando información..."
-      >
-        <div className="flex items-center justify-center h-64">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#C7E196] border-t-transparent" />
-        </div>
-      </DashboardLayout>
+      <div className="min-h-screen bg-gradient-to-br from-[#013936] via-[#024a46] to-[#013936] flex items-center justify-center">
+        <div className="text-white text-lg">Cargando información del equipo...</div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout 
-      navItems={navItems} 
-      title="Mi Ejecutiva de Cuenta" 
-      subtitle="Tu contacto directo para el crecimiento de tu negocio"
+    <DashboardLayout
+      navItems={navItems}
+      title="Mi Equipo de Ejecutivas"
+      subtitle="Especialistas dedicados a tu crecimiento"
     >
+
       <div className="space-y-6">
-        {/* Tarjeta Principal de Información */}
-        {ejecutivaInfo && (
-          <Card className="bg-gradient-to-r from-[#024a46] to-[#013936] border-[#C7E196]/20">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-6 items-start">
-                {/* Avatar e Información Básica */}
-                <div className="flex items-start gap-4 flex-1">
-                  <div className="w-20 h-20 bg-[#C7E196] rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl font-bold text-[#013936]">
-                      {getInitials(ejecutivaInfo.ejecutiva.nombre_completo)}
-                    </span>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h2 className="text-2xl font-bold text-white">{ejecutivaInfo.ejecutiva.nombre_completo}</h2>
-                      <Badge className="bg-[#C7E196] text-[#013936]">
-                        <Star className="w-3 h-3 mr-1" />
-                        Ejecutiva Certificada
-                      </Badge>
-                    </div>
-                    
-                    <p className="text-[#C7E196] text-lg mb-4">{ejecutivaInfo.ejecutiva.especialidad}</p>
-                    
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div className="flex items-center gap-2 text-white/80">
-                        <Mail className="w-4 h-4" />
-                        <span>{ejecutivaInfo.ejecutiva.correo}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-white/80">
-                        <Phone className="w-4 h-4" />
-                        <span>{ejecutivaInfo.ejecutiva.telefono}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-white/80">
-                        <Award className="w-4 h-4" />
-                        <span>{ejecutivaInfo.ejecutiva.experiencia}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-white/80">
-                        <Calendar className="w-4 h-4" />
-                        <span>Asignada desde: {new Date(ejecutivaInfo.ejecutiva.fecha_asignacion).toLocaleDateString('es-ES')}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Estadísticas */}
-                <div className="bg-white/10 rounded-lg p-4 min-w-[200px]">
-                  <h3 className="text-white font-semibold mb-3 text-center">Estadísticas</h3>
-                  <div className="space-y-2">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-[#C7E196]">{ejecutivaInfo.estadisticas.clientes_activos}</p>
-                      <p className="text-white/60 text-sm">Clientes Activos</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-[#C7E196]">{ejecutivaInfo.estadisticas.tasa_conversion}</p>
-                      <p className="text-white/60 text-sm">Tasa Conversión</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-[#C7E196]">{ejecutivaInfo.estadisticas.ventas_ganadas}</p>
-                      <p className="text-white/60 text-sm">Ventas Ganadas</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Acciones Rápidas */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Button 
-            className="bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/90 h-16 text-lg font-semibold"
-            onClick={() => handleContact('email')}
-          >
-            <Mail className="w-5 h-5 mr-2" />
-            Enviar Email
-          </Button>
-          
-          <Button 
-            className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-16 text-lg font-semibold"
-            onClick={() => handleContact('phone')}
-          >
-            <Phone className="w-5 h-5 mr-2" />
-            Llamar Ahora
-          </Button>
-          
-          <Button 
-            className="bg-green-600 text-white hover:bg-green-700 h-16 text-lg font-semibold"
-            onClick={() => handleContact('whatsapp')}
-          >
-            <MessageCircle className="w-5 h-5 mr-2" />
-            WhatsApp
-          </Button>
-        </div>
-
-        {/* Información Adicional */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Próxima Reunión */}
-          {ejecutivaInfo?.proxima_reunion && (
-            <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Próxima Reunión
-                </CardTitle>
-                <CardDescription className="text-white/60">
-                  Tu siguiente contacto programado
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/80">Fecha:</span>
-                    <Badge variant="outline" className="text-[#C7E196] border-[#C7E196]">
-                      {new Date(ejecutivaInfo.proxima_reunion.fecha).toLocaleDateString('es-ES', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/80">Tipo:</span>
-                    <span className="text-white">{ejecutivaInfo.proxima_reunion.tipo}</span>
-                  </div>
-                  <div>
-                    <span className="text-white/80 block mb-1">Descripción:</span>
-                    <p className="text-white">{ejecutivaInfo.proxima_reunion.descripcion}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Horarios de Contacto */}
-          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                Horarios de Contacto
-              </CardTitle>
-              <CardDescription className="text-white/60">
-                Mejores horarios para comunicarte
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                  <span className="text-white/80">Lunes - Viernes</span>
-                  <span className="text-white font-medium">9:00 - 18:00 hrs</span>
-                </div>
-                <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                  <span className="text-white/80">Sábados</span>
-                  <span className="text-white font-medium">10:00 - 14:00 hrs</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-white/80">Tiempo Respuesta</span>
-                  <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
-                    {ejecutivaInfo?.estadisticas.tiempo_respuesta || '< 2 horas'}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Especialidades y Servicios */}
+        {/* Resumen del Equipo */}
         <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
           <CardHeader>
-            <CardTitle className="text-white">Especialidades y Servicios</CardTitle>
+            <CardTitle className="text-white flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              Resumen del Equipo
+            </CardTitle>
             <CardDescription className="text-white/60">
-              Áreas en las que tu ejecutiva puede ayudarte
+              Métricas consolidadas de todo tu equipo comercial
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-white/5 rounded-lg">
-                <div className="w-12 h-12 bg-[#C7E196] rounded-full flex items-center justify-center mx-auto mb-2">
-                  <User className="w-6 h-6 text-[#013936]" />
-                </div>
-                <h4 className="text-white font-semibold">Onboarding</h4>
-                <p className="text-white/60 text-sm">Implementación inicial</p>
+                <p className="text-3xl font-bold text-[#C7E196]">
+                  {equipoStats.totalEjecutivas}
+                </p>
+                <p className="text-white/60">Total Ejecutivas</p>
               </div>
-              
               <div className="text-center p-4 bg-white/5 rounded-lg">
-                <div className="w-12 h-12 bg-[#C7E196] rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Activity className="w-6 h-6 text-[#013936]" />
-                </div>
-                <h4 className="text-white font-semibold">Desarrollo</h4>
-                <p className="text-white/60 text-sm">Crecimiento de negocio</p>
+                <p className="text-3xl font-bold text-[#C7E196]">
+                  ${(equipoStats.ventasTotales / 1000).toFixed(0)}K
+                </p>
+                <p className="text-white/60">Ventas Mensuales</p>
               </div>
-              
               <div className="text-center p-4 bg-white/5 rounded-lg">
-                <div className="w-12 h-12 bg-[#C7E196] rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Award className="w-6 h-6 text-[#013936]" />
-                </div>
-                <h4 className="text-white font-semibold">Optimización</h4>
-                <p className="text-white/60 text-sm">Mejora continua</p>
+                <p className="text-3xl font-bold text-[#C7E196]">
+                  {equipoStats.totalClientes}
+                </p>
+                <p className="text-white/60">Clientes Activos</p>
               </div>
-              
               <div className="text-center p-4 bg-white/5 rounded-lg">
-                <div className="w-12 h-12 bg-[#C7E196] rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Star className="w-6 h-6 text-[#013936]" />
-                </div>
-                <h4 className="text-white font-semibold">Soporte</h4>
-                <p className="text-white/60 text-sm">Atención personalizada</p>
+                <p className="text-3xl font-bold text-[#C7E196]">
+                  {equipoStats.conversionPromedio}
+                </p>
+                <p className="text-white/60">Conversión Promedio</p>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Header Section con Selector */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {ejecutivaSeleccionada ? ejecutivaSeleccionada.nombre_completo : 'Tu Ejecutiva'}
+            </h1>
+            <p className="text-white/60 text-lg">
+              {ejecutivaSeleccionada ? ejecutivaSeleccionada.especialidad : 'Selecciona una ejecutiva para ver sus detalles'}
+            </p>
+          </div>
+
+          {/* Selector de Ejecutiva */}
+          <div className="w-full lg:w-64">
+            <label className="text-sm text-white/60 mb-2 block flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Seleccionar Ejecutiva
+            </label>
+            <Select
+              value={ejecutivaSeleccionada?.id_ejecutiva.toString()}
+              onValueChange={handleEjecutivaChange}
+            >
+              <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                <SelectValue placeholder="Selecciona una ejecutiva" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#024a46] border-[#C7E196]/20">
+                {ejecutivas.map((ejecutiva) => (
+                  <SelectItem
+                    key={ejecutiva.id_ejecutiva}
+                    value={ejecutiva.id_ejecutiva.toString()}
+                    className="text-white hover:bg-white/10 focus:bg-white/10"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-[#C7E196] rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-[#013936]">
+                          {getInitials(ejecutiva.nombre_completo)}
+                        </span>
+                      </div>
+                      {ejecutiva.nombre_completo}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Mensaje si no hay ejecutivas */}
+        {ejecutivas.length === 0 && (
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
+            <CardContent className="p-8 text-center">
+              <Users className="w-16 h-16 text-white/40 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">No hay ejecutivas asignadas</h3>
+              <p className="text-white/60">
+                Actualmente no tienes ejecutivas asignadas a tu empresa. 
+                Contacta con el administrador para asignar profesionales a tu equipo.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Ejecutiva Seleccionada - DETALLE COMPLETO */}
+        {ejecutivaSeleccionada && (
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Información Principal */}
+              <div className="flex-1">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 bg-[#C7E196] rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl font-bold text-[#013936]">
+                      {getInitials(ejecutivaSeleccionada.nombre_completo)}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="text-xl font-semibold text-white">{ejecutivaSeleccionada.nombre_completo}</h4>
+                    </div>
+
+                    {/* Información de Contacto */}
+                    <div className="flex flex-wrap gap-4 mb-4">
+                      <div className="flex items-center gap-2 text-white/80">
+                        <Mail className="w-4 h-4" />
+                        <span className="text-sm">{ejecutivaSeleccionada.correo}</span>
+                      </div>
+                      {ejecutivaSeleccionada.telefono && ejecutivaSeleccionada.telefono !== 'No disponible' && (
+                        <div className="flex items-center gap-2 text-white/80">
+                          <Phone className="w-4 h-4" />
+                          <span className="text-sm">{ejecutivaSeleccionada.telefono}</span>
+                        </div>
+                      )}
+                      {ejecutivaSeleccionada.linkedin && (
+                        <div className="flex items-center gap-2 text-white/80">
+                          <Linkedin className="w-4 h-4" />
+                          <span className="text-sm">LinkedIn</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Métricas Principales */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-white">{ejecutivaSeleccionada.clientesAsignados}</p>
+                        <p className="text-xs text-white/60">Clientes Activos</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-white">${(ejecutivaSeleccionada.ventasMes / 1000).toFixed(0)}K</p>
+                        <p className="text-xs text-white/60">Ventas Mensuales</p>
+                      </div>
+                    </div>
+
+                    {/* Certificaciones */}
+                    <div className="mb-4">
+                      <h5 className="text-white font-semibold mb-2 flex items-center gap-2">
+                        <Award className="w-4 h-4" />
+                        Certificaciones
+                      </h5>
+                      <div className="flex flex-wrap gap-2">
+                        {ejecutivaSeleccionada.certificaciones.map((cert) => (
+                          <Badge key={cert.id} variant="outline" className="bg-white/10 text-white border-white/20">
+                            <BookOpen className="w-3 h-3 mr-1" />
+                            {cert.nombre}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Embudo de Ventas COMPLETO */}
+              <div className="lg:w-80">
+                <h5 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  Embudo de Ventas
+                </h5>
+                <div className="space-y-2">
+                  {ejecutivaSeleccionada.embudoVentas.map((etapa, index) => {
+                    const width = 100 - (index * 20);
+                    return (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <div className="w-20 text-white/80 flex-shrink-0">
+                          {etapa.etapa}
+                        </div>
+                        <div className="flex-1 flex justify-center">
+                          <div
+                            className="h-6 flex items-center justify-center text-white font-medium text-xs transition-all duration-300"
+                            style={{
+                              width: `${width}%`,
+                              backgroundColor: [
+                                '#6F9E2B', '#8CBD35', '#A9D45E', '#B2C48A', '#C7E196'
+                              ][index] || '#6B7280',
+                              borderRadius: '4px',
+                              minWidth: '60px'
+                            }}
+                          >
+                            {etapa.cantidad}
+                          </div>
+                        </div>
+                        <div className="w-12 text-white/60 text-right flex-shrink-0">
+                          ${(etapa.monto_potencial / 1000).toFixed(0)}K
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Resumen del Embudo */}
+                <div className="mt-4 pt-3 border-t border-white/10">
+
+                  <div className="flex justify-between items-center text-xs mt-1">
+                    <span className="text-white/60">Conversión Final:</span>
+                    <span className="text-[#C7E196] font-bold">
+                      {ejecutivaSeleccionada.embudoVentas[ejecutivaSeleccionada.embudoVentas.length - 1]?.tasa_conversion}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs mt-1">
+                    <span className="text-white/60">Tasa de Conversión Personal:</span>
+                    <span className="text-[#C7E196] font-bold">
+                      {ejecutivaSeleccionada.tasaConversion}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Lista de Clientes Recientes de la Ejecutiva Seleccionada */}
+        {ejecutivaSeleccionada && clientesRecientes.length > 0 && (
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Clientes de {ejecutivaSeleccionada.nombre_completo.split(' ')[0]}
+              </CardTitle>
+              <CardDescription className="text-white/60">
+                Clientes gestionados por esta ejecutiva
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {clientesRecientes
+                  .filter(cliente => cliente.ejecutiva_nombre === ejecutivaSeleccionada.nombre_completo)
+                  .slice(0, 6)
+                  .map((cliente) => (
+                    <div key={cliente.id_cliente_final} className="bg-white/5 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="text-white font-semibold text-sm">{cliente.razon_social}</h4>
+                        <Badge variant="outline" className="bg-[#C7E196]/20 text-[#C7E196] border-[#C7E196]/30 text-xs">
+                          {cliente.estado}
+                        </Badge>
+                      </div>
+                      <p className="text-white/60 text-xs mb-1">RUC: {cliente.ruc}</p>
+                      <p className="text-white/60 text-xs mb-2">Rubro: {cliente.rubro}</p>
+                      <div className="flex justify-between text-xs text-white/60">
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              {clientesRecientes.filter(cliente => cliente.ejecutiva_nombre === ejecutivaSeleccionada.nombre_completo).length === 0 && (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 text-white/40 mx-auto mb-2" />
+                  <p className="text-white/60">No hay clientes asignados a esta ejecutiva</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );
-};
+}
 
-export default ClienteEjecutivaPage;

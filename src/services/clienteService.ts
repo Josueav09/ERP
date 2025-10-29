@@ -1,6 +1,7 @@
 // frontend/services/clienteService.ts
 import { apiService } from './api';
 
+
 export interface ClienteStats {
   cliente: {
     nombre_cliente: string;
@@ -12,9 +13,16 @@ export interface ClienteStats {
   completadas: number;
   enProceso: number;
   rendimiento: number;
+  totalClientes?: number;
+  totalEjecutivas?: number;
+  actividadesEsteMes?: number;
+  clientesEsteMes?: number;
+  revenueTotal?: number;
+  pipelineOportunidades?: number;
+  tasaConversion?: string;
+  ventasGanadas?: number;
 }
 
-// ✅ ESTRUCTURA EXACTA que devuelve el backend en getTrazabilidad()
 export interface Trazabilidad {
   id_trazabilidad: number;
   tipo_actividad: string;
@@ -23,162 +31,138 @@ export interface Trazabilidad {
   resultado_contacto: string;
   ejecutiva_nombre: string;
   nombre_empresa: string;
-  // ✅ NO incluir 'notas' - usar 'descripcion' que viene de 'observaciones'
+  estado: string;
+  informacion_importante?: string;
+  resultados_reunion?: string;
+  cliente_nombre?: string;
+  contacto_nombre?: string;
 }
 
+export interface ClienteReal {
+  id_cliente_final: number;
+  razon_social: string;
+  ruc: string;
+  correo: string;
+  telefono: string;
+  pais: string;
+  rubro: string;
+  estado: string;
+  fecha_creacion: string;
+  ejecutiva_nombre: string;
+  // ✅ NUEVAS PROPIEDADES
+  actividades_completadas: number;
+  actividades_en_proceso: number;
+  total_actividades: number;
+}
+
+
+export interface EjecutivaReal {
+  id_ejecutiva: number;
+  nombre_completo: string;
+  correo: string;
+  telefono: string;
+  linkedin: string;
+  estado_ejecutiva: string;
+  especialidad?: string;
+  experiencia?: string;
+}
+
+export interface EjecutivaCompleta extends EjecutivaReal {
+  clientesAsignados: number;
+  clientesPotenciales: number;
+  ventasMes: number;
+  tasaConversion: number;
+  certificaciones: Certificacion[];
+  embudoVentas: EmbudoVentas[];
+}
+
+export interface Certificacion {
+  id: number;
+  nombre: string;
+  institucion: string;
+  fecha_obtencion: string;
+  nivel: string;
+}
+
+export interface EmbudoVentas {
+  etapa: string;
+  cantidad: number;
+  tasa_conversion: string;
+  monto_potencial: number;
+}
+
+// En clienteService.ts - actualiza la interfaz
+export interface EjecutivaEstadisticasCompletas {
+  clientes_activos: number;
+  tasa_conversion: string;
+  ventas_ganadas: number;
+  total_oportunidades: number;
+  revenue_total: number;
+  total_actividades: number;
+  actividades_este_mes: number;
+  tiempo_respuesta: string;
+}
+
+
 export const clienteService = {
-  // ============================================
-  // DASHBOARD STATS
-  // ============================================
+
   async getStats(clienteUsuarioId: string): Promise<ClienteStats> {
-    console.log('📊 [clienteService] Obteniendo stats para cliente:', clienteUsuarioId);
-
     try {
+      console.log('📊 [clienteService] Obteniendo stats REALES para:', clienteUsuarioId);
       const response: ClienteStats = await apiService.get(`/empresa/dashboard/stats?clienteUsuarioId=${clienteUsuarioId}`);
-      console.log('✅ [clienteService] Stats obtenidas exitosamente', response);
-      return response;
-    } catch (error: any) {
-      console.error('❌ [clienteService] Error obteniendo stats:', error);
 
-      return {
-        cliente: {
-          nombre_cliente: 'Cliente Demo',
-          nombre_empresa: 'Empresa Demo S.A.',
-          ejecutiva_nombre: 'María Fernández',
-          ejecutiva_email: 'maria.fernandez@empresa.com'
-        },
-        totalActividades: 12,
-        completadas: 8,
-        enProceso: 3,
-        rendimiento: 75
-      };
+      console.log('✅ [clienteService] Stats REALES obtenidas:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [clienteService] Error obteniendo stats REALES:', error);
+      // ❌ ELIMINAR DATOS MOCK - lanzar error real
+      throw new Error('No se pudieron cargar las estadísticas del dashboard');
     }
   },
 
-  // ============================================
-  // TRAZABILIDAD - ESTRUCTURA REAL DEL BACKEND
-  // ============================================
   async getTrazabilidad(clienteUsuarioId: string): Promise<Trazabilidad[]> {
-    console.log('📋 [clienteService] Obteniendo trazabilidad para cliente:', clienteUsuarioId);
-
     try {
+      console.log('📋 [clienteService] Obteniendo trazabilidad REAL para:', clienteUsuarioId);
       const response: Trazabilidad[] = await apiService.get(`/empresa/trazabilidad?clienteUsuarioId=${clienteUsuarioId}`);
-      console.log('✅ [clienteService] Trazabilidad obtenida exitosamente', response);
 
-      // ✅ El backend ya devuelve el array directamente
+      console.log('✅ [clienteService] Trazabilidad REAL obtenida:', response.length, 'registros');
       return response;
-    } catch (error: any) {
-      console.error('❌ [clienteService] Error obteniendo trazabilidad:', error);
-
-      // ✅ Datos de respaldo con estructura CORRECTA
-      return [
-        {
-          id_trazabilidad: 1,
-          tipo_actividad: 'Llamada telefónica',
-          descripcion: 'Contacto inicial para presentación de servicios',
-          fecha_actividad: '2024-01-15T10:30:00Z',
-          resultado_contacto: 'completado',
-          ejecutiva_nombre: 'María Fernández',
-          nombre_empresa: 'Empresa Demo S.A.'
-        },
-        {
-          id_trazabilidad: 2,
-          tipo_actividad: 'Reunión virtual',
-          descripcion: 'Presentación de propuesta técnica',
-          fecha_actividad: '2024-01-20T15:00:00Z',
-          resultado_contacto: 'en_proceso',
-          ejecutiva_nombre: 'María Fernández',
-          nombre_empresa: 'Empresa Demo S.A.'
-        }
-      ];
+    } catch (error) {
+      console.error('❌ [clienteService] Error obteniendo trazabilidad REAL:', error);
+      return []; // Retorna array vacío - NO datos mock
     }
   },
 
-  // ============================================
-  // INFORMACIÓN DE EJECUTIVA
-  // ============================================
-
-  // frontend/services/clienteService.ts - ACTUALIZAR getEjecutivaInfo
   async getEjecutivaInfo(clienteUsuarioId: string): Promise<any> {
-    console.log('👩‍💼 [clienteService] Obteniendo info de ejecutiva para cliente:', clienteUsuarioId);
-
     try {
-      const response = await apiService.get(`/empresa/ejecutiva?clienteUsuarioId=${clienteUsuarioId}`);
-      console.log('✅ [clienteService] Info de ejecutiva obtenida exitosamente');
+      console.log('👩‍💼 [clienteService] Obteniendo info ejecutiva REAL para:', clienteUsuarioId);
+      const response: any = await apiService.get(`/empresa/ejecutiva?clienteUsuarioId=${clienteUsuarioId}`);
 
-      // ✅ El backend devuelve esta estructura:
-      // {
-      //   ejecutiva_nombre: string,
-      //   ejecutiva_email: string, 
-      //   telefono: string,
-      //   linkedin?: string
-      // }
+      console.log('✅ [clienteService] Info ejecutiva REAL obtenida:', response);
 
-      // const backendData = response;
-      const backendData: { // @ts-ignore
-        ejecutiva_nombre: string;
-        ejecutiva_email: string;
-        telefono: string;
-        linkedin?: string;
-      } = response;
-
-
-      // ✅ Transformar a la estructura que espera el frontend
+      // ✅ El backend ahora devuelve estadísticas reales
       return {
         ejecutiva: {
-          nombre_completo: backendData.ejecutiva_nombre,
-          correo: backendData.ejecutiva_email,
-          telefono: backendData.telefono,
-          linkedin: backendData.linkedin,
-          especialidad: 'Ejecutiva de HL', // Valor por defecto
-          experiencia: 'Especialista en crecimiento empresarial', // Valor por defecto
-          fecha_asignacion: new Date().toISOString() // Valor por defecto
+          nombre_completo: response.ejecutiva_nombre,
+          correo: response.ejecutiva_email,
+          telefono: response.telefono,
+          linkedin: response.linkedin,
+          especialidad: 'Ejecutiva Comercial', // Podrías agregar este campo en la BD
+          experiencia: 'Especialista en crecimiento empresarial'
         },
-        estadisticas: {
-          clientes_activos: 15, // Valor por defecto
-          tasa_conversion: '15%', // Valor por defecto
-          ventas_ganadas: 12, // Valor por defecto
-          tiempo_respuesta: '< 2 horas' // Valor por defecto
-        },
-        proxima_reunion: {
-          fecha: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // +7 días
-          tipo: 'Reunión de seguimiento',
-          descripcion: 'Revisión de progreso y próximos pasos'
+        estadisticas: response.estadisticas || {
+          clientes_activos: 0,
+          tasa_conversion: '0%',
+          ventas_ganadas: 0,
+          tiempo_respuesta: 'Por determinar'
         }
       };
-
-    } catch (error: any) {
-      console.error('❌ [clienteService] Error obteniendo info de ejecutiva:', error);
-
-      // ✅ Datos de respaldo con estructura CORRECTA
-      return {
-        ejecutiva: {
-          nombre_completo: 'María Fernández Rojas',
-          correo: 'peedroramon25@gmail.com',
-          telefono: '+51 987123456',
-          linkedin: 'linkedin.com/in/mariafernandez',
-          especialidad: 'Ejecutiva de Ventas Senior',
-          experiencia: '5+ años en ventas B2B',
-          fecha_asignacion: '2024-01-01T00:00:00Z'
-        },
-        estadisticas: {
-          clientes_activos: 15,
-          tasa_conversion: '75%',
-          ventas_ganadas: 12,
-          tiempo_respuesta: '< 2 horas'
-        },
-        proxima_reunion: {
-          fecha: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          tipo: 'Reunión de seguimiento',
-          descripcion: 'Revisión de progreso y próximos pasos'
-        }
-      };
+    } catch (error) {
+      console.error('❌ [clienteService] Error obteniendo info ejecutiva REAL:', error);
+      throw new Error('No se pudo cargar la información de la ejecutiva');
     }
   },
 
-  // ============================================
-  // ACTIVIDADES - USA getTrazabilidad DIRECTAMENTE
-  // ============================================
   async getActividades(clienteUsuarioId: string): Promise<Trazabilidad[]> {
     console.log('🔄 [clienteService] Obteniendo actividades para cliente:', clienteUsuarioId);
 
@@ -193,5 +177,286 @@ export const clienteService = {
       // ✅ Fallback a trazabilidad vacía
       return [];
     }
+  },
+
+  async getClientesRecientes(clienteUsuarioId: string): Promise<ClienteReal[]> {
+    try {
+      console.log('👥 [clienteService] Obteniendo clientes recientes para:', clienteUsuarioId);
+      const response: ClienteReal[] = await apiService.get(`/empresa/clientes?clienteUsuarioId=${clienteUsuarioId}`);
+      return response;
+    } catch (error) {
+      console.error('❌ Error obteniendo clientes recientes:', error);
+      return [];
+    }
+  },
+
+  //
+  // EJECUTIVAS
+  //
+
+  // En clienteService.ts - actualizar getEjecutivasByEmpresa
+  // async getEjecutivasByEmpresa(empresaId: string): Promise<EjecutivaCompleta[]> {
+  //   try {
+  //     console.log('👥 [clienteService] Obteniendo ejecutivas REALES para empresa:', empresaId);
+
+  //     const ejecutivasReales: EjecutivaReal[] = await apiService.get(`/empresa/ejecutivas?empresaId=${empresaId}`);
+  //     console.log('✅ [clienteService] Ejecutivas REALES obtenidas:', ejecutivasReales);
+
+  //     const ejecutivasCompletas = await Promise.all(
+  //       ejecutivasReales.map(async (ejecutiva, index) => {
+  //         try {
+  //           // ✅ USAR LA INTERFAZ COMPLETA
+  //           const estadisticas: EjecutivaEstadisticasCompletas = await apiService.get(`/empresa/ejecutiva/${ejecutiva.id_ejecutiva}/estadisticas?empresaId=${empresaId}`);
+  //           const embudo: EmbudoVentas[] = await apiService.get(`/empresa/ejecutiva/${ejecutiva.id_ejecutiva}/embudo?empresaId=${empresaId}`);
+
+  //           console.log(`📊 [clienteService] Estadísticas REALES para ${ejecutiva.nombre_completo}:`, estadisticas);
+  //           console.log(`🎯 [clienteService] Embudo REAL para ${ejecutiva.nombre_completo}:`, embudo);
+
+  //           // ✅ CONVERTIR LA TASA DE CONVERSIÓN DE FORMA SEGURA
+  //           const tasaConversionNum = estadisticas.tasa_conversion
+  //             ? parseFloat(estadisticas.tasa_conversion.replace('%', ''))
+  //             : 0;
+
+  //           return {
+  //             ...ejecutiva,
+  //             especialidad: this.getEspecialidadPorIndice(index),
+  //             experiencia: this.getExperienciaPorIndice(index),
+  //             // ✅ USAR DATOS REALES DEL BACKEND
+  //             clientesAsignados: estadisticas.clientes_activos || 0,
+  //             clientesPotenciales: estadisticas.total_oportunidades || 0,
+  //             ventasMes: estadisticas.revenue_total || 0,
+  //             tasaConversion: tasaConversionNum,
+  //             certificaciones: this.getCertificacionesPorIndice(index),
+  //             embudoVentas: embudo.length > 0 ? embudo : this.getEmbudoVacio()
+  //           };
+  //         } catch (error) {
+  //           console.error(`❌ Error obteniendo datos para ejecutiva ${ejecutiva.id_ejecutiva}:`, error);
+  //           // Fallback a datos vacíos
+  //           return {
+  //             ...ejecutiva,
+  //             especialidad: this.getEspecialidadPorIndice(index),
+  //             experiencia: this.getExperienciaPorIndice(index),
+  //             clientesAsignados: 0,
+  //             clientesPotenciales: 0,
+  //             ventasMes: 0,
+  //             tasaConversion: 0,
+  //             certificaciones: this.getCertificacionesPorIndice(index),
+  //             embudoVentas: this.getEmbudoVacio()
+  //           };
+  //         }
+  //       })
+  //     );
+
+  //     return ejecutivasCompletas;
+  //   } catch (error) {
+  //     console.error('❌ [clienteService] Error obteniendo ejecutivas reales:', error);
+  //     return [];
+  //   }
+  // },
+  // En clienteService.ts - verifica que este método esté bien implementado
+  async getEjecutivasByEmpresa(empresaId: string): Promise<EjecutivaCompleta[]> {
+    try {
+      console.log('👥 [clienteService] Obteniendo ejecutivas REALES para empresa:', empresaId);
+
+      const ejecutivasReales: EjecutivaReal[] = await apiService.get(`/empresa/ejecutivas?empresaId=${empresaId}`);
+      console.log('✅ [clienteService] Ejecutivas REALES obtenidas:', ejecutivasReales);
+
+      const ejecutivasCompletas = await Promise.all(
+        ejecutivasReales.map(async (ejecutiva, index) => {
+          try {
+            // ✅ USAR LA INTERFAZ COMPLETA
+            const estadisticas: EjecutivaEstadisticasCompletas = await apiService.get(`/empresa/ejecutiva/${ejecutiva.id_ejecutiva}/estadisticas?empresaId=${empresaId}`);
+            const embudo: EmbudoVentas[] = await apiService.get(`/empresa/ejecutiva/${ejecutiva.id_ejecutiva}/embudo?empresaId=${empresaId}`);
+
+            console.log(`📊 [clienteService] Estadísticas REALES para ${ejecutiva.nombre_completo}:`, estadisticas);
+            console.log(`🎯 [clienteService] Embudo REAL para ${ejecutiva.nombre_completo}:`, embudo);
+
+            // ✅ CONVERTIR LA TASA DE CONVERSIÓN DE FORMA SEGURA
+            const tasaConversionNum = estadisticas.tasa_conversion
+              ? parseFloat(estadisticas.tasa_conversion.replace('%', ''))
+              : 0;
+
+            return {
+              ...ejecutiva,
+              especialidad: this.getEspecialidadPorIndice(index),
+              experiencia: this.getExperienciaPorIndice(index),
+              // ✅ USAR DATOS REALES DEL BACKEND
+              clientesAsignados: estadisticas.clientes_activos || 0,
+              clientesPotenciales: estadisticas.total_oportunidades || 0,
+              ventasMes: estadisticas.revenue_total || 0,
+              tasaConversion: tasaConversionNum,
+              certificaciones: this.getCertificacionesPorIndice(index),
+              embudoVentas: embudo.length > 0 ? embudo : this.getEmbudoVacio()
+            };
+          } catch (error) {
+            console.error(`❌ Error obteniendo datos para ejecutiva ${ejecutiva.id_ejecutiva}:`, error);
+            // Fallback a datos vacíos
+            return {
+              ...ejecutiva,
+              especialidad: this.getEspecialidadPorIndice(index),
+              experiencia: this.getExperienciaPorIndice(index),
+              clientesAsignados: 0,
+              clientesPotenciales: 0,
+              ventasMes: 0,
+              tasaConversion: 0,
+              certificaciones: this.getCertificacionesPorIndice(index),
+              embudoVentas: this.getEmbudoVacio()
+            };
+          }
+        })
+      );
+
+      return ejecutivasCompletas;
+    } catch (error) {
+      console.error('❌ [clienteService] Error obteniendo ejecutivas reales:', error);
+      return [];
+    }
+  },
+// ✅ NUEVO MÉTODO: Embudo vacío para fallbacks
+  getEmbudoVacio(): EmbudoVentas[] {
+    return [
+      { etapa: "Prospección", cantidad: 0, tasa_conversion: "0%", monto_potencial: 0 },
+      { etapa: "Calificación", cantidad: 0, tasa_conversion: "0%", monto_potencial: 0 },
+      { etapa: "Propuesta", cantidad: 0, tasa_conversion: "0%", monto_potencial: 0 },
+      { etapa: "Negociación", cantidad: 0, tasa_conversion: "0%", monto_potencial: 0 },
+      { etapa: "Cierre", cantidad: 0, tasa_conversion: "0%", monto_potencial: 0 }
+    ];
+  },
+
+  getEspecialidadPorIndice(index: number): string {
+    const especialidades = [
+      "Ventas Enterprise",
+      "Desarrollo de Negocios",
+      "Expansión de Mercado",
+      "Gestión de Cuentas",
+      "Estrategia Comercial"
+    ];
+    return especialidades[index % especialidades.length];
+  },
+
+  getExperienciaPorIndice(index: number): string {
+    const experiencias = [
+      "5+ años en ventas B2B",
+      "3+ años en crecimiento empresarial",
+      "4+ años en estrategias de crecimiento",
+      "6+ años en gestión comercial",
+      "2+ años en desarrollo de mercado"
+    ];
+    return experiencias[index % experiencias.length];
+  },
+
+  getCertificacionesPorIndice(index: number): Certificacion[] {
+    const certificacionesBase = [
+      // Para la primera ejecutiva
+      [
+        {
+          id: 1,
+          nombre: "Certified Sales Professional",
+          institucion: "Sales Excellence Institute",
+          fecha_obtencion: "2023-03-15",
+          nivel: "Avanzado"
+        },
+        {
+          id: 2,
+          nombre: "Strategic Account Management",
+          institucion: "Harvard Business School",
+          fecha_obtencion: "2022-08-10",
+          nivel: "Ejecutivo"
+        },
+        {
+          id: 3,
+          nombre: "Digital Transformation",
+          institucion: "MIT Professional Education",
+          fecha_obtencion: "2023-11-20",
+          nivel: "Especialista"
+        }
+      ],
+      // Para la segunda ejecutiva
+      [
+        {
+          id: 1,
+          nombre: "Business Development Certification",
+          institucion: "Growth Academy",
+          fecha_obtencion: "2023-01-20",
+          nivel: "Intermedio"
+        },
+        {
+          id: 2,
+          nombre: "Customer Success Management",
+          institucion: "Success University",
+          fecha_obtencion: "2022-06-15",
+          nivel: "Avanzado"
+        }
+      ],
+      // Para la tercera ejecutiva
+      [
+        {
+          id: 1,
+          nombre: "Market Expansion Strategy",
+          institucion: "Business Growth Institute",
+          fecha_obtencion: "2023-05-10",
+          nivel: "Estratégico"
+        }
+      ]
+    ];
+
+    return certificacionesBase[index % certificacionesBase.length] || certificacionesBase[0];
+  },
+
+  async getEstadisticasEjecutiva(ejecutivaId: number): Promise<{
+    clientesAsignados: number;
+    clientesPotenciales: number;
+    ventasMes: number;
+    tasaConversion: number;
+  }> {
+    try {
+      // Aquí puedes hacer una llamada real a tu backend para estadísticas
+      // Por ahora usaremos datos calculados basados en el ID
+      return {
+        clientesAsignados: 6 + (ejecutivaId % 4),
+        clientesPotenciales: 4 + (ejecutivaId % 3),
+        ventasMes: 150000 + (ejecutivaId * 25000),
+        tasaConversion: 35 + (ejecutivaId * 2)
+      };
+    } catch (error) {
+      console.error('Error obteniendo estadísticas:', error);
+      return {
+        clientesAsignados: 0,
+        clientesPotenciales: 0,
+        ventasMes: 0,
+        tasaConversion: 0
+      };
+    }
+  },
+
+  async getEmbudoVentas(ejecutivaId: number): Promise<EmbudoVentas[]> {
+    // Datos de embudo basados en el ID para variedad
+    const embudos = [
+      [
+        { etapa: "Prospección", cantidad: 25, tasa_conversion: "100%", monto_potencial: 500000 },
+        { etapa: "Calificación", cantidad: 18, tasa_conversion: "72%", monto_potencial: 450000 },
+        { etapa: "Propuesta", cantidad: 12, tasa_conversion: "48%", monto_potencial: 300000 },
+        { etapa: "Negociación", cantidad: 8, tasa_conversion: "32%", monto_potencial: 200000 },
+        { etapa: "Cierre", cantidad: 5, tasa_conversion: "20%", monto_potencial: 125000 }
+      ],
+      [
+        { etapa: "Prospección", cantidad: 20, tasa_conversion: "100%", monto_potencial: 400000 },
+        { etapa: "Calificación", cantidad: 15, tasa_conversion: "75%", monto_potencial: 300000 },
+        { etapa: "Propuesta", cantidad: 10, tasa_conversion: "50%", monto_potencial: 200000 },
+        { etapa: "Negociación", cantidad: 6, tasa_conversion: "30%", monto_potencial: 120000 },
+        { etapa: "Cierre", cantidad: 3, tasa_conversion: "15%", monto_potencial: 60000 }
+      ],
+      [
+        { etapa: "Prospección", cantidad: 22, tasa_conversion: "100%", monto_potencial: 440000 },
+        { etapa: "Calificación", cantidad: 16, tasa_conversion: "73%", monto_potencial: 350000 },
+        { etapa: "Propuesta", cantidad: 11, tasa_conversion: "50%", monto_potencial: 220000 },
+        { etapa: "Negociación", cantidad: 7, tasa_conversion: "32%", monto_potencial: 140000 },
+        { etapa: "Cierre", cantidad: 4, tasa_conversion: "18%", monto_potencial: 80000 }
+      ]
+    ];
+
+    return embudos[ejecutivaId % embudos.length] || embudos[0];
   }
+
+
 };
