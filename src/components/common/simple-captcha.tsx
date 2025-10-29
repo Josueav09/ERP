@@ -191,7 +191,7 @@ export function SimpleCaptcha({ onVerify }: SimpleCaptchaProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <span className="text-sm font-medium text-[#013936]">✓ Verificado</span>
+        <span className="text-sm font-medium text-[#013936]">Verificado</span>
         <button
           type="button"
           onClick={fetchCaptcha}
@@ -232,7 +232,7 @@ export function SimpleCaptcha({ onVerify }: SimpleCaptchaProps) {
           value={userInput}
           onChange={(e) => setUserInput(e.target.value.toUpperCase())}
           onKeyDown={(e) => e.key === "Enter" && handleVerify()}
-          className="flex-1 border-[#013936]/20 focus-visible:ring-[#C7E196] uppercase"
+          className="flex-1 border-[#013936]/20 focus-visible:ring-[#C7E196] "
           maxLength={6}
           disabled={isLoading}
         />
