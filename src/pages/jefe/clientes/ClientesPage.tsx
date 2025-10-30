@@ -105,25 +105,25 @@ export default function ClientesPage() {
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const token = sessionStorage.getItem('token');
-    
+
     if (!user && !storedUser) {
       navigate("/login");
       return;
     }
-    
+
     const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
-    
+
     if (!currentUser) {
       navigate("/login");
       return;
     }
-    
+
     const allowedRoles = ["jefe", "Jefe", "Administrador"];
     if (!allowedRoles.includes(currentUser.role)) {
       navigate("/login");
       return;
     }
-    
+
     fetchEjecutivas();
     fetchEmpresas();
     fetchClientes();
@@ -132,14 +132,14 @@ export default function ClientesPage() {
   // ✅ Filtrado
   useEffect(() => {
     let filtered = clientes;
-    
+
     // Filtro por estado (usando el campo 'estado' de la BD)
     if (statusFilter === "active") {
       filtered = filtered.filter(cliente => cliente.estado === 'Activo');
     } else if (statusFilter === "inactive") {
       filtered = filtered.filter(cliente => cliente.estado === 'Inactivo');
     }
-    
+
     // Filtro por búsqueda
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
@@ -155,7 +155,7 @@ export default function ClientesPage() {
         );
       });
     }
-    
+
     setFilteredClientes(filtered);
   }, [searchTerm, clientes, statusFilter]);
 
@@ -213,7 +213,7 @@ export default function ClientesPage() {
   };
 
   const openEditDialog = (cliente: ClienteFinal) => {
-      console.log('✏️ Abriendo diálogo de edición para:', cliente.razon_social);
+    console.log('✏️ Abriendo diálogo de edición para:', cliente.razon_social);
 
     setSelectedCliente(cliente);
     setFormData({
@@ -362,11 +362,129 @@ export default function ClientesPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("¿Estás seguro de que deseas desactivar este cliente?")) return;
+  // const handleDelete = async (id: number) => {
+  //   if (!confirm("¿Estás seguro de que deseas desactivar este cliente?")) return;
+
+  //   try {
+  //     await jefeService.deleteCliente(id);
+
+  //     toast({
+  //       title: "Éxito",
+  //       description: "Cliente desactivado correctamente",
+  //     });
+
+  //     fetchClientes();
+  //   } catch (error: any) {
+  //     console.error("Error deleting cliente:", error);
+  //     toast({
+  //       title: "Error",
+  //       description: error.message || "No se pudo desactivar el cliente",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
+
+  // const handleActivate = async (id: number) => {
+  //   if (!confirm("¿Estás seguro de que deseas activar este cliente?")) return;
+
+  //   try {
+  //     // ✅ SOLUCIÓN ALTERNATIVA: Usar update en lugar de activate
+  //     await jefeService.updateCliente(id, { estado: 'Activo' });
+
+  //     toast({
+  //       title: "Éxito",
+  //       description: "Cliente activado correctamente",
+  //     });
+
+  //     fetchClientes();
+  //   } catch (error: any) {
+  //     console.error("Error activating cliente:", error);
+  //     toast({
+  //       title: "Error",
+  //       description: error.message || "No se pudo activar el cliente",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
+
+  // Estadísticas usando el campo 'estado'
+
+  // En tu ClientesPage.tsx - CORREGIR handleDelete y handleActivate
+  // const handleDelete = async (id: number) => {
+  //   if (!confirm("¿Estás seguro de que deseas desactivar este cliente?")) return;
+
+  //   try {
+  //     console.log(`🗑️ Intentando desactivar cliente ID: ${id}`);
+
+  //     await jefeService.deleteCliente(id);
+
+  //     toast({
+  //       title: "Éxito",
+  //       description: "Cliente desactivado correctamente",
+  //     });
+
+  //     // Recargar la lista
+  //     fetchClientes();
+
+  //   } catch (error: any) {
+  //     console.error(`❌ Error desactivando cliente ${id}:`, error);
+
+  //     toast({
+  //       title: "Error",
+  //       description: error.message || "No se pudo desactivar el cliente",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
+
+  // const handleActivate = async (id: number) => {
+  //   if (!confirm("¿Estás seguro de que deseas activar este cliente?")) return;
+
+  //   try {
+  //     console.log(`🔄 Intentando activar cliente ID: ${id}`);
+
+  //     // ✅ USAR EL MÉTODO ESPECÍFICO PARA ACTIVAR
+  //     await jefeService.activateCliente(id);
+
+  //     toast({
+  //       title: "Éxito",
+  //       description: "Cliente activado correctamente",
+  //     });
+
+  //     fetchClientes();
+
+  //   } catch (error: any) {
+  //     console.error(`❌ Error activando cliente ${id}:`, error);
+
+  //     toast({
+  //       title: "Error",
+  //       description: error.message || "No se pudo activar el cliente",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
+
+  // // En tu ClientesPage.tsx
+  // const handleDeactivate = async (id: number) => {
+  //   if (!confirm("¿Estás seguro de que deseas desactivar este cliente?")) return;
+
+  //   try {
+  //     await jefeService.deactivateCliente(id);
+  //     toast({ title: "Éxito", description: "Cliente desactivado correctamente" });
+  //     fetchClientes();
+  //   } catch (error: any) {
+  //     toast({ title: "Error", description: error.message, variant: "destructive" });
+  //   }
+  // };
+
+
+  // ✅ MANTENER SOLO ESTOS DOS:
+  const handleDeactivate = async (id: number) => {
+  if (!confirm("¿Estás seguro de que deseas DESACTIVAR este cliente?\n\nEl cliente ya no estará visible en las operaciones diarias pero conservará su historial.")) return;
 
     try {
-      await jefeService.deleteCliente(id);
+      console.log(`🗑️ Desactivando cliente ID: ${id}`);
+      await jefeService.deactivateCliente(id);
 
       toast({
         title: "Éxito",
@@ -375,7 +493,7 @@ export default function ClientesPage() {
 
       fetchClientes();
     } catch (error: any) {
-      console.error("Error deleting cliente:", error);
+      console.error(`❌ Error desactivando cliente ${id}:`, error);
       toast({
         title: "Error",
         description: error.message || "No se pudo desactivar el cliente",
@@ -385,11 +503,11 @@ export default function ClientesPage() {
   };
 
   const handleActivate = async (id: number) => {
-    if (!confirm("¿Estás seguro de que deseas activar este cliente?")) return;
+  if (!confirm("¿Estás seguro de que deseas ACTIVAR este cliente?\n\nEl cliente volverá a estar disponible para todas las operaciones.")) return;
 
     try {
-      // ✅ SOLUCIÓN ALTERNATIVA: Usar update en lugar de activate
-      await jefeService.updateCliente(id, { estado: 'Activo' });
+      console.log(`🔄 Activando cliente ID: ${id}`);
+      await jefeService.activateCliente(id);
 
       toast({
         title: "Éxito",
@@ -398,7 +516,7 @@ export default function ClientesPage() {
 
       fetchClientes();
     } catch (error: any) {
-      console.error("Error activating cliente:", error);
+      console.error(`❌ Error activando cliente ${id}:`, error);
       toast({
         title: "Error",
         description: error.message || "No se pudo activar el cliente",
@@ -407,7 +525,6 @@ export default function ClientesPage() {
     }
   };
 
-  // Estadísticas usando el campo 'estado'
   const activeClientes = clientes.filter(c => c.estado === 'Activo');
   const inactiveClientes = clientes.filter(c => c.estado === 'Inactivo');
 
@@ -540,9 +657,9 @@ export default function ClientesPage() {
                       filteredClientes.map((cliente) => (
                         <TableRow key={cliente.id_cliente_final} className="border-white/10 hover:bg-white/5">
                           <TableCell>
-                            <Badge 
+                            <Badge
                               className={cliente.estado === 'Activo'
-                                ? "bg-green-500/20 border-green-500/30 text-[#013936]" 
+                                ? "bg-green-500/20 border-green-500/30 text-[#013936]"
                                 : "bg-red-500/20 border-red-500/30 text-red-600"
                               }
                             >
@@ -624,7 +741,7 @@ export default function ClientesPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleDelete(cliente.id_cliente_final)}
+                                  onClick={() => handleDeactivate(cliente.id_cliente_final)}
                                   className="text-red-300 hover:text-red-200 hover:bg-red-500/20"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -666,9 +783,9 @@ export default function ClientesPage() {
                 <div className="space-y-6 pr-4">
                   {/* Estado */}
                   <div className="flex items-center gap-2 mb-4">
-                    <Badge 
+                    <Badge
                       className={selectedCliente.estado === 'Activo'
-                        ? "bg-green-500/20 border-green-500/30 text-[#013936]" 
+                        ? "bg-green-500/20 border-green-500/30 text-[#013936]"
                         : "bg-red-500/20 border-red-500/30 text-red-600"
                       }
                     >
@@ -676,7 +793,7 @@ export default function ClientesPage() {
                     </Badge>
                     <span className="text-white/60 text-sm">
                       {selectedCliente.estado === 'Activo'
-                        ? "Cliente activo en el sistema" 
+                        ? "Cliente activo en el sistema"
                         : "Cliente desactivado temporalmente"
                       }
                     </span>
@@ -770,7 +887,7 @@ export default function ClientesPage() {
                       <div>
                         <p className="text-white/60">Facturación Anual</p>
                         <p className="text-white">
-                          {selectedCliente.facturacion_anual 
+                          {selectedCliente.facturacion_anual
                             ? `S/. ${selectedCliente.facturacion_anual.toLocaleString()}`
                             : "N/A"}
                         </p>
@@ -806,8 +923,8 @@ export default function ClientesPage() {
                       <div>
                         <p className="text-white/60">Fecha Creación</p>
                         <p className="text-white text-xs">
-                          {selectedCliente.fecha_creacion 
-                            ? new Date(selectedCliente.fecha_creacion).toLocaleDateString() 
+                          {selectedCliente.fecha_creacion
+                            ? new Date(selectedCliente.fecha_creacion).toLocaleDateString()
                             : "N/A"}
                         </p>
                       </div>
@@ -819,18 +936,18 @@ export default function ClientesPage() {
 
             <DialogFooter>
               <Button
-              variant="outline"
-              onClick={() => setViewDialogOpen(false)}
-              className="bg-transparent border-white/20 text-white hover:bg-white/10"
-            >
-              Cerrar
-            </Button>
+                variant="outline"
+                onClick={() => setViewDialogOpen(false)}
+                className="bg-transparent border-white/20 text-white hover:bg-white/10"
+              >
+                Cerrar
+              </Button>
 
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-                {/* Create/Edit Dialog */}
+        {/* Create/Edit Dialog */}
         <Dialog open={createDialogOpen || editDialogOpen} onOpenChange={(open) => {
           if (!open) {
             setCreateDialogOpen(false);
@@ -843,7 +960,7 @@ export default function ClientesPage() {
                 {createDialogOpen ? "Crear Nuevo Cliente" : "Editar Cliente"}
               </DialogTitle>
               <DialogDescription className="text-white/60 ">
-                {createDialogOpen 
+                {createDialogOpen
                   ? "Ingresa los datos del nuevo cliente final"
                   : "Modifica los datos del cliente"}
               </DialogDescription>
@@ -1081,7 +1198,7 @@ export default function ClientesPage() {
                   setCreateDialogOpen(false);
                   setEditDialogOpen(false);
                 }}
-                  className="!bg-transparent border-white/20 text-white hover:!bg-white/10 transition-colors duration-200"
+                className="!bg-transparent border-white/20 text-white hover:!bg-white/10 transition-colors duration-200"
 
               >
                 Cancelar

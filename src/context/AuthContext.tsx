@@ -408,18 +408,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // ========================
   // LOGOUT - CORREGIDO CON SERVICIOS
   // ========================
+  // const logout = useCallback(async () => {
+  //   try {
+  //     await authService.logout();
+  //   } catch {
+  //     // Si falla, igual limpiar sesión local
+  //   } finally {
+  //     setUser(null);
+  //     setPendingUser(null);
+  //     localStorage.removeItem("user");
+  //     sessionStorage.removeItem("token");
+  //     sessionStorage.removeItem("refreshToken");
+  //     navigate("/login");
+  //   }
+  // }, [navigate]);
+
+
   const logout = useCallback(async () => {
     try {
+      // 1️⃣ Intentar logout en el backend
       await authService.logout();
-    } catch {
-      // Si falla, igual limpiar sesión local
+    } catch (error) {
+      console.error('Error durante logout:', error);
+      // ✅ Continuar con limpieza local incluso si falla el servidor
     } finally {
+      // 2️⃣ LIMPIEZA LOCAL GARANTIZADA
       setUser(null);
       setPendingUser(null);
+
+      // Limpiar todo el almacenamiento local
       localStorage.removeItem("user");
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("refreshToken");
-      navigate("/login");
+
+      // Limpiar cualquier otro dato de sesión
+      localStorage.removeItem("pendingLogin");
+      sessionStorage.removeItem("loginAttempts");
+
+      console.log('✅ Sesión cerrada exitosamente');
+
+      // 3️⃣ Redirigir al login
+      navigate("/login", { replace: true });
     }
   }, [navigate]);
 

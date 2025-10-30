@@ -112,7 +112,7 @@ export const authService = {
       return await apiService.post<LoginResponse>('/auth/login', credentials);
     } catch (error: any) {
       console.error('Error en login:', error);
-      
+
       // ✅ Retornar error estructurado
       return {
         success: false,
@@ -127,7 +127,7 @@ export const authService = {
       return await apiService.post<VerifyEmailResponse>('/auth/verify-email', data);
     } catch (error: any) {
       console.error('Error verificando email:', error);
-      
+
       return {
         success: false,
         error: error.message || 'Error al verificar código'
@@ -135,11 +135,50 @@ export const authService = {
     }
   },
 
-  async logout(): Promise<void> {
+  // async logout(): Promise<void> {
+  //   try {
+  //     return await apiService.post('/auth/logout');
+  //   } catch (error) {
+  //     console.error('Error en logout:', error);
+  //   }
+  // }
+
+  async logout(): Promise<{ success: boolean; message: string }> {
     try {
-      return await apiService.post('/auth/logout');
-    } catch (error) {
-      console.error('Error en logout:', error);
+      // Obtener token actual para enviarlo al logout
+      const token = sessionStorage.getItem('token');
+
+      const response = await apiService.post<{ success: boolean; message: string }>(
+        '/auth/logout',
+        { token } // Enviar token en el body como fallback
+      );
+
+      return response;
+    } catch (error: any) {
+      console.error('Error en logout service:', error);
+
+      // ✅ IMPORTANTE: Siempre retornar éxito para limpieza local
+      return {
+        success: true,
+        message: 'Sesión cerrada localmente'
+      };
+    }
+  },
+
+  // Método auxiliar para verificar sesión activa
+  isAuthenticated(): boolean {
+    const token = sessionStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    return !!(token && user);
+  },
+
+  // Método para obtener datos del usuario actual
+  getCurrentUser(): any {
+    try {
+      const userStr = localStorage.getItem('user');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
     }
   }
 };

@@ -278,20 +278,97 @@ export const jefeService = {
   },
 
 
-  async deleteCliente(id: number): Promise<void> {
-    return apiService.delete(`/jefe/clientes/${id}`);
-  },
+  // async deleteCliente(id: number): Promise<void> {
+  //   return apiService.delete(`/jefe/clientes/${id}`);
+  // },
 
-  // ✅ NUEVO: Método para activar cliente
-  async activateCliente(id: number): Promise<void> {
-    console.log('🔄 [jefeService] Activando cliente:', id);
-    return apiService.patch(`/jefe/clientes/${id}/activate`);
-  },
+  // // ✅ NUEVO: Método para activar cliente
+  // async activateCliente(id: number): Promise<void> {
+  //   console.log('🔄 [jefeService] Activando cliente:', id);
+  //   return apiService.patch(`/jefe/clientes/${id}/activate`);
+  // },
   // ============================================
   // EJECUTIVAS
   // ============================================
 
   // Obtener TODAS las ejecutivas
+
+  // async deleteCliente(id: number): Promise<{ success: boolean; message: string }> {
+  //   try {
+  //     console.log(`🗑️ [jefeService] Desactivando cliente ID: ${id}`);
+
+  //     const response = await apiService.delete<{ success: boolean; message: string }>(
+  //       `/jefe/clientes/${id}`
+  //     );
+
+  //     console.log(`✅ [jefeService] Cliente ${id} desactivado exitosamente`);
+  //     return response;
+
+  //   } catch (error: any) {
+  //     console.error(`❌ [jefeService] Error desactivando cliente ${id}:`, error);
+
+  //     // ✅ Mensaje de error más específico
+  //     const errorMessage = error.message || 'Error al desactivar el cliente';
+  //     throw new Error(errorMessage);
+  //   }
+  // },
+
+
+
+  // async activateCliente(id: number): Promise<{ success: boolean; message: string }> {
+  //   try {
+  //     console.log(`🔄 [jefeService] Activando cliente ID: ${id}`);
+
+  //     const response = await apiService.patch<{ success: boolean; message: string }>(
+  //       `/jefe/clientes/${id}/activate`
+  //     );
+
+  //     console.log(`✅ [jefeService] Cliente ${id} activado exitosamente`);
+  //     return response;
+
+  //   } catch (error: any) {
+  //     console.error(`❌ [jefeService] Error activando cliente ${id}:`, error);
+  //     throw new Error(error.message || 'Error al activar el cliente');
+  //   }
+  // },
+
+  // async deactivateCliente(id: number): Promise<{ success: boolean; message: string }> {
+  //   try {
+  //     return await apiService.patch(`/jefe/clientes/${id}/deactivate`);
+  //   } catch (error: any) {
+  //     throw new Error(error.message || 'Error al desactivar cliente');
+  //   }
+  // },
+
+
+
+  async activateCliente(id: number): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log(`🔄 [jefeService] Activando cliente ID: ${id}`);
+      const response: { success: boolean; message: string }= await apiService.patch(`/jefe/clientes/${id}/activate`);
+      console.log(`✅ [jefeService] Cliente ${id} activado exitosamente`);
+      return response;
+    } catch (error: any) {
+      console.error(`❌ [jefeService] Error activando cliente ${id}:`, error);
+      throw new Error(error.message || 'Error al activar cliente');
+    }
+  },
+
+  async deactivateCliente(id: number): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log(`🗑️ [jefeService] Desactivando cliente ID: ${id}`);
+      const response: { success: boolean; message: string }= await apiService.patch(`/jefe/clientes/${id}/deactivate`);
+      console.log(`✅ [jefeService] Cliente ${id} desactivado exitosamente`);
+      return response;
+    } catch (error: any) {
+      console.error(`❌ [jefeService] Error desactivando cliente ${id}:`, error);
+      throw new Error(error.message || 'Error al desactivar cliente');
+    }
+  },
+
+
+
+
   async getEjecutivas(): Promise<Ejecutiva[]> {
     const data = await apiService.get('/jefe/ejecutivas');
     console.log('📥 [jefeService] Datos CRUDOS de ejecutivas del backend:', data);
@@ -304,19 +381,52 @@ export const jefeService = {
 
   // ✅ NUEVO: Obtener SOLO ejecutivas disponibles (sin empresa asignada)
   // En jefeService.ts - OPCIÓN MÁS ROBUSTA
-async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
-  try {
-    console.log('🔄 [jefeService] Solicitando ejecutivas disponibles...');
-    
-    const data = await apiService.get('/jefe/empresas/ejecutivas/disponibles');
-    
-    // ✅ Mapear explícitamente a la interfaz Ejecutiva
-    const ejecutivas: Ejecutiva[] = (data as any[]).map((ej: any) => ({
+  async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
+    try {
+      console.log('🔄 [jefeService] Solicitando ejecutivas disponibles...');
+
+      const data = await apiService.get('/jefe/empresas/ejecutivas/disponibles');
+
+      // ✅ Mapear explícitamente a la interfaz Ejecutiva
+      const ejecutivas: Ejecutiva[] = (data as any[]).map((ej: any) => ({
+        id_usuario: ej.id_ejecutiva || ej.id_usuario,
+        id_ejecutiva: ej.id_ejecutiva || ej.id_usuario,
+        nombre: ej.nombre || ej.nombre_completo?.split(' ')[0] || '',
+        apellido: ej.apellido || ej.nombre_completo?.split(' ').slice(1).join(' ') || '',
+        email: ej.email || ej.correo,
+        telefono: ej.telefono,
+        rol: 'ejecutiva',
+        activo: ej.activo !== false,
+        total_empresas: ej.total_empresas || 0,
+        total_clientes: ej.total_clientes || 0,
+        total_actividades: ej.total_actividades || 0,
+        estado_ejecutiva: ej.estado_ejecutiva || 'Activo',
+        nombre_completo: ej.nombre_completo || `${ej.nombre || ''} ${ej.apellido || ''}`.trim(),
+        correo: ej.correo || ej.email,
+        dni: ej.dni
+      }));
+
+      console.log('✅ [jefeService] Ejecutivas disponibles mapeadas:', ejecutivas.length);
+      return ejecutivas;
+
+    } catch (error: any) {
+      console.error('❌ [jefeService] Error obteniendo ejecutivas disponibles:', error);
+      return [];
+    }
+  },
+
+  // ✅ NUEVO MÉTODO PARA MAPEO SEGURO
+  mapearEjecutivasDisponibles(data: any): Ejecutiva[] {
+    if (!data) return [];
+
+    const datos = Array.isArray(data) ? data : (data.data || []);
+
+    return datos.map((ej: any) => ({
       id_usuario: ej.id_ejecutiva || ej.id_usuario,
       id_ejecutiva: ej.id_ejecutiva || ej.id_usuario,
-      nombre: ej.nombre || ej.nombre_completo?.split(' ')[0] || '',
+      nombre: ej.nombre || ej.nombre_completo?.split(' ')[0] || 'Ejecutiva',
       apellido: ej.apellido || ej.nombre_completo?.split(' ').slice(1).join(' ') || '',
-      email: ej.email || ej.correo,
+      email: ej.correo || ej.email,
       telefono: ej.telefono,
       rol: 'ejecutiva',
       activo: ej.activo !== false,
@@ -328,82 +438,49 @@ async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
       correo: ej.correo || ej.email,
       dni: ej.dni
     }));
-    
-    console.log('✅ [jefeService] Ejecutivas disponibles mapeadas:', ejecutivas.length);
-    return ejecutivas;
-    
-  } catch (error: any) {
-    console.error('❌ [jefeService] Error obteniendo ejecutivas disponibles:', error);
-    return [];
-  }
-},
+  },
 
-// ✅ NUEVO MÉTODO PARA MAPEO SEGURO
-  mapearEjecutivasDisponibles(data: any): Ejecutiva[] {
-  if (!data) return [];
-  
-  const datos = Array.isArray(data) ? data : (data.data || []);
-  
-  return datos.map((ej: any) => ({
-    id_usuario: ej.id_ejecutiva || ej.id_usuario,
-    id_ejecutiva: ej.id_ejecutiva || ej.id_usuario,
-    nombre: ej.nombre || ej.nombre_completo?.split(' ')[0] || 'Ejecutiva',
-    apellido: ej.apellido || ej.nombre_completo?.split(' ').slice(1).join(' ') || '',
-    email: ej.correo || ej.email,
-    telefono: ej.telefono,
-    rol: 'ejecutiva',
-    activo: ej.activo !== false,
-    total_empresas: ej.total_empresas || 0,
-    total_clientes: ej.total_clientes || 0,
-    total_actividades: ej.total_actividades || 0,
-    estado_ejecutiva: ej.estado_ejecutiva || 'Activo',
-    nombre_completo: ej.nombre_completo || `${ej.nombre || ''} ${ej.apellido || ''}`.trim(),
-    correo: ej.correo || ej.email,
-    dni: ej.dni
-  }));
-},
-
-// ✅ DATOS DE RESPALDO
+  // ✅ DATOS DE RESPALDO
   getEjecutivasDisponiblesRespaldo(): Ejecutiva[] {
-  console.log('🔄 [jefeService] Usando datos de respaldo para ejecutivas disponibles');
-  
-  return [
-    {
-      id_usuario: 1,
-      id_ejecutiva: 1,
-      nombre: 'María',
-      apellido: 'Fernández',
-      email: 'maria.fernandez@empresa.com',
-      telefono: '+51 987 654 321',
-      rol: 'ejecutiva',
-      activo: true,
-      total_empresas: 0,
-      total_clientes: 0,
-      total_actividades: 0,
-      estado_ejecutiva: 'Activo',
-      nombre_completo: 'María Fernández',
-      correo: 'maria.fernandez@empresa.com',
-      dni: '87654321'
-    },
-    {
-      id_usuario: 2,
-      id_ejecutiva: 2,
-      nombre: 'Ana',
-      apellido: 'García',
-      email: 'ana.garcia@empresa.com',
-      telefono: '+51 987 654 322',
-      rol: 'ejecutiva',
-      activo: true,
-      total_empresas: 0,
-      total_clientes: 0,
-      total_actividades: 0,
-      estado_ejecutiva: 'Activo',
-      nombre_completo: 'Ana García',
-      correo: 'ana.garcia@empresa.com',
-      dni: '87654322'
-    }
-  ];
-},
+    console.log('🔄 [jefeService] Usando datos de respaldo para ejecutivas disponibles');
+
+    return [
+      {
+        id_usuario: 1,
+        id_ejecutiva: 1,
+        nombre: 'María',
+        apellido: 'Fernández',
+        email: 'maria.fernandez@empresa.com',
+        telefono: '+51 987 654 321',
+        rol: 'ejecutiva',
+        activo: true,
+        total_empresas: 0,
+        total_clientes: 0,
+        total_actividades: 0,
+        estado_ejecutiva: 'Activo',
+        nombre_completo: 'María Fernández',
+        correo: 'maria.fernandez@empresa.com',
+        dni: '87654321'
+      },
+      {
+        id_usuario: 2,
+        id_ejecutiva: 2,
+        nombre: 'Ana',
+        apellido: 'García',
+        email: 'ana.garcia@empresa.com',
+        telefono: '+51 987 654 322',
+        rol: 'ejecutiva',
+        activo: true,
+        total_empresas: 0,
+        total_clientes: 0,
+        total_actividades: 0,
+        estado_ejecutiva: 'Activo',
+        nombre_completo: 'Ana García',
+        correo: 'ana.garcia@empresa.com',
+        dni: '87654322'
+      }
+    ];
+  },
 
   // ✅ CORREGIDO: Mapeo específico para ejecutivas disponibles
   mapEjecutivaDisponibleFromDB(dbEjecutiva: any): Ejecutiva {
@@ -575,23 +652,23 @@ async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
   },
 
   // En jefeService.ts - VERIFICAR
-    async addEjecutivaToEmpresa(empresaId: number, ejecutivaId: number): Promise<any> {
-      console.log('➕ [jefeService] Asignando ejecutiva:', { empresaId, ejecutivaId });
+  async addEjecutivaToEmpresa(empresaId: number, ejecutivaId: number): Promise<any> {
+    console.log('➕ [jefeService] Asignando ejecutiva:', { empresaId, ejecutivaId });
 
-      try {
-        // ✅ Enviar como { id_ejecutiva: ejecutivaId } en el body
-        const response = await apiService.post(`/jefe/empresas/${empresaId}/ejecutivas`, {
-          id_ejecutiva: ejecutivaId
-        });
-        
-        console.log('✅ [jefeService] Ejecutiva agregada exitosamente');
-        return response;
-        
-      } catch (error: any) {
-        console.error('❌ [jefeService] Error agregando ejecutiva:', error);
-        throw error;
-      }
-    },
+    try {
+      // ✅ Enviar como { id_ejecutiva: ejecutivaId } en el body
+      const response = await apiService.post(`/jefe/empresas/${empresaId}/ejecutivas`, {
+        id_ejecutiva: ejecutivaId
+      });
+
+      console.log('✅ [jefeService] Ejecutiva agregada exitosamente');
+      return response;
+
+    } catch (error: any) {
+      console.error('❌ [jefeService] Error agregando ejecutiva:', error);
+      throw error;
+    }
+  },
 
   // ✅ CORREGIDO: Usar DELETE con parámetros en URL
   async removeEjecutivaFromEmpresa(empresaId: number, ejecutivaId: number): Promise<any> {
@@ -785,11 +862,11 @@ async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
 
 
   // En jefeService.ts - AGREGAR TOKEN
-// En jefeService.ts - CORREGIR el método generateReport
+  // En jefeService.ts - CORREGIR el método generateReport
   async generateReport(filters: any, reportType: 'etapa1' | 'etapa2'): Promise<any> {
     try {
       console.log('📊 [jefeService] Solicitando reporte:', reportType, filters);
-      
+
       // ✅ USAR apiService en lugar de fetch directo
       const response = await apiService.post('/jefe/trazabilidad/report', {
         filters,
@@ -801,15 +878,15 @@ async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
 
       console.log('✅ [jefeService] Reporte generado exitosamente');
       return response;
-      
+
     } catch (error) {
       console.error('❌ [jefeService] Error en generateReport:', error);
       throw error;
     }
   },
 
-// O si estás usando fetch directamente en el componente, puedes eliminar 
-// el método del servicio y hacerlo directamente en el componente:
+  // O si estás usando fetch directamente en el componente, puedes eliminar 
+  // el método del servicio y hacerlo directamente en el componente:
   // ============================================
   // FILTROS DINÁMICOS - NUEVOS MÉTODOS
   // ============================================
@@ -1136,7 +1213,7 @@ async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
 
   // En jefeService.ts - agregar estos nuevos métodos
 
-// NUEVOS MÉTODOS PARA LOS GRÁFICOS CORREGIDOS
+  // NUEVOS MÉTODOS PARA LOS GRÁFICOS CORREGIDOS
   async getTrazabilidadNuevasReuniones(meses: number = 6, ejecutivaId?: number): Promise<any> {
     const params = new URLSearchParams();
     params.append('meses', meses.toString());

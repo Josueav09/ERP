@@ -190,6 +190,27 @@ export const clienteService = {
     }
   },
 
+  // async activateCliente(id: number): Promise<{ success: boolean; message: string }> {
+  //   try {
+  //     const response: { success: boolean; message: string }= await apiService.patch(`/jefe/clientes/${id}/activate`);
+  //     return response;
+  //   } catch (error: any) {
+  //     console.error('Error activando cliente:', error);
+  //     throw new Error(error.message || 'Error al activar cliente');
+  //   }
+  // },
+
+  // async deactivateCliente(id: number): Promise<{ success: boolean; message: string }> {
+  //   try {
+  //     const response: { success: boolean; message: string }= await apiService.patch(`/jefe/clientes/${id}/deactivate`);
+  //     return response;
+  //   } catch (error: any) {
+  //     console.error('Error desactivando cliente:', error);
+  //     throw new Error(error.message || 'Error al desactivar cliente');
+  //   }
+  // },
+
+
   //
   // EJECUTIVAS
   //
@@ -252,7 +273,7 @@ export const clienteService = {
       return [];
     }
   },
-// ✅ NUEVO MÉTODO: Embudo vacío para fallbacks
+  // ✅ NUEVO MÉTODO: Embudo vacío para fallbacks
   getEmbudoVacio(): EmbudoVentas[] {
     return [
       { etapa: "Prospección", cantidad: 0, tasa_conversion: "0%", monto_potencial: 0 },

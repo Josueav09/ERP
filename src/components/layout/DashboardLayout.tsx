@@ -26,10 +26,18 @@ export function DashboardLayout({ children, navItems, title, subtitle }: Dashboa
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  // const handleLogout = () => {
+  //   logout();
+  //   navigate("/login");
+  // };
+
+  const handleLogout = async () => {
+    if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+      await logout();
+    }
   };
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#013936] via-[#024a46] to-[#013936]">
