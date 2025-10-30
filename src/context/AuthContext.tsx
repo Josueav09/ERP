@@ -126,15 +126,97 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, [user, lastActivity]);
 
-  
+
   // ========================
   // LOGIN - CORREGIDO CON SERVICIOS
-  // ========================
+  // ======================== 
 
   // En tu AuthContext, agrega este useEffect para debug
   useEffect(() => {
     console.log('🔐 AuthContext - User state ACTUALIZADO:', user);
   }, [user]); // ← Se ejecuta cada vez que user cambia
+
+  // const login = async (
+  //   email: string,
+  //   password: string,
+  //   captchaToken: string,
+  //   captchaResponse: string
+  // ) => {
+  //   try {
+  //     const attemptCheck = checkLoginAttempts(email);
+
+
+  //     if (attemptCheck.blocked) {
+  //       return { success: false, error: "Cuenta bloqueada. Intente en 30 minutos." };
+  //     }
+
+  //     if (!captchaToken || !captchaResponse) {
+  //       return { success: false, error: "Debe completar el captcha." };
+  //     }
+
+  //     setLoading(true);
+
+  //     const loginData: LoginData = {
+  //       email,
+  //       password,
+  //       captchaToken,
+  //       captchaResponse,
+  //     };
+
+  //     const data = await authService.login(loginData);
+
+  //     if (!data.success) {
+  //       recordFailedAttempt(email);
+  //       const remaining = checkLoginAttempts(email);
+  //       const ipWarning =
+  //         remaining.ipRemainingAttempts <= 2
+  //           ? ` ADVERTENCIA: IP bloqueada en ${remaining.ipRemainingAttempts} intentos más.`
+  //           : "";
+  //       return {
+  //         success: false,
+  //         error: `${data.message || data.error || "Credenciales inválidas."} ${remaining.remainingAttempts} intentos restantes.${ipWarning}`,
+  //       };
+  //     }
+
+  //     clearLoginAttempts(email);
+
+  //     // ✅ Usuario requiere verificación de email
+  //     if (data.requiresEmailVerification) {
+  //       console.log("🔐 Setting pending user for email verification:", data.email);
+  //       setPendingUser({
+  //         email: data.email,
+  //         userId: data.userId,
+  //         name: data.name,
+  //         rol: data.rol
+  //       });
+
+  //       setLoading(false); // ✅ Importante: desactivar loading aquí
+  //       return {
+  //         success: true,
+  //         requiresEmailVerification: true,
+  //         email: data.email,
+  //         userData: data
+  //       };
+  //     }
+
+  //     setLoading(false);
+  //     return { success: true };
+  //   } catch (error: any) {
+  //     console.error("Login error:", error);
+  //     recordFailedAttempt(email);
+  //     setLoading(false);
+  //     return {
+  //       success: false,
+  //       error: error.message || "Error al conectar con el servidor."
+  //     };
+  //   }
+  // };
+
+  // ========================
+  // VERIFY EMAIL - CORREGIDO CON SERVICIOS
+  // ========================
+
+  // En tu AuthContext, modifica la función login:
 
   const login = async (
     email: string,
@@ -145,13 +227,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const attemptCheck = checkLoginAttempts(email);
 
-
       if (attemptCheck.blocked) {
-        return { success: false, error: "Cuenta bloqueada. Intente en 30 minutos." };
+        return {
+          success: false,
+          error: "Cuenta bloqueada temporalmente. Intente en 30 minutos."
+        };
       }
 
       if (!captchaToken || !captchaResponse) {
-        return { success: false, error: "Debe completar el captcha." };
+        return {
+          success: false,
+          error: "Debe completar el captcha de seguridad"
+        };
       }
 
       setLoading(true);
@@ -163,26 +250,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         captchaResponse,
       };
 
+      // ✅ authService ya maneja los errores y retorna success: false
       const data = await authService.login(loginData);
 
       if (!data.success) {
         recordFailedAttempt(email);
         const remaining = checkLoginAttempts(email);
-        const ipWarning =
-          remaining.ipRemainingAttempts <= 2
-            ? ` ADVERTENCIA: IP bloqueada en ${remaining.ipRemainingAttempts} intentos más.`
-            : "";
+
+        // ✅ Usar el mensaje de error del backend directamente
         return {
           success: false,
-          error: `${data.message || data.error || "Credenciales inválidas."} ${remaining.remainingAttempts} intentos restantes.${ipWarning}`,
+          error: data.error || data.message || "Error al iniciar sesión"
         };
       }
 
       clearLoginAttempts(email);
 
-      // ✅ Usuario requiere verificación de email
       if (data.requiresEmailVerification) {
-        console.log("🔐 Setting pending user for email verification:", data.email);
+        console.log("✅ Requiere verificación de email");
         setPendingUser({
           email: data.email,
           userId: data.userId,
@@ -190,7 +275,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           rol: data.rol
         });
 
-        setLoading(false); // ✅ Importante: desactivar loading aquí
+        setLoading(false);
         return {
           success: true,
           requiresEmailVerification: true,
@@ -201,20 +286,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setLoading(false);
       return { success: true };
+
     } catch (error: any) {
       console.error("Login error:", error);
       recordFailedAttempt(email);
       setLoading(false);
+
       return {
         success: false,
-        error: error.message || "Error al conectar con el servidor."
+        error: error.message || "Error de conexión con el servidor"
       };
     }
   };
 
-  // ========================
-  // VERIFY EMAIL - CORREGIDO CON SERVICIOS
-  // ========================
 
   const verifyEmailCode = async (code: string) => {
     console.log('🔐 Verificando código:', code);
