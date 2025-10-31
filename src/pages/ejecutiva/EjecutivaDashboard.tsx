@@ -59,9 +59,6 @@ export default function EjecutivaDashboard() {
         ejecutivaService.getTrazabilidad(user.id)
       ])
 
-      console.log("[v1] Ejecutiva stats:", statsData)
-      console.log("[v1] Ejecutiva trazabilidad:", trazabilidadData)
-
       setStats(statsData)
       setTrazabilidad(trazabilidadData)
     } catch (error) {

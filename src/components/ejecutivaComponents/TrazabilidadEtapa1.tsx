@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -47,7 +46,6 @@ export function TrazabilidadEtapa1({ ejecutivaId, refreshKey = 0 }: Trazabilidad
   const fetchEtapa1Data = async () => {
     setLoading(true)
     try {
-      console.log('🔍 Fetching Etapa 1 data for ejecutiva:', ejecutivaId)
       
       const trazabilidadData = await ejecutivaService.getTrazabilidad(ejecutivaId)
       
@@ -56,10 +54,8 @@ export function TrazabilidadEtapa1({ ejecutivaId, refreshKey = 0 }: Trazabilidad
         !record.pasa_embudo_ventas || !record.nombre_oportunidad
       )
       
-      console.log(`✅ Etapa 1 records loaded: ${etapa1Records.length}`)
       setData(etapa1Records)
     } catch (error) {
-      console.error("❌ Error fetching Etapa 1 data:", error)
       toast.error("Error al cargar registros de contactos")
     } finally {
       setLoading(false)
@@ -90,10 +86,10 @@ export function TrazabilidadEtapa1({ ejecutivaId, refreshKey = 0 }: Trazabilidad
 
   const getResultadoBadge = (resultado: string) => {
     const colores: Record<string, string> = {
-      "Positivo": "bg-green-500/20 text-green-700 border-green-700/30",
-      "Negativo": "bg-red-500/20 text-red-700 border-red-700/30",
-      "Pendiente": "bg-yellow-500/20 text-yellow-700 border-yellow-700/30",
-      "Neutro": "bg-gray-500/20 text-gray-700 border-gray-700/30"
+      "Positivo": "bg-green-500/50 text-green-700 border-green-700/30",
+      "Negativo": "bg-red-500/50 !text-red-700 border-red-700/30",
+      "Pendiente": "bg-yellow-500/50 !text-yellow-700 border-yellow-700/30",
+      "Neutro": "bg-gray-500/50 text-gray-700 border-gray-700/30"
     }
     return colores[resultado] || "bg-white/10 text-white/60"
   }
@@ -175,7 +171,7 @@ export function TrazabilidadEtapa1({ ejecutivaId, refreshKey = 0 }: Trazabilidad
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={item.pasa_embudo_ventas ? "bg-[#C7E196] text-[#013936]" : "bg-red-500/20 text-red-300"}>
+                        <Badge className={item.pasa_embudo_ventas ? "bg-[#C7E196] text-[#013936]" : "bg-red-500/20 text-red-500"}>
                           {item.pasa_embudo_ventas ? "Sí" : "No"}
                         </Badge>
                       </TableCell>
@@ -327,7 +323,7 @@ export function TrazabilidadEtapa1({ ejecutivaId, refreshKey = 0 }: Trazabilidad
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#C7E196] pr-8">¿Pasa al Embudo de Ventas?</label>
-                <Badge className={selectedRecord.pasa_embudo_ventas ? "bg-[#C7E196] text-[#013936]" : "bg-red-500/20 text-red-300"}>
+                <Badge className={selectedRecord.pasa_embudo_ventas ? "bg-[#C7E196] text-[#013936]" : "!bg-red-500/20 !text-red-700"}>
                   {selectedRecord.pasa_embudo_ventas ? "Sí - Convertido a Oportunidad" : "No - Aún en prospección"}
                 </Badge>
               </div>

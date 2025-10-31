@@ -49,9 +49,6 @@ export function TrazabilidadEtapa1({ filters }: Etapa1TableProps) {
         limit: pagination.limit
       })
 
-      console.log('📊 Datos recibidos del servicio:', response.data)
-      console.log('📊 Paginación recibida:', response.pagination)
-      
       setData(response.data || [])
       
       // ✅ ACTUALIZAR PAGINACIÓN CON DATOS DEL BACKEND
@@ -64,7 +61,6 @@ export function TrazabilidadEtapa1({ filters }: Etapa1TableProps) {
       }
       
     } catch (error) {
-      console.error('Error al cargar datos de Etapa 1:', error)
       setData([])
     } finally {
       setLoading(false)
@@ -102,7 +98,6 @@ export function TrazabilidadEtapa1({ filters }: Etapa1TableProps) {
       window.URL.revokeObjectURL(url)
       
     } catch (error) {
-      console.error('Error al generar reporte:', error)
       alert('Error al generar el reporte')
     } finally {
       setGeneratingReport(false)

@@ -35,7 +35,6 @@ export function TrazabilidadKPIs({ filters }: TrazabilidadKPIsProps) {
   const fetchKPIs = async () => {
     try {
       setLoading(true)
-      console.log('📊 [TrazabilidadKPIs] Cargando 6 gráficos con filtros:', filters)
       
       const ejecutivaId = filters.ejecutiva !== "all" ? parseInt(filters.ejecutiva) : undefined
 
@@ -73,7 +72,7 @@ export function TrazabilidadKPIs({ filters }: TrazabilidadKPIsProps) {
       setEmbudoVentas(embudoData || [])
       setRankingEjecutivas(rankingData || [])
     } catch (error) {
-      console.error('❌ [TrazabilidadKPIs] Error al cargar KPIs:', error)
+      console.error('Error al cargar KPIs:', error)
     } finally {
       setLoading(false)
     }

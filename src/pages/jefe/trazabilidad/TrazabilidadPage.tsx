@@ -73,14 +73,6 @@ export default function TrazabilidadPage() {
     const empresaId = filters.empresa !== "all" ? parseInt(filters.empresa) : undefined
     const clienteId = filters.cliente !== "all" ? parseInt(filters.cliente) : undefined
 
-    console.log('🔍 [TrazabilidadPage] Fetching KPIs con filtros:', {
-      ejecutivaId,
-      empresaId, 
-      clienteId,
-      fechaDesde: filters.fechaDesde,
-      fechaHasta: filters.fechaHasta
-    })
-
     const stats = await jefeService.getTrazabilidadKPIs({
       ejecutivaId,
       empresaId,
@@ -89,7 +81,6 @@ export default function TrazabilidadPage() {
       fechaHasta: filters.fechaHasta || undefined,
     })
 
-    console.log('✅ [TrazabilidadPage] KPIs recibidos:', stats)
     setKpiStats(stats)
     
   } catch (error) {

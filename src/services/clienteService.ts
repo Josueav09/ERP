@@ -108,10 +108,8 @@ export const clienteService = {
 
   async getStats(clienteUsuarioId: string): Promise<ClienteStats> {
     try {
-      console.log('📊 [clienteService] Obteniendo stats REALES para:', clienteUsuarioId);
       const response: ClienteStats = await apiService.get(`/empresa/dashboard/stats?clienteUsuarioId=${clienteUsuarioId}`);
 
-      console.log('✅ [clienteService] Stats REALES obtenidas:', response);
       return response;
     } catch (error) {
       console.error('❌ [clienteService] Error obteniendo stats REALES:', error);
@@ -122,10 +120,8 @@ export const clienteService = {
 
   async getTrazabilidad(clienteUsuarioId: string): Promise<Trazabilidad[]> {
     try {
-      console.log('📋 [clienteService] Obteniendo trazabilidad REAL para:', clienteUsuarioId);
       const response: Trazabilidad[] = await apiService.get(`/empresa/trazabilidad?clienteUsuarioId=${clienteUsuarioId}`);
 
-      console.log('✅ [clienteService] Trazabilidad REAL obtenida:', response.length, 'registros');
       return response;
     } catch (error) {
       console.error('❌ [clienteService] Error obteniendo trazabilidad REAL:', error);
@@ -135,10 +131,8 @@ export const clienteService = {
 
   async getEjecutivaInfo(clienteUsuarioId: string): Promise<any> {
     try {
-      console.log('👩‍💼 [clienteService] Obteniendo info ejecutiva REAL para:', clienteUsuarioId);
       const response: any = await apiService.get(`/empresa/ejecutiva?clienteUsuarioId=${clienteUsuarioId}`);
 
-      console.log('✅ [clienteService] Info ejecutiva REAL obtenida:', response);
 
       // ✅ El backend ahora devuelve estadísticas reales
       return {
@@ -158,18 +152,15 @@ export const clienteService = {
         }
       };
     } catch (error) {
-      console.error('❌ [clienteService] Error obteniendo info ejecutiva REAL:', error);
       throw new Error('No se pudo cargar la información de la ejecutiva');
     }
   },
 
   async getActividades(clienteUsuarioId: string): Promise<Trazabilidad[]> {
-    console.log('🔄 [clienteService] Obteniendo actividades para cliente:', clienteUsuarioId);
 
     try {
       // ✅ getActividades y getTrazabilidad devuelven la MISMA estructura
       const actividades = await this.getTrazabilidad(clienteUsuarioId);
-      console.log('✅ [clienteService] Actividades obtenidas exitosamente', actividades.length);
       return actividades;
     } catch (error: any) {
       console.error('❌ [clienteService] Error obteniendo actividades:', error);
@@ -181,7 +172,6 @@ export const clienteService = {
 
   async getClientesRecientes(clienteUsuarioId: string): Promise<ClienteReal[]> {
     try {
-      console.log('👥 [clienteService] Obteniendo clientes recientes para:', clienteUsuarioId);
       const response: ClienteReal[] = await apiService.get(`/empresa/clientes?clienteUsuarioId=${clienteUsuarioId}`);
       return response;
     } catch (error) {
@@ -190,37 +180,14 @@ export const clienteService = {
     }
   },
 
-  // async activateCliente(id: number): Promise<{ success: boolean; message: string }> {
-  //   try {
-  //     const response: { success: boolean; message: string }= await apiService.patch(`/jefe/clientes/${id}/activate`);
-  //     return response;
-  //   } catch (error: any) {
-  //     console.error('Error activando cliente:', error);
-  //     throw new Error(error.message || 'Error al activar cliente');
-  //   }
-  // },
-
-  // async deactivateCliente(id: number): Promise<{ success: boolean; message: string }> {
-  //   try {
-  //     const response: { success: boolean; message: string }= await apiService.patch(`/jefe/clientes/${id}/deactivate`);
-  //     return response;
-  //   } catch (error: any) {
-  //     console.error('Error desactivando cliente:', error);
-  //     throw new Error(error.message || 'Error al desactivar cliente');
-  //   }
-  // },
-
-
   //
   // EJECUTIVAS
   //
 
   async getEjecutivasByEmpresa(empresaId: string): Promise<EjecutivaCompleta[]> {
     try {
-      console.log('👥 [clienteService] Obteniendo ejecutivas REALES para empresa:', empresaId);
 
       const ejecutivasReales: EjecutivaReal[] = await apiService.get(`/empresa/ejecutivas?empresaId=${empresaId}`);
-      console.log('✅ [clienteService] Ejecutivas REALES obtenidas:', ejecutivasReales);
 
       const ejecutivasCompletas = await Promise.all(
         ejecutivasReales.map(async (ejecutiva, index) => {
@@ -228,9 +195,6 @@ export const clienteService = {
             // ✅ USAR LA INTERFAZ COMPLETA
             const estadisticas: EjecutivaEstadisticasCompletas = await apiService.get(`/empresa/ejecutiva/${ejecutiva.id_ejecutiva}/estadisticas?empresaId=${empresaId}`);
             const embudo: EmbudoVentas[] = await apiService.get(`/empresa/ejecutiva/${ejecutiva.id_ejecutiva}/embudo?empresaId=${empresaId}`);
-
-            console.log(`📊 [clienteService] Estadísticas REALES para ${ejecutiva.nombre_completo}:`, estadisticas);
-            console.log(`🎯 [clienteService] Embudo REAL para ${ejecutiva.nombre_completo}:`, embudo);
 
             // ✅ CONVERTIR LA TASA DE CONVERSIÓN DE FORMA SEGURA
             const tasaConversionNum = estadisticas.tasa_conversion
@@ -312,40 +276,54 @@ export const clienteService = {
       [
         {
           id: 1,
-          nombre: "Certified Sales Professional",
-          institucion: "Sales Excellence Institute",
-          fecha_obtencion: "2023-03-15",
+          nombre: "Ventas Consultivas B2B",
+          institucion: "Cámara de Comercio de Lima",
+          fecha_obtencion: "2024-03-15",
           nivel: "Avanzado"
         },
         {
           id: 2,
-          nombre: "Strategic Account Management",
-          institucion: "Harvard Business School",
-          fecha_obtencion: "2022-08-10",
-          nivel: "Ejecutivo"
+          nombre: "Gestión de Cartera de Clientes",
+          institucion: "Universidad ESAN",
+          fecha_obtencion: "2024-06-20",
+          nivel: "Intermedio"
         },
         {
           id: 3,
-          nombre: "Digital Transformation",
-          institucion: "MIT Professional Education",
-          fecha_obtencion: "2023-11-20",
-          nivel: "Especialista"
+          nombre: "Técnicas de Negociación Comercial",
+          institucion: "Instituto Peruano de Marketing",
+          fecha_obtencion: "2024-01-10",
+          nivel: "Avanzado"
+        },
+        {
+          id: 4,
+          nombre: "CRM y Automatización de Ventas",
+          institucion: "Asociación de Ejecutivos de Ventas",
+          fecha_obtencion: "2024-08-05",
+          nivel: "Intermedio"
         }
       ],
       // Para la segunda ejecutiva
       [
         {
           id: 1,
-          nombre: "Business Development Certification",
-          institucion: "Growth Academy",
-          fecha_obtencion: "2023-01-20",
-          nivel: "Intermedio"
+          nombre: "Estrategias de Ventas Digitales",
+          institucion: "Cámara de Comercio de Lima",
+          fecha_obtencion: "2024-02-18",
+          nivel: "Avanzado"
         },
         {
           id: 2,
-          nombre: "Customer Success Management",
-          institucion: "Success University",
-          fecha_obtencion: "2022-06-15",
+          nombre: "Análisis de Mercado y Competencia",
+          institucion: "Universidad del Pacífico",
+          fecha_obtencion: "2024-07-12",
+          nivel: "Intermedio"
+        },
+        {
+          id: 3,
+          nombre: "Gestión de Relaciones con Clientes",
+          institucion: "Instituto Peruano de Administración",
+          fecha_obtencion: "2024-04-22",
           nivel: "Avanzado"
         }
       ],
@@ -353,15 +331,36 @@ export const clienteService = {
       [
         {
           id: 1,
-          nombre: "Market Expansion Strategy",
-          institucion: "Business Growth Institute",
-          fecha_obtencion: "2023-05-10",
+          nombre: "Planificación Comercial Estratégica",
+          institucion: "ESAN Graduate School",
+          fecha_obtencion: "2024-05-30",
           nivel: "Estratégico"
+        },
+        {
+          id: 2,
+          nombre: "Inteligencia Comercial y Analytics",
+          institucion: "Pontificia Universidad Católica del Perú",
+          fecha_obtencion: "2024-03-08",
+          nivel: "Avanzado"
+        },
+        {
+          id: 3,
+          nombre: "Liderazgo en Equipos de Ventas",
+          institucion: "Centrum PUCP",
+          fecha_obtencion: "2024-09-15",
+          nivel: "Directivo"
+        },
+        {
+          id: 4,
+          nombre: "Transformación Digital en Ventas",
+          institucion: "Universidad de Lima",
+          fecha_obtencion: "2024-11-10",
+          nivel: "Especialista"
         }
       ]
     ];
-
-    return certificacionesBase[index % certificacionesBase.length] || certificacionesBase[0];
+    
+    return certificacionesBase[index] || [];
   },
 
   async getEstadisticasEjecutiva(ejecutivaId: number): Promise<{

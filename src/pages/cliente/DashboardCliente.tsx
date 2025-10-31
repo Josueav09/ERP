@@ -87,10 +87,8 @@ export default function ProveedorDashboard() {
   const fetchData = async () => {
   setLoading(true);
   try {
-    console.log('🔄 [ProveedorDashboard] Cargando datos REALES...');
 
     const clienteUsuarioId = user?.id || '1';
-    console.log('🔍 ID de empresa:', clienteUsuarioId);
 
     // ✅ CORREGIR: Obtener ejecutivasData correctamente
     const [statsData, trazabilidadData, ejecutivaData, clientesData, ejecutivasData] = await Promise.all([
@@ -100,13 +98,6 @@ export default function ProveedorDashboard() {
       clienteService.getClientesRecientes(clienteUsuarioId),
       clienteService.getEjecutivasByEmpresa(clienteUsuarioId) // ✅ Este es el array de ejecutivas
     ]);
-
-    console.log('✅ [ProveedorDashboard] Datos REALES cargados:');
-    console.log('📊 Stats:', statsData);
-    console.log('📋 Trazabilidad:', trazabilidadData.length, 'registros');
-    console.log('👩‍💼 Ejecutiva individual:', ejecutivaData);
-    console.log('👥 Todas las ejecutivas:', ejecutivasData?.length || 0, 'ejecutivas');
-
     setStats(statsData as StatsCompletas);
     setTrazabilidad(trazabilidadData);
     setEjecutivaInfo(ejecutivaData);
@@ -122,7 +113,6 @@ export default function ProveedorDashboard() {
   
   useEffect(() => {
     if (clientesRecientes.length > 0) {
-      console.log('🔍 [Debug] Verificando datos de clientes:');
       clientesRecientes.forEach((cliente, index) => {
         console.log(`Cliente ${index}:`, {
           id: cliente.id_cliente_final,
@@ -296,7 +286,7 @@ export default function ProveedorDashboard() {
     switch (estado) {
       case "completada": return "bg-green-500";
       case "en_proceso": return "bg-yellow-500";
-      case "pendiente": return "bg-gray-500";
+      case "pendiente": return "bg-gray-600";
       default: return "bg-gray-400";
     }
   };
@@ -451,7 +441,7 @@ export default function ProveedorDashboard() {
                 <XAxis dataKey="mes" stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
                 <YAxis stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" }}
+                  contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px", color:"white" }}
                 />
                 <Bar dataKey="actividades" fill="#C7E196" name="Actividades" />
               </BarChart>
@@ -472,7 +462,7 @@ export default function ProveedorDashboard() {
                 <XAxis dataKey="categoria" stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
                 <YAxis stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" }}
+                  contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" , color:"white"}}
                 />
                 <Bar dataKey="valor" fill="#C7E196" name="Cantidad">
                   {getVentasVsPipelineData().map((entry, index) => (
@@ -500,7 +490,7 @@ export default function ProveedorDashboard() {
                 <XAxis dataKey="estado" stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
                 <YAxis stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" }}
+                  contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px", color:"white"}}
                 />
                 <Bar dataKey="cantidad" fill="#C7E196" name="Cantidad" />
               </BarChart>
@@ -521,7 +511,7 @@ export default function ProveedorDashboard() {
                 <XAxis dataKey="semana" stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
                 <YAxis stroke="#ffffff60" tick={{ fill: "#ffffff60" }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px" }}
+                  contentStyle={{ backgroundColor: "#024a46", border: "1px solid #C7E19640", borderRadius: "8px", color:"white" }}
                 />
                 <Line
                   type="monotone"

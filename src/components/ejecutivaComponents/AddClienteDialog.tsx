@@ -1,4 +1,3 @@
-
 import React, { useState } from "react"
 import {
   Dialog,
@@ -47,11 +46,6 @@ export function AddClienteDialog({ ejecutivaId, onSuccess, onClose, open = false
     setLoading(true)
 
     try {
-      console.log("📤 Creando cliente:", {
-        ...formData,
-        ejecutivaId: ejecutivaId
-      })
-
       // ✅ LLAMADA REAL AL BACKEND usando el servicio
       await ejecutivaService.createCliente({
         razon_social: formData.razon_social,
@@ -74,7 +68,6 @@ export function AddClienteDialog({ ejecutivaId, onSuccess, onClose, open = false
         cantidad_empleados: formData.cantidad_empleados
       })
       
-      console.log("✅ Cliente creado exitosamente")
       
       onSuccess()
       onClose()
@@ -99,7 +92,6 @@ export function AddClienteDialog({ ejecutivaId, onSuccess, onClose, open = false
         cantidad_empleados: "",
       })
     } catch (error) {
-      console.error("❌ Error creando cliente:", error)
       alert(error instanceof Error ? error.message : "Error al crear cliente")
     } finally {
       setLoading(false)
@@ -230,7 +222,7 @@ export function AddClienteDialog({ ejecutivaId, onSuccess, onClose, open = false
 
           {/* Información comercial */}
           <div className="space-y-4 p-4 !bg-[#C7E196]/5 rounded-lg">
-            <h3 className="font-semibold text-[#013936]">Información Comercial</h3>
+            <h3 className="font-semibold text-white">Información Comercial</h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

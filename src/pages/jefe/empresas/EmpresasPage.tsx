@@ -125,16 +125,11 @@ export default function EmpresasPage() {
   ];
 
   useEffect(() => {
-    console.log('📍 JefeDashboard - User context:', user);
 
     const storedUser = localStorage.getItem('user');
     const token = sessionStorage.getItem('token');
 
-    console.log('📍 JefeDashboard - Stored user:', storedUser);
-    console.log('📍 JefeDashboard - Token:', token);
-
     if (!user && !storedUser) {
-      console.log('❌ JefeDashboard: Sin usuario en contexto ni storage, redirigiendo...');
       navigate("/login");
       return;
     }
@@ -142,20 +137,16 @@ export default function EmpresasPage() {
     const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
 
     if (!currentUser) {
-      console.log('❌ JefeDashboard: No se pudo obtener usuario, redirigiendo...');
       navigate("/login");
       return;
     }
 
     const allowedRoles = ["jefe", "Jefe", "Administrador"];
     if (!allowedRoles.includes(currentUser.role)) {
-      console.log('❌ JefeDashboard: Rol no permitido:', currentUser.role);
       navigate("/login");
       return;
     }
 
-    console.log('✅ JefeDashboard: Acceso permitido para:', currentUser.role);
-    console.log('✅ JefeDashboard: Fuente del usuario:', user ? 'contexto' : 'localStorage');
     fetchEmpresas();
     fetchEjecutivasDisponibles();
   }, [user, navigate]);
@@ -178,17 +169,14 @@ export default function EmpresasPage() {
 
   const fetchEjecutivasDisponibles = async () => {
     try {
-      console.log('🔄 [EmpresasPage] Cargando ejecutivas disponibles...');
 
       // ✅ VALIDAR QUE selectedEmpresa NO SEA NULL
       if (!selectedEmpresaId || !selectedEmpresaId) {
-        console.log('⚠️ [EmpresasPage] No hay empresa seleccionada');
         setAvailableEjecutivas([]);
         return;
       }
 
       const data = await jefeService.getEjecutivasDisponibles();
-      console.log('✅ [EmpresasPage] Ejecutivas disponibles cargadas:', data.length);
       setAvailableEjecutivas(data);
     } catch (error) {
       console.error('❌ [EmpresasPage] Error cargando ejecutivas disponibles:', error);
@@ -273,7 +261,6 @@ export default function EmpresasPage() {
     setIsEjecutivasDialogOpen(true);
 
     try {
-      console.log('🔍 [EmpresasPage] Cargando ejecutivas para empresa:', empresaId);
 
       // ✅ Cargar ejecutivas asignadas
       const empresaData = await jefeService.getEmpresaEjecutivas(empresaId);
@@ -281,7 +268,6 @@ export default function EmpresasPage() {
 
       // ✅ Cargar ejecutivas disponibles (NUEVO MÉTODO SIMPLE)
       const ejecutivasDisponibles = await jefeService.getEjecutivasDisponibles();
-      console.log('✅ [EmpresasPage] Ejecutivas disponibles:', ejecutivasDisponibles);
       setAvailableEjecutivas(ejecutivasDisponibles);
 
     } catch (error: any) {
@@ -312,7 +298,6 @@ const handleAddEjecutiva = async (ejecutivaId: number) => {
       variant: "destructive" 
     });
     
-    console.log("Error completo:", error);
   }
 };
 
@@ -465,8 +450,6 @@ const handleToggleEstado = async (empresa: Empresa) => {
   if (!confirmacion) return;
 
   try {
-    console.log(`🔄 [Frontend] Cambiando estado de empresa ${empresa.id_empresa} a: ${nuevoEstado}`);
-    
     await jefeService.toggleEmpresaEstado(empresa.id_empresa, nuevoEstado);
     
     toast({
@@ -489,7 +472,6 @@ const handleToggleEstado = async (empresa: Empresa) => {
       errorMessage = error.message;
     }
     
-    console.log("🔍 [Frontend] Mensaje de error completo:", errorMessage);
     
     toast({
       title: "❌ Error",

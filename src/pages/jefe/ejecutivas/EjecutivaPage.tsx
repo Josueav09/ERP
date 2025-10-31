@@ -116,7 +116,7 @@ export default function EjecutivasPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [currentEjecutiva, setCurrentEjecutiva] = useState<Ejecutiva | null>(null);
   const [ejecutivaDetalle, setEjecutivaDetalle] = useState<EjecutivaDetalle | null>(null);
-  
+
   // Form data para edición
   const [formData, setFormData] = useState({
     nombre_completo: "",
@@ -138,36 +138,27 @@ export default function EjecutivasPage() {
   });
 
   useEffect(() => {
-    console.log('📍 JefeDashboard - User context:', user);
-    
+
     const storedUser = localStorage.getItem('user');
     const token = sessionStorage.getItem('token');
-    
-    console.log('📍 JefeDashboard - Stored user:', storedUser);
-    console.log('📍 JefeDashboard - Token:', token);
-    
+
     if (!user && !storedUser) {
-      console.log('❌ JefeDashboard: Sin usuario en contexto ni storage, redirigiendo...');
       navigate("/login");
       return;
     }
-    
+
     const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
-    
+
     if (!currentUser) {
-      console.log('❌ JefeDashboard: No se pudo obtener usuario, redirigiendo...');
       navigate("/login");
       return;
     }
-    
+
     const allowedRoles = ["jefe", "Jefe", "Administrador"];
     if (!allowedRoles.includes(currentUser.role)) {
-      console.log('❌ JefeDashboard: Rol no permitido:', currentUser.role);
       navigate("/login");
       return;
     }
-    
-    console.log('✅ JefeDashboard: Acceso permitido para:', currentUser.role);
     fetchEjecutivas();
   }, [user, navigate]);
 
@@ -185,8 +176,7 @@ export default function EjecutivasPage() {
     try {
       setLoading(true);
       const data = await jefeService.getEjecutivas();
-      console.log('📥 Datos recibidos del backend:', data);
-      
+
       // Asegurarnos de que los datos tengan la estructura correcta
       const ejecutivasFormateadas = data.map((ej: any) => ({
         id_usuario: ej.id_usuario || ej.id_ejecutiva,
@@ -207,7 +197,7 @@ export default function EjecutivasPage() {
         id_empresa_prov: ej.id_empresa_prov,
         empresa_asignada: ej.empresa_asignada
       }));
-      
+
       setEjecutivas(ejecutivasFormateadas);
       setFilteredEjecutivas(ejecutivasFormateadas);
     } catch (error) {
@@ -229,21 +219,31 @@ export default function EjecutivasPage() {
       telefono: ejecutiva.telefono || "",
       linkedin: ejecutiva.linkedin || "",
       estado_ejecutiva: ejecutiva.estado_ejecutiva || "Activo",
-          contraseña: "" // ✅ INICIALIZAR VACÍO (por seguridad)
+      contraseña: "" // ✅ INICIALIZAR VACÍO (por seguridad)
 
     });
     setIsEditDialogOpen(true);
   };
-
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       if (!currentEjecutiva) return;
 
-      // Usar id_ejecutiva si está disponible, sino id_usuario
+      // ✅ VALIDACIÓN MEJORADA DE CONTRASEÑA
+      if (formData.contraseña && formData.contraseña.trim() !== '') {
+        if (formData.contraseña.length < 6) {
+          toast({
+            title: "Error de validación",
+            description: "La contraseña debe tener al menos 6 caracteres",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       const ejecutivaId = currentEjecutiva.id_ejecutiva || currentEjecutiva.id_usuario;
-      
+
       await jefeService.updateEjecutiva(ejecutivaId, formData);
 
       toast({
@@ -253,20 +253,19 @@ export default function EjecutivasPage() {
 
       setIsEditDialogOpen(false);
       fetchEjecutivas();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating ejecutiva:", error);
       toast({
         title: "Error",
-        description: "No se pudo actualizar la ejecutiva",
+        description: error.message || "No se pudo actualizar la ejecutiva",
         variant: "destructive",
       });
     }
   };
 
+
   const handleOpenDetailDialog = async (ejecutiva: Ejecutiva) => {
     try {
-      console.log('🔍 Botón ojo clickeado para ejecutiva:', ejecutiva);
-      
       // Datos básicos mientras carga
       const basicData: EjecutivaDetalle = {
         ejecutiva: {
@@ -283,22 +282,20 @@ export default function EjecutivasPage() {
         empresas: [],
         clientes: []
       };
-      
+
       setEjecutivaDetalle(basicData);
       setIsDetailDialogOpen(true);
-      
+
       // Intentar cargar datos detallados
       try {
-        console.log('📡 Llamando a getEjecutivaDetalle...');
         const ejecutivaId = ejecutiva.id_ejecutiva || ejecutiva.id_usuario;
         const detailedData = await jefeService.getEjecutivaDetalle(ejecutivaId);
-        console.log('✅ Datos recibidos:', detailedData);
         setEjecutivaDetalle(detailedData);
       } catch (error) {
         console.warn("No se pudieron cargar los detalles completos:", error);
         // Mantener los datos básicos
       }
-      
+
     } catch (error) {
       console.error("Error opening detail dialog:", error);
       toast({
@@ -570,8 +567,8 @@ export default function EjecutivasPage() {
                                 ejecutiva.estado_ejecutiva === 'Activo'
                                   ? "bg-[#C7E196] text-[#013936] hover:bg-[#C7E196]/80"
                                   : ejecutiva.estado_ejecutiva === 'Suspendido'
-                                  ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-                                  : "bg-white/10 text-white/60"
+                                    ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+                                    : "bg-white/10 text-white/60"
                               }
                             >
                               {ejecutiva.estado_ejecutiva || 'N/A'}
@@ -636,14 +633,13 @@ export default function EjecutivasPage() {
                     <h4 className="font-semibold text-white mb-2">Estado y Asignaciones</h4>
                     <div className="space-y-2 text-sm">
                       <p>
-                        <span className="text-white/60">Estado:</span> 
-                        <Badge className={`ml-2 ${
-                          ejecutivaDetalle.ejecutiva.estado_ejecutiva === 'Activo' 
-                            ? 'bg-[#C7E196] text-[#013936]' 
-                            : ejecutivaDetalle.ejecutiva.estado_ejecutiva === 'Suspendido'
+                        <span className="text-white/60">Estado:</span>
+                        <Badge className={`ml-2 ${ejecutivaDetalle.ejecutiva.estado_ejecutiva === 'Activo'
+                          ? 'bg-[#C7E196] text-[#013936]'
+                          : ejecutivaDetalle.ejecutiva.estado_ejecutiva === 'Suspendido'
                             ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
                             : 'bg-white/10 text-white/60'
-                        }`}>
+                          }`}>
                           {ejecutivaDetalle.ejecutiva.estado_ejecutiva}
                         </Badge>
                       </p>
@@ -798,11 +794,15 @@ export default function EjecutivasPage() {
                     placeholder="https://linkedin.com/in/usuario"
                   />
                 </div>
-
-                {/* ✅ AGREGAR CAMPO DE CONTRASEÑA */}
                 <div className="space-y-2">
                   <Label htmlFor="contraseña" className="text-white/80">
                     Nueva Contraseña
+                    {formData.contraseña && formData.contraseña.length > 0 && formData.contraseña.length < 6 && (
+                      <span className="text-yellow-400 text-xs ml-2">⚠️ Mínimo 6 caracteres</span>
+                    )}
+                    {formData.contraseña && formData.contraseña.length >= 6 && (
+                      <span className="text-[#C7E196] text-xs ml-2">✅ Válida</span>
+                    )}
                   </Label>
                   <Input
                     id="contraseña"
@@ -817,7 +817,6 @@ export default function EjecutivasPage() {
                     Solo completa si deseas cambiar la contraseña (mínimo 6 caracteres)
                   </p>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="estado_ejecutiva" className="text-white/80">
                     Estado

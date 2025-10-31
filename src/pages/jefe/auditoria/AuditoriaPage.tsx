@@ -38,13 +38,10 @@ export default function AuditoriaPage() {
   const [fechaFin, setFechaFin] = useState<string>("");
 
   useEffect(() => {
-    console.log('📍 AuditoriaPage - Verificando autenticación...');
-
     const storedUser = localStorage.getItem('user');
     const token = sessionStorage.getItem('token');
 
     if (!user && !storedUser) {
-      console.log('❌ AuditoriaPage: Sin usuario, redirigiendo...');
       navigate("/login");
       return;
     }
@@ -58,12 +55,10 @@ export default function AuditoriaPage() {
 
     const allowedRoles = ["jefe", "Jefe", "Administrador"];
     if (!allowedRoles.includes(currentUser.role)) {
-      console.log('❌ AuditoriaPage: Rol no permitido:', currentUser.role);
       navigate("/login");
       return;
     }
 
-    console.log('✅ AuditoriaPage: Acceso permitido');
     fetchAuditoriaData();
   }, [user, navigate]);
 
@@ -85,15 +80,12 @@ export default function AuditoriaPage() {
       setFilteredAuditorias(auditoriaData);
       setStats(statsData);
 
-      console.log('✅ Datos de auditoría cargados:', auditoriaData.length, 'registros');
-
       toast({
         title: "Datos cargados",
         description: `${auditoriaData.length} registros de auditoría cargados`,
       });
 
     } catch (error) {
-      console.error("Error fetching auditoria data:", error);
 
       // ✅ Cargar datos de prueba en caso de error
       const datosPrueba = auditoriaService.getDatosPrueba();

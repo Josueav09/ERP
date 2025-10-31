@@ -48,14 +48,6 @@ export function TrazabilidadEtapa2({ filters }: Etapa2TableProps) {
         limit: pagination.limit
       })
 
-        console.log('🔍 [Etapa2] Datos recibidos:', response.data)
-      console.log('🔍 [Etapa2] Probabilidades:', response.data.map((item: any) => ({
-        nombre: item.nombreOportunidad,
-        probabilidadCierre: item.probabilidadCierre,
-        probabilidad: item.probabilidad,
-        etapa: item.etapaOportunidad
-      })))
-
       setData(response.data || [])
       if (response.pagination) {
         setPagination(prev => ({
@@ -65,7 +57,6 @@ export function TrazabilidadEtapa2({ filters }: Etapa2TableProps) {
         }))
       }
     } catch (error) {
-      console.error('Error al cargar datos de Etapa 2:', error)
       setData([])
     } finally {
       setLoading(false)
@@ -102,7 +93,6 @@ export function TrazabilidadEtapa2({ filters }: Etapa2TableProps) {
       window.URL.revokeObjectURL(url)
       
     } catch (error) {
-      console.error('Error al generar reporte:', error)
       alert('Error al generar el reporte')
     } finally {
       setGeneratingReport(false)

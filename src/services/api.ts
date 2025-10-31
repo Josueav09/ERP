@@ -1,91 +1,3 @@
-// import { API_CONFIG } from '@/config/config';
-// import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-
-// class ApiService {
-//   private api: AxiosInstance;
-
-//   constructor() {
-//     this.api = axios.create({
-//       baseURL: API_CONFIG.baseURL,
-//       timeout: API_CONFIG.timeout,
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//     });
-
-//     this.setupInterceptors();
-//   }
-
-//   private setupInterceptors() {
-//     console.log('🔐 Configurando interceptors de axios...');
-
-//     this.api.interceptors.request.use(
-//       (config) => {
-//         const token = sessionStorage.getItem('token');
-//         console.log('🔐 Interceptor Request - Token:', token ? 'EXISTE' : 'NO EXISTE');
-//         console.log('🔐 Interceptor Request - URL:', config.url);
-//         console.log('🔐 Interceptor Request - Headers antes:', config.headers);
-
-//         if (token) {
-//           config.headers.Authorization = `Bearer ${token}`;
-//           console.log('🔐 Interceptor - ✅ Authorization header AGREGADO');
-//         } else {
-//           console.log('❌ Interceptor - NO hay token disponible');
-//         }
-
-//         console.log('🔐 Interceptor Request - Headers después:', config.headers);
-//         return config;
-//       },
-//       (error) => {
-//         console.error('❌ Interceptor request error:', error);
-//         return Promise.reject(error);
-//       }
-//     );
-
-//     this.api.interceptors.response.use(
-//       (response) => {
-//         console.log('✅ Interceptor Response - Status:', response.status, 'URL:', response.config.url);
-//         return response;
-//       },
-//       (error) => {
-//         console.error('❌ Interceptor Response error:', {
-//           status: error.response?.status,
-//           url: error.config?.url,
-//           headers: error.config?.headers
-//         });
-//         return Promise.reject(error);
-//       }
-//     );  
-//   }
-//   async get<T>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
-//     const response: AxiosResponse<T> = await this.api.get(endpoint, config);
-//     return response.data;
-//   }
-
-//   async post<T>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-//     const response: AxiosResponse<T> = await this.api.post(endpoint, data, config);
-//     return response.data;
-//   }
-
-//   async put<T>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-//     const response: AxiosResponse<T> = await this.api.put(endpoint, data, config);
-//     return response.data;
-//   }
-
-//   async delete<T>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
-//     const response: AxiosResponse<T> = await this.api.delete(endpoint, config);
-//     return response.data;
-//   }
-
-//   // ✅ IMPLEMENTAR MÉTODO PATCH
-//   async patch<T>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-//     const response: AxiosResponse<T> = await this.api.patch(endpoint, data, config);
-//     return response.data;
-//   }
-// }
-
-// export const apiService = new ApiService();
-
 import { API_CONFIG } from '@/config/config';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
@@ -105,28 +17,21 @@ class ApiService {
   }
 
   private setupInterceptors() {
-    console.log('🔐 Configurando interceptors de axios...');
 
     // ========== REQUEST INTERCEPTOR ==========
     this.api.interceptors.request.use(
       (config) => {
         const token = sessionStorage.getItem('token');
-        console.log('🔐 Interceptor Request - Token:', token ? 'EXISTE' : 'NO EXISTE');
-        console.log('🔐 Interceptor Request - URL:', config.url);
-        console.log('🔐 Interceptor Request - Headers antes:', config.headers);
 
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('🔐 Interceptor - ✅ Authorization header AGREGADO');
         } else {
           console.log('❌ Interceptor - NO hay token disponible');
         }
 
-        console.log('🔐 Interceptor Request - Headers después:', config.headers);
         return config;
       },
       (error) => {
-        console.error('❌ Interceptor request error:', error);
         return Promise.reject(error);
       }
     );
@@ -134,17 +39,9 @@ class ApiService {
     // ========== RESPONSE INTERCEPTOR - ✅ CORREGIDO ==========
     this.api.interceptors.response.use(
       (response) => {
-        console.log('✅ Interceptor Response - Status:', response.status, 'URL:', response.config.url);
         return response;
       },
       (error: AxiosError<any>) => {
-        console.error('❌ Interceptor Response error:', {
-          status: error.response?.status,
-          url: error.config?.url,
-          headers: error.config?.headers,
-          data: error.response?.data
-        });
-
         // ✅ EXTRAER MENSAJE DE ERROR DEL BACKEND
         let errorMessage = 'Error de conexión con el servidor';
         let errorDetails = null;
@@ -152,10 +49,6 @@ class ApiService {
         if (error.response) {
           // El servidor respondió con un código de error (4xx, 5xx)
           const data = error.response.data;
-          
-          console.log('📤 Error data del backend:', data);
-          console.log('📤 Estructura completa:', JSON.stringify(data, null, 2));
-
           // ✅ EXTRACCIÓN ROBUSTA DEL MENSAJE
           if (data && typeof data === 'object') {
             // 1. Prioridad: campo "message"
@@ -163,11 +56,9 @@ class ApiService {
               if (Array.isArray(data.message)) {
                 // class-validator devuelve array de errores
                 errorMessage = data.message[0];
-                console.log('📤 Mensaje extraído de array:', errorMessage);
               } else if (typeof data.message === 'string') {
                 // NestJS estándar devuelve string
                 errorMessage = data.message;
-                console.log('📤 Mensaje extraído de string:', errorMessage);
               }
             } 
             // 2. Alternativa: campo "error" (solo si no es genérico)
@@ -175,17 +66,14 @@ class ApiService {
               const genericErrors = ['Unauthorized', 'Bad Request', 'Forbidden', 'Not Found', 'Internal Server Error'];
               if (!genericErrors.includes(data.error)) {
                 errorMessage = data.error;
-                console.log('📤 Mensaje extraído de error personalizado:', errorMessage);
               } else {
                 // Error genérico, usar statusText
                 errorMessage = error.response.statusText || 'Error en el servidor';
-                console.log('📤 Error genérico detectado, usando statusText:', errorMessage);
               }
             }
             // 3. Fallback: statusText
             else {
               errorMessage = error.response.statusText || 'Error en el servidor';
-              console.log('📤 Usando statusText como fallback:', errorMessage);
             }
           }
 
@@ -195,29 +83,39 @@ class ApiService {
             data: data
           };
 
-          console.log('✅ Mensaje de error final extraído:', errorMessage);
 
           // ✅ MANEJAR ERRORES ESPECÍFICOS POR CÓDIGO DE ESTADO
           switch (error.response.status) {
             case 400:
               console.log('❌ Bad Request (400):', errorMessage);
+              if (errorMessage === 'Bad Request') {
+                errorMessage = 'Solicitud inválida';
+              }
               break;
             case 401:
+
               console.log('❌ Unauthorized (401):', errorMessage);
+              if (errorMessage === 'Unauthorized') {
+                errorMessage = 'No autorizado';
+              }
+             
               // Solo limpiar sesión si es error de token, no de login
               if (errorMessage.toLowerCase().includes('token expired') || 
                   errorMessage.toLowerCase().includes('invalid token') ||
                   errorMessage.toLowerCase().includes('jwt')) {
-                console.log('🔐 Token inválido detectado, limpiando sesión...');
                 sessionStorage.removeItem('token');
                 localStorage.removeItem('user');
               }
               break;
             case 403:
               console.log('❌ Forbidden (403):', errorMessage);
+              if (errorMessage === 'Forbidden') {
+                errorMessage = 'Acceso prohibido';
+              }
               break;
             case 404:
               console.log('❌ Not Found (404):', errorMessage);
+
               if (errorMessage === 'Not Found') {
                 errorMessage = 'Recurso no encontrado';
               }
@@ -265,8 +163,6 @@ class ApiService {
           details: errorDetails,
           originalError: error
         };
-
-        console.log('🔴 Error estructurado final:', structuredError);
 
         // ✅ RECHAZAR CON ERROR ESTRUCTURADO
         return Promise.reject(structuredError);
@@ -337,7 +233,6 @@ class ApiService {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    console.log('🔐 Sesión limpiada');
   }
 
   getAxiosInstance(): AxiosInstance {

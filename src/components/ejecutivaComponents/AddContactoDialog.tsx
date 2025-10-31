@@ -43,11 +43,6 @@ export function AddContactoDialog({
     setLoading(true)
 
     try {
-      console.log("📤 Creando persona de contacto:", {
-        ...formData,
-        id_cliente_final: clienteId.toString(),
-        ejecutivaId: ejecutivaId
-      })
 
       // ✅ LLAMADA REAL AL BACKEND usando el servicio
       await ejecutivaService.createPersonaContacto({
@@ -62,7 +57,6 @@ export function AddContactoDialog({
         linkedin: formData.linkedin
       })
       
-      console.log("✅ Persona de contacto creada exitosamente")
       
       onSuccess()
       onClose()
@@ -77,7 +71,6 @@ export function AddContactoDialog({
         linkedin: "",
       })
     } catch (error) {
-      console.error("❌ Error creando persona de contacto:", error)
       alert(error instanceof Error ? error.message : "Error al crear contacto")
     } finally {
       setLoading(false)

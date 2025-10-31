@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -56,18 +55,14 @@ const ClienteActividadesPage: React.FC = () => {
   const fetchActividades = async () => {
     try {
       setLoading(true);
-      console.log('🔄 [ClienteActividadesPage] Cargando actividades...');
 
       const clienteUsuarioId = user?.id || '1';
       const data = await clienteService.getActividades(clienteUsuarioId);
 
-      console.log('🔍 [Debug] Actividades recibidas:', data);
       
       setActividades(data);
       setFilteredActividades(data); // ✅ Inicializar con todos los datos
-      console.log('✅ [ClienteActividadesPage] Actividades cargadas:', data.length);
     } catch (error) {
-      console.error('❌ [ClienteActividadesPage] Error cargando actividades:', error);
       toast({
         title: "Error",
         description: "No se pudo cargar el historial de actividades",
@@ -161,15 +156,15 @@ const ClienteActividadesPage: React.FC = () => {
     
     switch (estadoLimpio) {
       case 'completada':
-        return <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Completada</Badge>;
+        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Completada</Badge>;
       case 'en_proceso':
-        return <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">En Proceso</Badge>;
+        return <Badge className="bg-blue-500/20 text-blue-700 border-blue-500/30">En Proceso</Badge>;
       case 'pendiente':
-        return <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">Pendiente</Badge>;
+        return <Badge className="bg-yellow-500/20 text-yellow-700 border-yellow-500/30">Pendiente</Badge>;
       case 'cancelada':
-        return <Badge className="bg-red-500/20 text-red-300 border-red-500/30">Cancelada</Badge>;
+        return <Badge className="bg-red-500/20 text-red-700 border-red-500/30">Cancelada</Badge>;
       default:
-        return <Badge className="bg-gray-500/20 text-gray-300 border-gray-500/30">{estadoLimpio}</Badge>;
+        return <Badge className="bg-gray-500/20 text-gray-700 border-gray-500/30">{estadoLimpio}</Badge>;
     }
   };
 
@@ -285,7 +280,7 @@ const ClienteActividadesPage: React.FC = () => {
           <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-white/80">Completadas</CardTitle>
-              <Badge className="bg-green-500/20 text-green-300 border-green-500/30">✓</Badge>
+              <Badge className="!bg-green-500/20 !text-green-300 border-green-500/30">✓</Badge>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
@@ -298,7 +293,7 @@ const ClienteActividadesPage: React.FC = () => {
           <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-white/80">En Proceso</CardTitle>
-              <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">🔄</Badge>
+              <Badge className="!bg-blue-500/20 text-blue-300 border-blue-500/30">🔄</Badge>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
@@ -426,7 +421,7 @@ const ClienteActividadesPage: React.FC = () => {
               <Button
                 onClick={exportToCSV}
                 variant="outline"
-                className="border-[#C7E196] text-[#C7E196] hover:bg-[#C7E196] hover:text-[#013936]"
+                className="!bg-[#C7E196] border-[#C7E196] text-[#013936] hover:bg-[#C7E196] hover:text-[#013936]"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Exportar CSV
@@ -444,17 +439,41 @@ const ClienteActividadesPage: React.FC = () => {
                   className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#C7E196]"
                 />
               </div>
-              <select
-                value={filterEstado}
-                onChange={(e) => setFilterEstado(e.target.value)}
-                className="bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-[#C7E196] focus:outline-none"
-              >
-                <option value="todos">Todos los estados</option>
-                <option value="completada">Completada</option>
-                <option value="en_proceso">En Proceso</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="cancelada">Cancelada</option>
-              </select>
+             <select
+              value={filterEstado}
+              onChange={(e) => setFilterEstado(e.target.value)}
+              className="
+                bg-[#013936]                /* Fondo verde oscuro */
+                text-[#C7E196]              /* Texto verde claro */
+                border border-[#C7E196]/30  /* Borde sutil */
+                rounded-lg
+                px-3 py-2
+                font-medium
+                transition-all duration-200
+                focus:outline-none
+                focus:border-[#C7E196]
+                focus:ring-2 focus:ring-[#C7E196]/40
+                hover:border-[#C7E196]
+                cursor-pointer
+              "
+            >
+              <option value="todos" className="bg-[#013936] text-[#C7E196]">
+                Todos los estados
+              </option>
+              <option value="completada" className="bg-[#013936] text-[#C7E196]">
+                Completada
+              </option>
+              <option value="en_proceso" className="bg-[#013936] text-[#C7E196]">
+                En Proceso
+              </option>
+              <option value="pendiente" className="bg-[#013936] text-[#C7E196]">
+                Pendiente
+              </option>
+              <option value="cancelada" className="bg-[#013936] text-[#C7E196]">
+                Cancelada
+              </option>
+            </select>
+
             </div>
           </CardContent>
         </Card>
@@ -472,12 +491,12 @@ const ClienteActividadesPage: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="font-semibold text-[#C7E196]">Fecha y Hora</TableHead>
-                    <TableHead className="font-semibold text-[#C7E196]">Tipo</TableHead>
-                    <TableHead className="font-semibold text-[#C7E196]">Descripción</TableHead>
-                    <TableHead className="font-semibold text-[#C7E196]">Cliente</TableHead>
-                    <TableHead className="font-semibold text-[#C7E196]">Estado</TableHead>
-                    <TableHead className="font-semibold text-[#C7E196]">Ejecutiva</TableHead>
+                    <TableHead className="font-semibold text-white">Fecha y Hora</TableHead>
+                    <TableHead className="font-semibold text-white">Tipo</TableHead>
+                    <TableHead className="font-semibold text-white">Descripción</TableHead>
+                    <TableHead className="font-semibold text-white">Cliente</TableHead>
+                    <TableHead className="font-semibold text-white">Estado</TableHead>
+                    <TableHead className="font-semibold text-white">Ejecutiva</TableHead>
                   </TableRow>
                 </TableHeader>
 

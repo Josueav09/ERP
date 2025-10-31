@@ -188,15 +188,11 @@ export default function ClientesPage() {
   };
 
   const fetchClientes = async () => {
-    console.log('entro al fetch');
     try {
       setLoading(true);
-      console.log('entro al fetch');
       const data = await jefeService.getClientes();
-      console.log('📥 Clientes recibidos:', data);
       setClientes(data);
     } catch (error) {
-      console.error("Error fetching clientes:", error);
       toast({
         title: "Error",
         description: "No se pudieron cargar los clientes",
@@ -213,7 +209,6 @@ export default function ClientesPage() {
   };
 
   const openEditDialog = (cliente: ClienteFinal) => {
-    console.log('✏️ Abriendo diálogo de edición para:', cliente.razon_social);
 
     setSelectedCliente(cliente);
     setFormData({
@@ -362,128 +357,11 @@ export default function ClientesPage() {
     }
   };
 
-  // const handleDelete = async (id: number) => {
-  //   if (!confirm("¿Estás seguro de que deseas desactivar este cliente?")) return;
-
-  //   try {
-  //     await jefeService.deleteCliente(id);
-
-  //     toast({
-  //       title: "Éxito",
-  //       description: "Cliente desactivado correctamente",
-  //     });
-
-  //     fetchClientes();
-  //   } catch (error: any) {
-  //     console.error("Error deleting cliente:", error);
-  //     toast({
-  //       title: "Error",
-  //       description: error.message || "No se pudo desactivar el cliente",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
-  // const handleActivate = async (id: number) => {
-  //   if (!confirm("¿Estás seguro de que deseas activar este cliente?")) return;
-
-  //   try {
-  //     // ✅ SOLUCIÓN ALTERNATIVA: Usar update en lugar de activate
-  //     await jefeService.updateCliente(id, { estado: 'Activo' });
-
-  //     toast({
-  //       title: "Éxito",
-  //       description: "Cliente activado correctamente",
-  //     });
-
-  //     fetchClientes();
-  //   } catch (error: any) {
-  //     console.error("Error activating cliente:", error);
-  //     toast({
-  //       title: "Error",
-  //       description: error.message || "No se pudo activar el cliente",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
-  // Estadísticas usando el campo 'estado'
-
-  // En tu ClientesPage.tsx - CORREGIR handleDelete y handleActivate
-  // const handleDelete = async (id: number) => {
-  //   if (!confirm("¿Estás seguro de que deseas desactivar este cliente?")) return;
-
-  //   try {
-  //     console.log(`🗑️ Intentando desactivar cliente ID: ${id}`);
-
-  //     await jefeService.deleteCliente(id);
-
-  //     toast({
-  //       title: "Éxito",
-  //       description: "Cliente desactivado correctamente",
-  //     });
-
-  //     // Recargar la lista
-  //     fetchClientes();
-
-  //   } catch (error: any) {
-  //     console.error(`❌ Error desactivando cliente ${id}:`, error);
-
-  //     toast({
-  //       title: "Error",
-  //       description: error.message || "No se pudo desactivar el cliente",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
-  // const handleActivate = async (id: number) => {
-  //   if (!confirm("¿Estás seguro de que deseas activar este cliente?")) return;
-
-  //   try {
-  //     console.log(`🔄 Intentando activar cliente ID: ${id}`);
-
-  //     // ✅ USAR EL MÉTODO ESPECÍFICO PARA ACTIVAR
-  //     await jefeService.activateCliente(id);
-
-  //     toast({
-  //       title: "Éxito",
-  //       description: "Cliente activado correctamente",
-  //     });
-
-  //     fetchClientes();
-
-  //   } catch (error: any) {
-  //     console.error(`❌ Error activando cliente ${id}:`, error);
-
-  //     toast({
-  //       title: "Error",
-  //       description: error.message || "No se pudo activar el cliente",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
-  // // En tu ClientesPage.tsx
-  // const handleDeactivate = async (id: number) => {
-  //   if (!confirm("¿Estás seguro de que deseas desactivar este cliente?")) return;
-
-  //   try {
-  //     await jefeService.deactivateCliente(id);
-  //     toast({ title: "Éxito", description: "Cliente desactivado correctamente" });
-  //     fetchClientes();
-  //   } catch (error: any) {
-  //     toast({ title: "Error", description: error.message, variant: "destructive" });
-  //   }
-  // };
-
-
   // ✅ MANTENER SOLO ESTOS DOS:
   const handleDeactivate = async (id: number) => {
   if (!confirm("¿Estás seguro de que deseas DESACTIVAR este cliente?\n\nEl cliente ya no estará visible en las operaciones diarias pero conservará su historial.")) return;
 
     try {
-      console.log(`🗑️ Desactivando cliente ID: ${id}`);
       await jefeService.deactivateCliente(id);
 
       toast({
@@ -506,7 +384,6 @@ export default function ClientesPage() {
   if (!confirm("¿Estás seguro de que deseas ACTIVAR este cliente?\n\nEl cliente volverá a estar disponible para todas las operaciones.")) return;
 
     try {
-      console.log(`🔄 Activando cliente ID: ${id}`);
       await jefeService.activateCliente(id);
 
       toast({

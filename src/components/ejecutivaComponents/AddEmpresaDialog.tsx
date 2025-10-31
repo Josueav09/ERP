@@ -49,10 +49,6 @@ export function AddEmpresaDialog({ ejecutivaId, onSuccess, onClose, open = false
     setLoading(true)
 
     try {
-      console.log("📤 Registrando empresa con datos:", {
-        ...formData,
-        ejecutivaId: ejecutivaId
-      })
 
       // ✅ LLAMADA REAL AL BACKEND usando el servicio
       await ejecutivaService.createEmpresa({
@@ -77,7 +73,6 @@ export function AddEmpresaDialog({ ejecutivaId, onSuccess, onClose, open = false
         cantidad_empleados: formData.cantidad_empleados
       })
       
-      console.log("✅ Empresa registrada exitosamente")
       
       onSuccess()
       onClose()
@@ -103,7 +98,6 @@ export function AddEmpresaDialog({ ejecutivaId, onSuccess, onClose, open = false
         cantidad_empleados: "",
       })
     } catch (error) {
-      console.error("❌ Error registrando empresa:", error)
       alert(error instanceof Error ? error.message : "Error al registrar empresa")
     } finally {
       setLoading(false)

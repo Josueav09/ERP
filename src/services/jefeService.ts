@@ -171,12 +171,9 @@ export const jefeService = {
   // ============================================
   async getStats(): Promise<DashboardStats> {
     try {
-      console.log('🔄 [jefeService.getStats] Solicitando estadísticas...');
       const data: DashboardStats = await apiService.get('/jefe/stats');
-      console.log('✅ [jefeService.getStats] Datos recibidos:', data);
       return data;
     } catch (error) {
-      console.error('❌ [jefeService.getStats] Error:', error);
 
       // Datos de respaldo mientras se soluciona el backend
       return {
@@ -231,26 +228,15 @@ export const jefeService = {
   // CLIENTES
   // ============================================
   async getClientes(): Promise<ClienteFinal[]> {
-    console.log('🔄 [jefeService.getClientes] === INICIANDO ===');
 
     try {
-      console.log('📞 [jefeService.getClientes] Llamando a apiService.get...');
 
       const data = await apiService.get('/jefe/clientes');
 
-      console.log('✅ [jefeService.getClientes] apiService.get completado');
-      console.log('📊 [jefeService.getClientes] Respuesta completa:', data);
-      console.log('📊 [jefeService.getClientes] Tipo de respuesta:', typeof data);
-      console.log('📊 [jefeService.getClientes] Es array?:', Array.isArray(data));
-
       // ✅ Mapear los campos
-      console.log('🔄 [jefeService.getClientes] Mapeando clientes...');
       const clientesMapeados = (data as any[]).map((cliente: any) =>
         this.mapClienteFromDB(cliente)
       );
-
-      console.log('✅ [jefeService.getClientes] Mapeo completado');
-      console.log('📤 [jefeService.getClientes] Clientes mapeados:', clientesMapeados);
 
       return clientesMapeados;
 
@@ -266,102 +252,30 @@ export const jefeService = {
   },
 
   async createCliente(data: any): Promise<any> {
-    console.log('📤 [jefeService] Enviando cliente:', data);
     return apiService.post('/jefe/clientes', data);
   },
 
 
   // En jefeService.ts - método updateCliente
   async updateCliente(id: number, data: any): Promise<any> {
-    console.log('📤 [jefeService] Actualizando cliente:', data);
     return apiService.put(`/jefe/clientes/${id}`, data);
   },
 
 
-  // async deleteCliente(id: number): Promise<void> {
-  //   return apiService.delete(`/jefe/clientes/${id}`);
-  // },
-
-  // // ✅ NUEVO: Método para activar cliente
-  // async activateCliente(id: number): Promise<void> {
-  //   console.log('🔄 [jefeService] Activando cliente:', id);
-  //   return apiService.patch(`/jefe/clientes/${id}/activate`);
-  // },
-  // ============================================
-  // EJECUTIVAS
-  // ============================================
-
-  // Obtener TODAS las ejecutivas
-
-  // async deleteCliente(id: number): Promise<{ success: boolean; message: string }> {
-  //   try {
-  //     console.log(`🗑️ [jefeService] Desactivando cliente ID: ${id}`);
-
-  //     const response = await apiService.delete<{ success: boolean; message: string }>(
-  //       `/jefe/clientes/${id}`
-  //     );
-
-  //     console.log(`✅ [jefeService] Cliente ${id} desactivado exitosamente`);
-  //     return response;
-
-  //   } catch (error: any) {
-  //     console.error(`❌ [jefeService] Error desactivando cliente ${id}:`, error);
-
-  //     // ✅ Mensaje de error más específico
-  //     const errorMessage = error.message || 'Error al desactivar el cliente';
-  //     throw new Error(errorMessage);
-  //   }
-  // },
-
-
-
-  // async activateCliente(id: number): Promise<{ success: boolean; message: string }> {
-  //   try {
-  //     console.log(`🔄 [jefeService] Activando cliente ID: ${id}`);
-
-  //     const response = await apiService.patch<{ success: boolean; message: string }>(
-  //       `/jefe/clientes/${id}/activate`
-  //     );
-
-  //     console.log(`✅ [jefeService] Cliente ${id} activado exitosamente`);
-  //     return response;
-
-  //   } catch (error: any) {
-  //     console.error(`❌ [jefeService] Error activando cliente ${id}:`, error);
-  //     throw new Error(error.message || 'Error al activar el cliente');
-  //   }
-  // },
-
-  // async deactivateCliente(id: number): Promise<{ success: boolean; message: string }> {
-  //   try {
-  //     return await apiService.patch(`/jefe/clientes/${id}/deactivate`);
-  //   } catch (error: any) {
-  //     throw new Error(error.message || 'Error al desactivar cliente');
-  //   }
-  // },
-
-
-
   async activateCliente(id: number): Promise<{ success: boolean; message: string }> {
     try {
-      console.log(`🔄 [jefeService] Activando cliente ID: ${id}`);
       const response: { success: boolean; message: string }= await apiService.patch(`/jefe/clientes/${id}/activate`);
-      console.log(`✅ [jefeService] Cliente ${id} activado exitosamente`);
       return response;
     } catch (error: any) {
-      console.error(`❌ [jefeService] Error activando cliente ${id}:`, error);
       throw new Error(error.message || 'Error al activar cliente');
     }
   },
 
   async deactivateCliente(id: number): Promise<{ success: boolean; message: string }> {
     try {
-      console.log(`🗑️ [jefeService] Desactivando cliente ID: ${id}`);
       const response: { success: boolean; message: string }= await apiService.patch(`/jefe/clientes/${id}/deactivate`);
-      console.log(`✅ [jefeService] Cliente ${id} desactivado exitosamente`);
       return response;
     } catch (error: any) {
-      console.error(`❌ [jefeService] Error desactivando cliente ${id}:`, error);
       throw new Error(error.message || 'Error al desactivar cliente');
     }
   },
@@ -371,11 +285,9 @@ export const jefeService = {
 
   async getEjecutivas(): Promise<Ejecutiva[]> {
     const data = await apiService.get('/jefe/ejecutivas');
-    console.log('📥 [jefeService] Datos CRUDOS de ejecutivas del backend:', data);
     const ejecutivasMapeadas = (data as any[]).map((ejecutiva: any) =>
       this.mapEjecutivaFromDB(ejecutiva)
     );
-    console.log('📤 [jefeService] Ejecutivas mapeadas:', ejecutivasMapeadas);
     return ejecutivasMapeadas;
   },
 
@@ -383,7 +295,6 @@ export const jefeService = {
   // En jefeService.ts - OPCIÓN MÁS ROBUSTA
   async getEjecutivasDisponibles(): Promise<Ejecutiva[]> {
     try {
-      console.log('🔄 [jefeService] Solicitando ejecutivas disponibles...');
 
       const data = await apiService.get('/jefe/empresas/ejecutivas/disponibles');
 
@@ -406,11 +317,9 @@ export const jefeService = {
         dni: ej.dni
       }));
 
-      console.log('✅ [jefeService] Ejecutivas disponibles mapeadas:', ejecutivas.length);
       return ejecutivas;
 
     } catch (error: any) {
-      console.error('❌ [jefeService] Error obteniendo ejecutivas disponibles:', error);
       return [];
     }
   },
@@ -442,7 +351,6 @@ export const jefeService = {
 
   // ✅ DATOS DE RESPALDO
   getEjecutivasDisponiblesRespaldo(): Ejecutiva[] {
-    console.log('🔄 [jefeService] Usando datos de respaldo para ejecutivas disponibles');
 
     return [
       {
@@ -484,7 +392,6 @@ export const jefeService = {
 
   // ✅ CORREGIDO: Mapeo específico para ejecutivas disponibles
   mapEjecutivaDisponibleFromDB(dbEjecutiva: any): Ejecutiva {
-    console.log('🔍 [mapEjecutivaDisponibleFromDB] Datos crudos:', dbEjecutiva);
 
     return {
       id_usuario: dbEjecutiva.id_ejecutiva || dbEjecutiva.id_usuario,
@@ -508,9 +415,7 @@ export const jefeService = {
 
   async getEjecutivaDetalle(id: number): Promise<any> {
     const data = await apiService.get(`/jefe/ejecutivas/${id}`);
-    console.log('📥 [jefeService] Detalle CRUDO de ejecutiva:', data);
     const detalleMapeado = this.mapEjecutivaDetalleFromDB(data);
-    console.log('📤 [jefeService] Detalle mapeado:', detalleMapeado);
     return detalleMapeado;
   },
 
@@ -530,21 +435,26 @@ export const jefeService = {
       id_jefe: currentUser?.id || 1 // ✅ Usar el ID del jefe actual
     };
 
-    console.log('📤 [jefeService] Enviando datos de ejecutiva al backend:', dbData);
     return apiService.post('/jefe/ejecutivas', dbData);
   },
-
   async updateEjecutiva(id: number, data: any): Promise<any> {
-    const dbData = {
-      nombre_completo: data.nombre_completo, // ✅ Usar nombre_completo directamente
+    const dbData: any = {
+      nombre_completo: data.nombre_completo,
       telefono: data.telefono,
       linkedin: data.linkedin,
-      estado_ejecutiva: data.estado_ejecutiva // ✅ Usar estado_ejecutiva directamente
+      estado_ejecutiva: data.estado_ejecutiva
     };
 
-    console.log('📤 [jefeService] Enviando datos de actualización:', dbData);
+    // ✅ AGREGAR: Solo enviar contraseña si no está vacía
+    if (data.contraseña && data.contraseña.trim() !== '') {
+      dbData.contraseña = data.contraseña.trim();
+    }
+
     return apiService.put(`/jefe/ejecutivas/${id}`, dbData);
   },
+
+
+
 
   // ============================================
   // EMPRESAS
@@ -567,7 +477,6 @@ export const jefeService = {
       tamanio_empresa: data.tamanio_empresa,
       estado: 'Activo'
     };
-    console.log('📤 [jefeService] Enviando datos de empresa al backend:', dbData);
     return apiService.post('/jefe/empresas', dbData);
   },
 
@@ -582,7 +491,6 @@ export const jefeService = {
       rubro: data.rubro,
       tamanio_empresa: data.tamanio_empresa
     };
-    console.log('📤 [jefeService] Enviando datos de actualización de empresa:', dbData);
     return apiService.put(`/jefe/empresas/${id}`, dbData);
   },
 
@@ -594,19 +502,15 @@ export const jefeService = {
   // En jefeService.ts - CORREGIR completamente el método toggleEmpresaEstado
 
   async toggleEmpresaEstado(id: number, activo: boolean): Promise<any> {
-    console.log('🔄 [jefeService] Cambiando estado de empresa:', { id, activo });
 
     // ✅ SOLO enviar el campo 'activo' como booleano, que es lo que espera tu backend
     const requestData = {
       activo: activo // ← Esto es lo CRÍTICO: debe ser booleano, no string
     };
 
-    console.log('📤 [jefeService] Enviando datos:', requestData);
-
     try {
       // ✅ Usar EXACTAMENTE el endpoint que tienes en tu backend
       const response = await apiService.patch(`/jefe/empresas/${id}/estado`, requestData);
-      console.log('✅ [jefeService] Estado cambiado exitosamente');
       return response;
     } catch (error: any) {
       console.error('❌ [jefeService] Error cambiando estado:', error);
@@ -625,7 +529,6 @@ export const jefeService = {
   // ✅ CORREGIDO: Mapear ejecutivas de empresa con validación
   async getEmpresaEjecutivas(empresaId: number): Promise<any> {
     const data: any = await apiService.get(`/jefe/empresas/${empresaId}/ejecutivas`);
-    console.log('📥 [jefeService] Respuesta del backend:', data);
 
     // ✅ Extraer ejecutivas
     const ejecutivasArray: any[] = Array.isArray(data) ? data : (data.ejecutivas || []);
@@ -641,7 +544,6 @@ export const jefeService = {
       total_clientes: ej.total_clientes || 0
     }));
 
-    console.log('✅ [jefeService] Ejecutivas mapeadas:', ejecutivasMapeadas);
 
     return {
       id_empresa_prov: data.id_empresa_prov || empresaId,
@@ -653,7 +555,6 @@ export const jefeService = {
 
   // En jefeService.ts - VERIFICAR
   async addEjecutivaToEmpresa(empresaId: number, ejecutivaId: number): Promise<any> {
-    console.log('➕ [jefeService] Asignando ejecutiva:', { empresaId, ejecutivaId });
 
     try {
       // ✅ Enviar como { id_ejecutiva: ejecutivaId } en el body
@@ -661,7 +562,6 @@ export const jefeService = {
         id_ejecutiva: ejecutivaId
       });
 
-      console.log('✅ [jefeService] Ejecutiva agregada exitosamente');
       return response;
 
     } catch (error: any) {
@@ -687,12 +587,10 @@ export const jefeService = {
     if (filters?.cliente && filters.cliente !== 'all') params.append('cliente', filters.cliente);
 
     const data = await apiService.get(`/jefe/trazabilidad?${params.toString()}`);
-    console.log('📥 [jefeService] Datos CRUDOS de trazabilidad del backend:', data);
 
     const trazabilidadMapeada = (data as any[]).map((item: any) =>
       this.mapTrazabilidadFromDB(item)
     );
-    console.log('📤 [jefeService] Trazabilidad mapeada:', trazabilidadMapeada);
 
     return trazabilidadMapeada;
   },
@@ -706,37 +604,28 @@ export const jefeService = {
     fechaDesde?: string;
     fechaHasta?: string;
   }): Promise<any> {
-    console.log('✅ [TrazabilidadController] Controller inicializado');
     try {
-      console.log('🔄 [jefeService.getTrazabilidadKPIs] Iniciando con filters:', filters)
 
       const params = new URLSearchParams();
       if (filters?.ejecutivaId) {
         params.append('ejecutivaId', filters.ejecutivaId.toString());
-        console.log('📤 [jefeService] Agregando ejecutivaId:', filters.ejecutivaId)
       }
       if (filters?.empresaId) {
         params.append('empresaId', filters.empresaId.toString());
-        console.log('📤 [jefeService] Agregando empresaId:', filters.empresaId)
       }
       if (filters?.clienteId) {
         params.append('clienteId', filters.clienteId.toString());
-        console.log('📤 [jefeService] Agregando clienteId:', filters.clienteId)
       }
       if (filters?.fechaDesde) {
         params.append('fechaDesde', filters.fechaDesde);
-        console.log('📤 [jefeService] Agregando fechaDesde:', filters.fechaDesde)
       }
       if (filters?.fechaHasta) {
         params.append('fechaHasta', filters.fechaHasta);
-        console.log('📤 [jefeService] Agregando fechaHasta:', filters.fechaHasta)
       }
 
       const url = `/jefe/trazabilidad/kpis?${params.toString()}`
-      console.log('📞 [jefeService] Llamando a:', url)
 
       const data = await apiService.get(url);
-      console.log('📊 [jefeService] Respuesta recibida:', data)
 
       return data;
 
@@ -745,8 +634,6 @@ export const jefeService = {
       console.error('❌ [jefeService] Mensaje:', error.message)
       console.error('❌ [jefeService] Response:', error.response)
 
-      // En caso de error, retornar datos de prueba
-      console.log('🔄 [jefeService] Usando datos de prueba por error')
       return {
         totalOportunidades: 18,
         enProceso: 6,
@@ -865,7 +752,6 @@ export const jefeService = {
   // En jefeService.ts - CORREGIR el método generateReport
   async generateReport(filters: any, reportType: 'etapa1' | 'etapa2'): Promise<any> {
     try {
-      console.log('📊 [jefeService] Solicitando reporte:', reportType, filters);
 
       // ✅ USAR apiService en lugar de fetch directo
       const response = await apiService.post('/jefe/trazabilidad/report', {
@@ -876,7 +762,6 @@ export const jefeService = {
         responseType: 'text' // ← IMPORTANTE para recibir CSV
       });
 
-      console.log('✅ [jefeService] Reporte generado exitosamente');
       return response;
 
     } catch (error) {
@@ -885,20 +770,15 @@ export const jefeService = {
     }
   },
 
-  // O si estás usando fetch directamente en el componente, puedes eliminar 
-  // el método del servicio y hacerlo directamente en el componente:
   // ============================================
   // FILTROS DINÁMICOS - NUEVOS MÉTODOS
   // ============================================
 
   async getFilterOptions(): Promise<FilterOptions> {
     try {
-      console.log('🔄 [jefeService] Obteniendo opciones de filtro...');
 
       // ✅ Usar apiService en lugar de fetch directo
       const response = await apiService.get('/jefe/trazabilidad/filter-options');
-
-      console.log('📡 [jefeService] Respuesta completa:', response);
 
       // ✅ Manejar diferentes estructuras de respuesta
       let data;
@@ -911,8 +791,6 @@ export const jefeService = {
       } else {
         throw new Error('Estructura de respuesta inválida');
       }
-
-      console.log('✅ [jefeService] Opciones procesadas:', data);
       return data;
 
     } catch (error) {
@@ -926,7 +804,6 @@ export const jefeService = {
   // ✅ NUEVO MÉTODO: Obtener datos reales de endpoints existentes
   async getRealDataFromOtherEndpoints(): Promise<FilterOptions> {
     try {
-      console.log('🔄 [jefeService] Obteniendo datos reales de otros endpoints...');
 
       const [ejecutivas, empresas, clientes] = await Promise.all([
         this.getEjecutivas(),
@@ -988,7 +865,6 @@ export const jefeService = {
   // ============================================
   async getPerfil(): Promise<PerfilJefe> {
     const token = sessionStorage.getItem('auth_token');
-    console.log('🔐 [jefeService] Token para perfil:', token);
 
     try {
       const response: any = await apiService.get('/jefe/perfil', {
@@ -997,7 +873,6 @@ export const jefeService = {
         }
       });
 
-      console.log('📋 [jefeService] Respuesta completa del perfil:', response);
 
       const perfilData = response.data || response;
 
@@ -1033,7 +908,6 @@ export const jefeService = {
   // ============================================
 
   mapEjecutivaFromDB(dbEjecutiva: any): Ejecutiva {
-    console.log('🔍 [mapEjecutivaFromDB] Datos crudos:', dbEjecutiva);
 
     // Separar nombre_completo en nombre y apellido para el frontend
     const nombreCompleto = dbEjecutiva.nombre_completo || '';
@@ -1060,7 +934,6 @@ export const jefeService = {
   },
   // ✅ CORREGIDO: Mapeo de detalle de ejecutiva
   mapEjecutivaDetalleFromDB(dbDetalle: any): any {
-    console.log('🔍 [mapEjecutivaDetalleFromDB] Datos crudos:', dbDetalle);
 
     // Si dbDetalle ya tiene la estructura de tu backend
     if (dbDetalle.ejecutiva) {
@@ -1173,7 +1046,6 @@ export const jefeService = {
     };
   },
   mapClienteFromDB(dbCliente: any): ClienteFinal {
-    console.log('🔍 Cliente crudo del backend:', dbCliente);
 
     return {
       id_cliente_final: dbCliente.id_cliente_final,

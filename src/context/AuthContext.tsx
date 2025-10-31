@@ -136,88 +136,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('🔐 AuthContext - User state ACTUALIZADO:', user);
   }, [user]); // ← Se ejecuta cada vez que user cambia
 
-  // const login = async (
-  //   email: string,
-  //   password: string,
-  //   captchaToken: string,
-  //   captchaResponse: string
-  // ) => {
-  //   try {
-  //     const attemptCheck = checkLoginAttempts(email);
-
-
-  //     if (attemptCheck.blocked) {
-  //       return { success: false, error: "Cuenta bloqueada. Intente en 30 minutos." };
-  //     }
-
-  //     if (!captchaToken || !captchaResponse) {
-  //       return { success: false, error: "Debe completar el captcha." };
-  //     }
-
-  //     setLoading(true);
-
-  //     const loginData: LoginData = {
-  //       email,
-  //       password,
-  //       captchaToken,
-  //       captchaResponse,
-  //     };
-
-  //     const data = await authService.login(loginData);
-
-  //     if (!data.success) {
-  //       recordFailedAttempt(email);
-  //       const remaining = checkLoginAttempts(email);
-  //       const ipWarning =
-  //         remaining.ipRemainingAttempts <= 2
-  //           ? ` ADVERTENCIA: IP bloqueada en ${remaining.ipRemainingAttempts} intentos más.`
-  //           : "";
-  //       return {
-  //         success: false,
-  //         error: `${data.message || data.error || "Credenciales inválidas."} ${remaining.remainingAttempts} intentos restantes.${ipWarning}`,
-  //       };
-  //     }
-
-  //     clearLoginAttempts(email);
-
-  //     // ✅ Usuario requiere verificación de email
-  //     if (data.requiresEmailVerification) {
-  //       console.log("🔐 Setting pending user for email verification:", data.email);
-  //       setPendingUser({
-  //         email: data.email,
-  //         userId: data.userId,
-  //         name: data.name,
-  //         rol: data.rol
-  //       });
-
-  //       setLoading(false); // ✅ Importante: desactivar loading aquí
-  //       return {
-  //         success: true,
-  //         requiresEmailVerification: true,
-  //         email: data.email,
-  //         userData: data
-  //       };
-  //     }
-
-  //     setLoading(false);
-  //     return { success: true };
-  //   } catch (error: any) {
-  //     console.error("Login error:", error);
-  //     recordFailedAttempt(email);
-  //     setLoading(false);
-  //     return {
-  //       success: false,
-  //       error: error.message || "Error al conectar con el servidor."
-  //     };
-  //   }
-  // };
-
-  // ========================
-  // VERIFY EMAIL - CORREGIDO CON SERVICIOS
-  // ========================
-
-  // En tu AuthContext, modifica la función login:
-
   const login = async (
     email: string,
     password: string,
@@ -227,12 +145,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const attemptCheck = checkLoginAttempts(email);
 
-      if (attemptCheck.blocked) {
-        return {
-          success: false,
-          error: "Cuenta bloqueada temporalmente. Intente en 30 minutos."
-        };
-      }
+      // if (attemptCheck.blocked) {
+      //   return {
+      //     success: false,
+      //     error: "Cuenta bloqueada temporalmente. Intente en 30 minutos."
+      //   };
+      // }
 
       if (!captchaToken || !captchaResponse) {
         return {
@@ -267,7 +185,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clearLoginAttempts(email);
 
       if (data.requiresEmailVerification) {
-        console.log("✅ Requiere verificación de email");
         setPendingUser({
           email: data.email,
           userId: data.userId,
@@ -288,7 +205,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { success: true };
 
     } catch (error: any) {
-      console.error("Login error:", error);
       recordFailedAttempt(email);
       setLoading(false);
 
@@ -301,8 +217,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 
   const verifyEmailCode = async (code: string) => {
-    console.log('🔐 Verificando código:', code);
-    console.log('🔐 PendingUser:', pendingUser);
     try {
       if (!pendingUser) {
         return { success: false, error: "No hay sesión pendiente" };
@@ -312,10 +226,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: pendingUser.email,
         code,
       };
-      console.log('🔐 Enviando verify data:', verifyData);
 
       const data = await authService.verifyEmail(verifyData);
-      console.log('🔐 Respuesta del backend:', data);
 
       if (!data.success) {
         return {
@@ -325,11 +237,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       if (!data.accessToken) {
-        console.log('❌ No se recibió token del backend');
         return { success: false, error: "Error de autenticación" };
       }
 
-      console.log('✅ Token recibido:', data.accessToken.substring(0, 20), '...');
 
       // ✅ Guardar usuario y token correctamente
       const loggedUser: User = {
@@ -347,7 +257,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         lastLogin: new Date().toISOString(),
       };
 
-      console.log('🔐 Usuario a guardar:', loggedUser);
 
       // ✅ GUARDAR PRIMERO
       setUser(loggedUser);
@@ -357,29 +266,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // ✅ VERIFICAR DESPUÉS con setTimeout para dar tiempo a React
       setTimeout(() => {
-        console.log('🔐 AuthContext - User state DESPUÉS de setUser:', user);
-        console.log('🔐 Token guardado en sessionStorage:', sessionStorage.getItem('token'));
-        console.log('🔐 User guardado en localStorage:', localStorage.getItem('user'));
       }, 0);
-
-      // ✅ DEBUG de redirección
-      console.log('🔐 DEBUG Redirección:');
-      console.log(' - Rol recibido:', data.rol);
-      console.log(' - Tipo de dato:', typeof data.rol);
-      console.log(' - ¿Es "Administrador"?:', data.rol === 'Administrador');
-      console.log(' - ¿Es "jefe"?:', data.rol === 'jefe');
 
       // ✅ REDIRECCIÓN con más tiempo para que el contexto se actualice
       setTimeout(() => {
-        console.log('🔐 Redirigiendo a rol:', data.rol);
-        console.log('🔐 User context en redirección:', user); // ← Esto puede seguir mostrando null
 
         if (data.rol === "jefe" || data.rol === "Jefe" || data.rol === "Administrador") {
-          console.log('🔐 Redirigiendo a /dashboard/jefe');
           navigate("/dashboard/jefe", { replace: true });
         }
         else if (data.rol === "ejecutiva") {
-          console.log('🔐 Redirigiendo a /dashboard/ejecutiva');
           navigate("/dashboard/ejecutiva", { replace: true });
         }
         else if (data.rol === "empresa") {
@@ -389,14 +284,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           navigate("/dashboard/cliente", { replace: true });
         }
         else {
-          console.log('❌ Rol no reconocido:', data.rol, '- Redirigiendo a login');
           navigate("/login", { replace: true });
         }
       }, 200); // ✅ Aumentar el tiempo para dar chance al contexto
 
       return { success: true };
     } catch (error: any) {
-      console.error("Verify code error:", error);
       return {
         success: false,
         error: error.message || "Error al verificar código",
@@ -404,32 +297,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-
-  // ========================
-  // LOGOUT - CORREGIDO CON SERVICIOS
-  // ========================
-  // const logout = useCallback(async () => {
-  //   try {
-  //     await authService.logout();
-  //   } catch {
-  //     // Si falla, igual limpiar sesión local
-  //   } finally {
-  //     setUser(null);
-  //     setPendingUser(null);
-  //     localStorage.removeItem("user");
-  //     sessionStorage.removeItem("token");
-  //     sessionStorage.removeItem("refreshToken");
-  //     navigate("/login");
-  //   }
-  // }, [navigate]);
-
-
   const logout = useCallback(async () => {
     try {
       // 1️⃣ Intentar logout en el backend
       await authService.logout();
     } catch (error) {
-      console.error('Error durante logout:', error);
       // ✅ Continuar con limpieza local incluso si falla el servidor
     } finally {
       // 2️⃣ LIMPIEZA LOCAL GARANTIZADA
@@ -445,7 +317,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem("pendingLogin");
       sessionStorage.removeItem("loginAttempts");
 
-      console.log('✅ Sesión cerrada exitosamente');
 
       // 3️⃣ Redirigir al login
       navigate("/login", { replace: true });
@@ -463,7 +334,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     loading,
     refreshToken: async () => {
-      console.log("Token refreshed");
     },
   };
 

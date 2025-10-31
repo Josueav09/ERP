@@ -186,20 +186,17 @@ export interface ActividadReciente {
 export const ejecutivaService = {
   // Obtener estadísticas
   async getStats(ejecutivaId: string): Promise<Stats> {
-    console.log('📊 getStats called for ejecutiva:', ejecutivaId)
     return apiService.get(`/ejecutiva/stats?ejecutivaId=${ejecutivaId}`)
   },
 
   // ✅ Obtener estadísticas de trazabilidad (desde traceability-service)
   async getTrazabilidadStats(ejecutivaId: string): Promise<TrazabilidadStats> {
-    console.log('📊 getTrazabilidadStats called for ejecutiva:', ejecutivaId)
     return apiService.get(`/ejecutiva/trazabilidad/stats?ejecutivaId=${ejecutivaId}`)
   },
 
 
   // Obtener trazabilidad
   async getTrazabilidad(ejecutivaId: string): Promise<Trazabilidad[]> {
-    console.log('🔍 getTrazabilidad called for ejecutiva:', ejecutivaId)
     return apiService.get(`/ejecutiva/trazabilidad?ejecutivaId=${ejecutivaId}`)
   },
 
@@ -306,7 +303,6 @@ export const ejecutivaService = {
     reuniones_agendadas: number
     inicio_semana: string
   }> {
-    console.log('📊 getKPIsSemanales called for ejecutiva:', ejecutivaId)
     return apiService.get(`/ejecutiva/kpis/semanales?ejecutivaId=${ejecutivaId}`)
   },
 
@@ -326,7 +322,6 @@ export const ejecutivaService = {
     nuevaEtapa: string
     ejecutivaId: string
   }) {
-    console.log('🔄 updateEtapaOportunidad called with data:', data)
     return apiService.put("/ejecutiva/trazabilidad/etapa", data)
   },
 
@@ -434,8 +429,7 @@ export const ejecutivaService = {
       link.click();
       document.body.removeChild(link);
 
-      console.log('✅ Plantilla CSV generada y descargada exitosamente');
-
+ 
     } catch (error) {
       console.error('❌ Error generando plantilla:', error);
       throw error;

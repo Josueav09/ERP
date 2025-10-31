@@ -37,7 +37,6 @@ export function TrazabilidadFilters({ filters, onFilterChange, onClearFilters }:
     try {
       setLoading(true)
       setError(null)
-      console.log('🔄 Cargando opciones de filtro desde BD...')
       
       const options = await jefeService.getFilterOptions()
       
@@ -46,11 +45,9 @@ export function TrazabilidadFilters({ filters, onFilterChange, onClearFilters }:
         setError('No se encontraron datos en la base de datos')
       } else {
         setFilterOptions(options)
-        console.log('✅ Opciones cargadas desde BD:', options)
       }
       
     } catch (error) {
-      console.error('❌ Error cargando opciones:', error)
       setError('Error al cargar los filtros. Contacte al administrador.')
     } finally {
       setLoading(false)

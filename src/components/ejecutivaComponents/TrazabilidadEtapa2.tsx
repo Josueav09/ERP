@@ -48,20 +48,15 @@ export function TrazabilidadEtapa2({ ejecutivaId, refreshKey = 0 }: Trazabilidad
     const fetchEtapa2Data = async () => {
         setLoading(true)
         try {
-            console.log('🔍 Fetching Etapa 2 data (pipeline) for ejecutiva:', ejecutivaId)
 
             // Intentar con trazabilidad primero, si no funciona usar actividades
             let trazabilidadData;
             try {
                 trazabilidadData = await ejecutivaService.getTrazabilidad(ejecutivaId)
-                console.log('✅ Usando endpoint de trazabilidad')
             } catch (error) {
-                console.log('⚠️ Endpoint trazabilidad no disponible, usando actividades')
                 trazabilidadData = await ejecutivaService.getActividadesRecientes(ejecutivaId, 50)
             }
 
-            // Debug completo de la estructura
-            console.log('🔍 DEBUG - Estructura completa del primer item:', JSON.stringify(trazabilidadData[0], null, 2))
 
             // Buscar campos que indiquen etapa 2
             const pipelineData = trazabilidadData
@@ -69,13 +64,6 @@ export function TrazabilidadEtapa2({ ejecutivaId, refreshKey = 0 }: Trazabilidad
                     // Una oportunidad de Etapa 2 debe tener nombre Y etapa
                     const hasOportunidad = item.nombre_oportunidad && item.etapa_oportunidad
                     const isActive = !['Venta ganada', 'Venta perdida', 'Venta suspendida'].includes(item.etapa_oportunidad)
-
-                    console.log(`🔍 Item ${item.id_trazabilidad}:`, {
-                        nombre: item.nombre_oportunidad,
-                        etapa: item.etapa_oportunidad,
-                        tieneOportunidad: hasOportunidad,
-                        estaActivo: isActive
-                    })
 
                     return hasOportunidad && isActive
                 })
@@ -102,11 +90,8 @@ export function TrazabilidadEtapa2({ ejecutivaId, refreshKey = 0 }: Trazabilidad
                     }
                 })
 
-            console.log(`✅ Etapa 2 records loaded: ${pipelineData.length}`)
-            console.log('🔍 Pipeline data:', pipelineData)
             setData(pipelineData)
         } catch (error) {
-            console.error("❌ Error fetching Etapa 2 data:", error)
             toast.error("Error al cargar oportunidades")
         } finally {
             setLoading(false)
@@ -120,7 +105,6 @@ export function TrazabilidadEtapa2({ ejecutivaId, refreshKey = 0 }: Trazabilidad
 
         setUpdatingEtapa(true)
         try {
-            console.log('🔄 Updating etapa for trazabilidad:', selectedRecord.id_trazabilidad)
 
             await ejecutivaService.updateEtapaOportunidad({
                 trazabilidadId: selectedRecord.id_trazabilidad.toString(),
@@ -133,7 +117,6 @@ export function TrazabilidadEtapa2({ ejecutivaId, refreshKey = 0 }: Trazabilidad
             setDetailDialogOpen(false)
             fetchEtapa2Data() // Recargar datos
         } catch (error) {
-            console.error("❌ Error updating etapa:", error)
             toast.error("Error al actualizar etapa")
         } finally {
             setUpdatingEtapa(false)

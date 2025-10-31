@@ -50,7 +50,6 @@ export const auditoriaService = {
   
   async getAuditoria(filters?: AuditoriaFilters): Promise<AuditoriaRecord[]> {
     try {
-      console.log('🔄 [auditoriaService] Obteniendo auditoría...');
       
       // ✅ USAR ENDPOINTS CORRECTOS según tu API Gateway
       try {
@@ -61,18 +60,14 @@ export const auditoriaService = {
         if (filters?.usuario) params.append('usuario', filters.usuario);
         
         const url = `/auditoria/contratos?${params.toString()}`;
-        console.log('📞 [auditoriaService] Llamando a:', url);
         
         const data = await apiService.get(url);
-        console.log('✅ [auditoriaService] Datos recibidos desde /auditoria/contratos');
         return this.mapAuditoriaFromDB(data as any);
       } catch (error) {
-        console.log('⚠️ [auditoriaService] /auditoria/contratos no disponible, usando datos de prueba');
         return this.getDatosPrueba();
       }
       
     } catch (error) {
-      console.error('❌ [auditoriaService] Error obteniendo auditoría:', error);
       return this.getDatosPrueba();
     }
   },
@@ -83,20 +78,16 @@ export const auditoriaService = {
   
   async getEstadisticas(): Promise<AuditoriaStats> {
     try {
-      console.log('📊 [auditoriaService] Obteniendo estadísticas...');
       
       // ✅ USAR ENDPOINT CORRECTO
       try {
         const data: AuditoriaStats = await apiService.get('/auditoria/estadisticas');
-        console.log('✅ [auditoriaService] Estadísticas recibidas desde /auditoria/estadisticas');
         return data;
       } catch (error) {
-        console.log('⚠️ [auditoriaService] /auditoria/estadisticas no disponible, usando datos de prueba');
         return this.getEstadisticasPrueba();
       }
       
     } catch (error) {
-      console.error('❌ [auditoriaService] Error obteniendo estadísticas:', error);
       return this.getEstadisticasPrueba();
     }
   },
@@ -107,12 +98,11 @@ export const auditoriaService = {
   
   async getResumenMensual(): Promise<any> {
     try {
-      console.log('📅 [auditoriaService] Obteniendo resumen mensual...');
-      const data = await apiService.get('/auditoria/resumen-mensual');
-      console.log('✅ [auditoriaService] Resumen mensual recibido');
+      const data = await apiService.get('/auditoria/resumen-mensual');      
       return data;
+
     } catch (error) {
-      console.error('❌ [auditoriaService] Error obteniendo resumen mensual:', error);
+      console.error('❌ [auditoriaService] Error al obtener resumen mensual:', error);
       return [];
     }
   },
@@ -154,7 +144,6 @@ export const auditoriaService = {
   },
 
   getDatosPrueba(): AuditoriaRecord[] {
-    console.log('🔄 [auditoriaService] Generando datos de prueba...');
     
     const fechaBase = new Date();
     const datosPrueba: AuditoriaRecord[] = [

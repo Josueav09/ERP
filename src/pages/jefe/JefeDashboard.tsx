@@ -18,18 +18,13 @@ export default function JefeDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('📍 JefeDashboard - User context:', user);
 
     // ✅ SOLUCIÓN: Verificar tanto contexto como localStorage
     const storedUser = localStorage.getItem('user');
     const token = sessionStorage.getItem('token');
 
-    console.log('📍 JefeDashboard - Stored user:', storedUser);
-    console.log('📍 JefeDashboard - Token:', token);
-
     // ✅ PERMITIR acceso si hay token, incluso si el contexto no se actualizó aún
     if (!user && !storedUser) {
-      console.log('❌ JefeDashboard: Sin usuario en contexto ni storage, redirigiendo...');
       navigate("/login");
       return;
     }
@@ -38,20 +33,16 @@ export default function JefeDashboard() {
     const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
 
     if (!currentUser) {
-      console.log('❌ JefeDashboard: No se pudo obtener usuario, redirigiendo...');
       navigate("/login");
       return;
     }
 
     const allowedRoles = ["jefe", "Jefe", "Administrador"];
     if (!allowedRoles.includes(currentUser.role)) {
-      console.log('❌ JefeDashboard: Rol no permitido:', currentUser.role);
       navigate("/login");
       return;
     }
 
-    console.log('✅ JefeDashboard: Acceso permitido para:', currentUser.role);
-    console.log('✅ JefeDashboard: Fuente del usuario:', user ? 'contexto' : 'localStorage');
     fetchStats();
   }, [user, navigate]);
 
@@ -117,26 +108,6 @@ export default function JefeDashboard() {
       </div>
     );
   }
-
-  // ✅ CORREGIDO: Usar datos reales del backend
-  // Datos para gráfico de actividades por ejecutiva
-  // const actividadesData = stats.dashboardEjecutivas?.map((item) => ({
-  //   name: item.nombre_ejecutiva.split(" ")[0],
-  //   actividades: Number.parseInt(item.total_gestiones) || 0,
-  // })) || [];
-
-  // // ✅ CORREGIDO: Datos para gráfico de estado (usando pipeline data)
-  // const estadoData = stats.pipeline?.map((item, index) => ({
-  //   name: item.etapa_oportunidad || `Etapa ${index + 1}`,
-  //   value: 1, // Placeholder - puedes ajustar según tus necesidades
-  // })) || [
-  //   ];
-
-  // // ✅ CORREGIDO: Datos para gráfico de clientes por empresa
-  // const clientesData = [
-  //   { name: stats.dashboardEjecutivas?.[0]?.empresa_proveedora || "Empresa 1", clientes: Number.parseInt(stats.dashboardEjecutivas?.[0]?.total_clientes) || 0 },
-  //   { name: "Otras empresas", clientes: Math.max(0, stats.totalClientes - (Number.parseInt(stats.dashboardEjecutivas?.[0]?.total_clientes) || 0)) },
-  // ].filter(item => item.clientes > 0);
 
   // ✅ CORREGIDO: Datos reales para gráficos
   const actividadesData = stats.dashboardEjecutivas?.map((item) => ({

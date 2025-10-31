@@ -29,62 +29,6 @@ export default function LoginPage() {
     setCaptchaToken(token);
     setCaptchaResponse(userInput);
   };
-
-// frontend/src/pages/LoginPage.tsx
-// const handleSubmit = async (e: React.FormEvent) => {
-//   e.preventDefault();
-//   setError("");
-
-//   if (!captchaToken || !captchaResponse) {
-//     setError("Por favor complete la verificación captcha");
-//     return;
-//   }
-
-//   if (!username.trim() || !password.trim()) {
-//     setError("Email y contraseña son obligatorios");
-//     return;
-//   }
-
-//   setIsLoading(true);
-
-//   try {
-//     const result = await login(username, password, captchaToken, captchaResponse);
-
-//     if (result.success && result.requiresEmailVerification) {
-//       console.log("✅ Login exitoso, requiere verificación");
-//       setIsLoading(false);
-//       setUserEmail(result.email || username);
-//       setShowEmailVerification(true);
-//     } else {
-//       // ✅ MOSTRAR ERROR ESPECÍFICO DEL BACKEND
-//       setError(result.error || "Error al iniciar sesión");
-//       setCaptchaToken("");
-//       setCaptchaResponse("");
-//       setIsLoading(false);
-//     }
-//   } catch (err: any) {
-//     console.error("Error en login:", err);
-    
-//     // ✅ MEJOR MANEJO DE ERRORES HTTP
-//     if (err.response?.data?.message) {
-//       // Error del backend con mensaje específico
-//       setError(err.response.data.message);
-//     } else if (err.response?.data?.error) {
-//       // Error del backend con campo 'error'
-//       setError(err.response.data.error);
-//     } else if (err.message) {
-//       // Error de conexión
-//       setError(err.message);
-//     } else {
-//       setError("Error de conexión con el servidor");
-//     }
-    
-//     setCaptchaToken("");
-//     setCaptchaResponse("");
-//     setIsLoading(false);
-//   }
-// };
-
 // En LoginPage.tsx, simplifica handleSubmit:
 
 const handleSubmit = async (e: React.FormEvent) => {
@@ -107,7 +51,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     const result = await login(username, password, captchaToken, captchaResponse);
 
     if (result.success && result.requiresEmailVerification) {
-      console.log("✅ Login exitoso, requiere verificación");
       setIsLoading(false);
       setUserEmail(result.email || username);
       setShowEmailVerification(true);

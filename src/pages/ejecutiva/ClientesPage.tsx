@@ -115,7 +115,6 @@ export default function ClientesPage() {
 
       setClientes(clientesTransformados)
     } catch (error) {
-      console.error("❌ Error fetching clientes:", error)
       // En caso de error, mostrar array vacío
       setClientes([])
     } finally {
@@ -209,7 +208,6 @@ export default function ClientesPage() {
       }
 
     } catch (error: any) {
-      console.error('Error en bulk upload:', error)
       alert(`Error al procesar archivo: ${error.response?.data?.message || error.message}`)
     } finally {
       setUploading(false)
@@ -229,7 +227,6 @@ export default function ClientesPage() {
     try {
       await ejecutivaService.downloadPlantillaClientes(user.id)
     } catch (error: any) {
-      console.error('Error descargando plantilla:', error)
       alert('Error al descargar plantilla')
     }
   }
@@ -259,7 +256,7 @@ export default function ClientesPage() {
           <Button
             onClick={handleDownloadTemplate}
             variant="outline"
-            className="border-[#C7E196] text-[#C7E196] hover:bg-[#C7E196] hover:text-[#013936] font-semibold"
+            className="!bg-[#C7E196] text-[#013936] !hover:bg-[#C7E196] font-semibold border-none !opacity-100"
           >
             <Download className="w-4 h-4 mr-2" />
             Plantilla
@@ -270,7 +267,7 @@ export default function ClientesPage() {
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             variant="outline"
-            className="border-[#C7E196] text-[#C7E196] hover:bg-[#C7E196] hover:text-[#013936] font-semibold"
+            className="!bg-[#C7E196] text-[#013936] !hover:bg-[#C7E196] font-semibold border-none !opacity-100"
           >
             <Upload className="w-4 h-4 mr-2" />
             {uploading ? 'Subiendo...' : 'Subir CSV'}
@@ -438,10 +435,10 @@ export default function ClientesPage() {
               {/* Personas de contacto expandible */}
               {expandedCliente === cliente.id_cliente_final && cliente.personas_contacto.length > 0 && (
                 <div className="border-t border-white/10 !bg-[#C7E196]/5 p-6">
-                  <h4 className="text-sm font-semibold text-white mb-1">Personas de Contacto</h4>
+                  <h4 className="text-sm font-semibold text-white mb-4">Personas de Contacto</h4>
                   <div className="grid md:grid-cols-2 gap-4 ">
                     {cliente.personas_contacto.map((contacto) => (
-                      <Card key={contacto.id_contacto} className="bg-[#013936]/80 border-[#C7E196]/10 p-4">
+                      <Card key={contacto.id_contacto} className="!bg-[#013936]/80 border-[#C7E196]/10 p-4">
                         <div className="flex items-start justify-between mb-0">
                           <div>
                             <h5 className="font-semibold text-white">{contacto.nombre_completo}</h5>
@@ -493,8 +490,7 @@ export default function ClientesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleAddContacto(cliente.id_cliente_final)}
-                      className="border-[#C7E196] text-[#C7E196] hover:bg-[#C7E196] hover:text-[#013936]"
-                    >
+                      className="!bg-[#C7E196] border-[#C7E196] text-[#013936] hover:!bg-[#C7E196] hover:!text-[#013936]"                    >
                       <UserPlus className="w-4 h-4 mr-2" />
                       Agregar Primera Persona
                     </Button>

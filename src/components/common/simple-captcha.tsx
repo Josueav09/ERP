@@ -25,7 +25,6 @@ export function SimpleCaptcha({ onVerify }: SimpleCaptchaProps) {
       setUserInput("");
       setIsVerified(false);
     } catch (err) {
-      console.error("Error cargando captcha:", err);
       alert("Error al cargar captcha. Recargue la página.");
     } finally {
       setIsLoading(false);

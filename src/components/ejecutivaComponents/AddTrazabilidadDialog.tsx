@@ -95,18 +95,15 @@ export function AddTrazabilidadDialog({ ejecutivaId, onSuccess, onClose, open = 
 
   const fetchEmpresaAsignada = async () => {
     try {
-      console.log('🏢 Fetching empresa asignada for ejecutiva:', ejecutivaId)
       const empresaData = await ejecutivaService.getEmpresaAsignada(ejecutivaId)
       setEmpresa(empresaData)
       
       if (!empresaData) {
         toast.error("No tienes una empresa asignada")
-        console.error('❌ Ejecutiva no tiene empresa asignada')
       } else {
-        console.log('✅ Empresa asignada:', empresaData.razon_social)
+        toast.success(`Empresa asignada: ${empresaData.razon_social}`)
       }
     } catch (error) {
-      console.error("❌ Error fetching empresa asignada:", error)
       toast.error("Error al cargar información de la empresa")
     }
   }
@@ -114,14 +111,10 @@ export function AddTrazabilidadDialog({ ejecutivaId, onSuccess, onClose, open = 
   const fetchClientes = async () => {
     try {
       setLoadingClientes(true)
-      console.log('👥 Fetching clientes for ejecutiva:', ejecutivaId)
-      
       const clientesData = await ejecutivaService.getClientes(ejecutivaId)
       setClientes(clientesData)
       
-      console.log(`✅ Clientes cargados: ${clientesData.length}`)
     } catch (error) {
-      console.error("❌ Error fetching clientes:", error)
       toast.error("Error al cargar clientes")
     } finally {
       setLoadingClientes(false)
@@ -131,14 +124,10 @@ export function AddTrazabilidadDialog({ ejecutivaId, onSuccess, onClose, open = 
   const fetchContactos = async (clienteId: string) => {
     try {
       setLoadingContactos(true)
-      console.log('📞 Fetching contactos for cliente:', clienteId)
-      
       const contactosData = await ejecutivaService.getContactosCliente(clienteId, ejecutivaId)
       setContactos(contactosData)
       
-      console.log(`✅ Contactos cargados: ${contactosData.length}`)
     } catch (error) {
-      console.error("❌ Error fetching contactos:", error)
       toast.error("Error al cargar contactos del cliente")
     } finally {
       setLoadingContactos(false)
@@ -212,11 +201,6 @@ export function AddTrazabilidadDialog({ ejecutivaId, onSuccess, onClose, open = 
     setLoading(true)
 
     try {
-      console.log('📝 Creating trazabilidad with data:', {
-        ejecutivaId,
-        empresaId: empresa.id_empresa_prov,
-        ...formData
-      })
 
       const payload = {
         id_ejecutiva: ejecutivaId,
@@ -245,8 +229,6 @@ export function AddTrazabilidadDialog({ ejecutivaId, onSuccess, onClose, open = 
 
       const result = await ejecutivaService.createTrazabilidad(payload)
       
-      console.log('✅ Trazabilidad creada:', result)
-      
       toast.success(
         formData.pasa_embudo_ventas 
           ? "Oportunidad creada exitosamente" 
@@ -257,7 +239,6 @@ export function AddTrazabilidadDialog({ ejecutivaId, onSuccess, onClose, open = 
       onClose()
       resetForm()
     } catch (error: any) {
-      console.error("❌ Error creating trazabilidad:", error)
       toast.error(error.message || "Error al registrar la actividad")
     } finally {
       setLoading(false)

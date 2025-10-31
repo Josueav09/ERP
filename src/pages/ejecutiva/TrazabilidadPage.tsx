@@ -56,11 +56,9 @@ export default function TrazabilidadPage() {
   const fetchStats = async () => {
     try {
       setIsLoading(true)
-      console.log('📊 Fetching trazabilidad stats for ejecutiva:', user?.id)
       
       // Usar el endpoint específico de trazabilidad
       const statsData = await ejecutivaService.getTrazabilidadStats(user!.id)
-      console.log('✅ Trazabilidad stats received:', statsData)
       
       setStats(statsData)
     } catch (error) {
@@ -82,7 +80,6 @@ export default function TrazabilidadPage() {
   }
 
   const handleTrazabilidadCreated = () => {
-    console.log('✅ Trazabilidad created, refreshing data...')
     setRefreshKey(prev => prev + 1)
     toast.success("Actividad registrada exitosamente")
   }
