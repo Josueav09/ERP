@@ -217,7 +217,7 @@ export default function PerfilPage() {
                 <CardDescription className="text-white/60 flex items-center gap-2 mt-1">
                   {/* ✅ Mostrar correctamente el rol */}
                   <Badge className={`${jefeData?.rol === 'Administrador'
-                      ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                      ? 'bg-blue-500/20 text-blue-700 border-blue-500/30'
                       : 'bg-[#C7E196]/20 text-[#C7E196] border-[#C7E196]/30'
                     }`}>
                     {jefeData?.rol || 'Jefe'}

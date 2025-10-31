@@ -283,23 +283,23 @@ export default function EmpresasPage() {
   };
 
   // Prueba con este código que incluye ambos
-const handleAddEjecutiva = async (ejecutivaId: number) => {
-  try {
-    await jefeService.addEjecutivaToEmpresa(selectedEmpresaId!, ejecutivaId);
-    toast({ title: "✅ Éxito", description: "Ejecutiva asignada" });
-  } catch (error: any) {
-    const errorMsg = error.response?.data?.message || error.message;
-    
-    // Forzar ambos métodos
-    alert(`IMPORTANTE: ${errorMsg} . ELIGE OTRA EJECUTIVA O DESVINCULA LA EJECUTIVA PARA SELECCIONARLA`);
-    toast({ 
-      title: "❌ TOAST Error", 
-      description: errorMsg,
-      variant: "destructive" 
-    });
-    
-  }
-};
+  const handleAddEjecutiva = async (ejecutivaId: number) => {
+    try {
+      await jefeService.addEjecutivaToEmpresa(selectedEmpresaId!, ejecutivaId);
+      toast({ title: "✅ Éxito", description: "Ejecutiva asignada" });
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message;
+
+      // Forzar ambos métodos
+      alert(`IMPORTANTE: ${errorMsg} . ELIGE OTRA EJECUTIVA O DESVINCULA LA EJECUTIVA PARA SELECCIONARLA`);
+      toast({
+        title: "❌ TOAST Error",
+        description: errorMsg,
+        variant: "destructive"
+      });
+
+    }
+  };
 
   const handleRemoveEjecutiva = async (ejecutivaId: number) => {
     if (!selectedEmpresaId) return;
@@ -438,52 +438,52 @@ const handleAddEjecutiva = async (ejecutivaId: number) => {
   };
 
   // En EmpresasPage.tsx - MEJORAR handleToggleEstado
-const handleToggleEstado = async (empresa: Empresa) => {
-  const nuevoEstado = !empresa.activo;
-  const accion = nuevoEstado ? "activar" : "desactivar";
+  const handleToggleEstado = async (empresa: Empresa) => {
+    const nuevoEstado = !empresa.activo;
+    const accion = nuevoEstado ? "activar" : "desactivar";
 
-  const confirmacion = confirm(
-    `¿Estás seguro de que deseas ${accion.toUpperCase()} la empresa "${empresa.nombre_empresa}"?\n\n` +
-    `Esto también ${nuevoEstado ? "activará" : "desactivará"} todos los clientes asociados.`
-  );
+    const confirmacion = confirm(
+      `¿Estás seguro de que deseas ${accion.toUpperCase()} la empresa "${empresa.nombre_empresa}"?\n\n` +
+      `Esto también ${nuevoEstado ? "activará" : "desactivará"} todos los clientes asociados.`
+    );
 
-  if (!confirmacion) return;
+    if (!confirmacion) return;
 
-  try {
-    await jefeService.toggleEmpresaEstado(empresa.id_empresa, nuevoEstado);
-    
-    toast({
-      title: "✅ Éxito",
-      description: `Empresa ${accion}ada correctamente. Los clientes asociados han sido ${accion}ados.`,
-      duration: 5000,
-    });
-    
-    fetchEmpresas();
-    
-  } catch (error: any) {
-    console.error("❌ [Frontend] Error cambiando estado:", error);
-    
-    // ✅ EXTRAER MENSAJE DE ERROR DETALLADO
-    let errorMessage = "Error al cambiar estado de la empresa";
-    
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    } else if (error.message) {
-      errorMessage = error.message;
+    try {
+      await jefeService.toggleEmpresaEstado(empresa.id_empresa, nuevoEstado);
+
+      toast({
+        title: "✅ Éxito",
+        description: `Empresa ${accion}ada correctamente. Los clientes asociados han sido ${accion}ados.`,
+        duration: 5000,
+      });
+
+      fetchEmpresas();
+
+    } catch (error: any) {
+      console.error("❌ [Frontend] Error cambiando estado:", error);
+
+      // ✅ EXTRAER MENSAJE DE ERROR DETALLADO
+      let errorMessage = "Error al cambiar estado de la empresa";
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+
+      toast({
+        title: "❌ Error",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 8000, // Más tiempo para leer el error
+      });
+
+      // ✅ También mostrar alert para asegurar que se vea
+      alert(`❌ Error: ${errorMessage}`);
     }
-    
-    
-    toast({
-      title: "❌ Error",
-      description: errorMessage,
-      variant: "destructive",
-      duration: 8000, // Más tiempo para leer el error
-    });
-    
-    // ✅ También mostrar alert para asegurar que se vea
-    alert(`❌ Error: ${errorMessage}`);
-  }
-};
+  };
   const handleViewDetails = (empresa: Empresa) => {
     setSelectedEmpresaDetails(empresa);
     setIsDetailsDialogOpen(true);
@@ -637,9 +637,9 @@ const handleToggleEstado = async (empresa: Empresa) => {
                     }}
                     className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-[#C7E196] focus:outline-none text-sm"
                   >
-                    <option value="todos">Todos los estados</option>
-                    <option value="activas">Solo activas</option>
-                    <option value="inactivas">Solo inactivas</option>
+                    <option value="todos" className="text-gray-800">Todos los estados</option>
+                    <option value="activas" className="text-gray-800">Solo activas</option>
+                    <option value="inactivas" className="text-gray-800">Solo inactivas</option>
                   </select>
                 </div>
 
@@ -653,10 +653,10 @@ const handleToggleEstado = async (empresa: Empresa) => {
                     }}
                     className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-[#C7E196] focus:outline-none text-sm"
                   >
-                    <option value="todos">Todos los tamaños</option>
-                    <option value="Pequeña">Pequeña</option>
-                    <option value="Mediana">Mediana</option>
-                    <option value="Grande">Grande</option>
+                    <option value="todos" className="text-gray-800">Todos los tamaños</option>
+                    <option value="Pequeña" className="text-gray-800">Pequeña</option>
+                    <option value="Mediana" className="text-gray-800">Mediana</option>
+                    <option value="Grande" className="text-gray-800">Grande</option>
                   </select>
                 </div>
 
@@ -946,9 +946,9 @@ const handleToggleEstado = async (empresa: Empresa) => {
                         onChange={(e) => setFormData({ ...formData, tamanio_empresa: e.target.value as any })}
                         className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-[#C7E196] focus:outline-none"
                       >
-                        <option value="Pequeña">Pequeña</option>
-                        <option value="Mediana">Mediana</option>
-                        <option value="Grande">Grande</option>
+                        <option value="Pequeña" className="text-gray-800">Pequeña</option>
+                        <option value="Mediana" className="text-gray-800">Mediana</option>
+                        <option value="Grande" className="text-gray-800">Grande</option>
                       </select>
                     </div>
                   </div>
