@@ -1,9 +1,7 @@
-// src/config.ts
 export const API_CONFIG = {
-  baseURL: 'http://localhost:3000',
+  baseURL: 'https://growvia-app-gateway.ashygrass-1b0d0ce7.eastus.azurecontainerapps.io',
   timeout: 30000,
 };
-
 
 export const SECURITY = {
   sessionTimeout: 600000,

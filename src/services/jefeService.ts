@@ -775,31 +775,20 @@ export const jefeService = {
   // ============================================
 
   async getFilterOptions(): Promise<FilterOptions> {
-    try {
+  try {
+    // Tipando la respuesta
+    const response = await apiService.get<FilterOptions>('/jefe/trazabilidad/filter-options');
 
-      // ✅ Usar apiService en lugar de fetch directo
-      const response = await apiService.get('/jefe/trazabilidad/filter-options');
+    return response;
 
-      // ✅ Manejar diferentes estructuras de respuesta
-      let data;
-      if (response.data) {
-        // Si la respuesta tiene estructura { success, data }
-        data = response.data;
-      } else if (response.ejecutivas !== undefined) {
-        // Si la respuesta es directa { ejecutivas, empresas, clientes }
-        data = response;
-      } else {
-        throw new Error('Estructura de respuesta inválida');
-      }
-      return data;
+  } catch (error) {
+    console.error('❌ [jefeService] Error obteniendo opciones de filtro:', error);
 
-    } catch (error) {
-      console.error('❌ [jefeService] Error obteniendo opciones de filtro:', error);
+    // Llamada de respaldo
+    return await this.getRealDataFromOtherEndpoints();
+  }
+},
 
-      // ✅ Llamar a la solución temporal
-      return await this.getRealDataFromOtherEndpoints();
-    }
-  },
 
   // ✅ NUEVO MÉTODO: Obtener datos reales de endpoints existentes
   async getRealDataFromOtherEndpoints(): Promise<FilterOptions> {

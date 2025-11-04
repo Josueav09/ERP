@@ -113,7 +113,7 @@ export default function EmpresasPage() {
       <DashboardLayout navItems={navItems} title="Mi Empresa" subtitle="Empresa proveedora asignada">
         <div className="space-y-6">
           {/* Card de alerta */}
-          <Card className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/30 p-6">
+          <Card className="bg-gradient-to-br from-[#024a46] to-[#013936] border-[#C7E196]/20 p-6">
             <div className="flex items-start gap-4">
               <AlertCircle className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
               <div>
